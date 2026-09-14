@@ -114,6 +114,12 @@ jobs:
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          # Default 'tools platform-tools' tries the long-deprecated standalone 'tools' package,
+          # which Google has dropped from the SDK repository (sdkmanager: "Failed to find package
+          # 'tools'"). Gradle/AGP resolve every SDK component (platforms, build-tools, NDK) it
+          # actually needs on its own, so skip this action's own package install entirely.
+          packages: ''
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
@@ -168,6 +174,12 @@ jobs:
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          # Default 'tools platform-tools' tries the long-deprecated standalone 'tools' package,
+          # which Google has dropped from the SDK repository (sdkmanager: "Failed to find package
+          # 'tools'"). Gradle/AGP resolve every SDK component (platforms, build-tools, NDK) it
+          # actually needs on its own, so skip this action's own package install entirely.
+          packages: ''
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
