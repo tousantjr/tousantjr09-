@@ -172,21 +172,22 @@ OwnTV_Core/  (separate repo, published as tv.own.owntv:core / :player-core)
 
 ## 📥 Installing (Fire TV / Android TV)
 
-Grab the signed APK from the [**latest release**](https://github.com/ahXN00/OwnTV/releases/latest).
+Grab the signed APK from the [**latest release**](https://github.com/tousantjr/tousantjr09-/releases/latest).
 This link always points at the newest build:
 
 ```
-https://github.com/ahXN00/OwnTV/releases/latest/download/OwnTV.apk
+https://github.com/tousantjr/tousantjr09-/releases/latest/download/MPTV.apk
 ```
 
-- **Fire TV** — install **Downloader** (by AFTVnews), then enter code **`4308278`**. Enable *Apps from
-  Unknown Sources* if prompted.
-- **Android TV / Google TV** — Downloader is on Google Play too, so the same code works. Or sideload
-  with *Send files to TV*, a USB drive, or `adb install OwnTV.apk`.
+- **Fire TV** — install **Downloader** (by AFTVnews), then enter the URL above, or register it at
+  [downloader.net](https://downloader.net/) for a short code. Enable *Apps from Unknown Sources* if
+  prompted.
+- **Android TV / Google TV** — Downloader is on Google Play too, so the same URL/code works. Or
+  sideload with *Send files to TV*, a USB drive, or `adb install MPTV.apk`.
 
 > Install only from this repository's Releases. Each release ships **two APKs**:
-> `OwnTV.apk` (arm — every real TV box, and what the Downloader code fetches) and
-> `OwnTV-x86_64-vX.X.X.apk` (emulators and rare Intel boxes).
+> `MPTV.apk` (arm — every real TV box, and what the Downloader code fetches) and
+> `MPTV-x86_64-vX.X.X.apk` (emulators and rare Intel boxes).
 
 ## 🛠️ Building & running
 
