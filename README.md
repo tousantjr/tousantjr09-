@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="extras/logo.png" alt="OwnTV" width="360">
+  <img src="extras/mptv_logo.jpg" alt="MPTV" width="360">
 </p>
 
 <p align="center">
@@ -20,8 +20,8 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/ahXN00/OwnTV/actions/workflows/android.yml">
-    <img alt="Android CI" src="https://github.com/ahXN00/OwnTV/actions/workflows/android.yml/badge.svg">
+  <a href="https://github.com/tousantjr/tousantjr09-/actions/workflows/android.yml">
+    <img alt="Android CI" src="https://github.com/tousantjr/tousantjr09-/actions/workflows/android.yml/badge.svg">
   </a>
 </p>
 
