@@ -92,6 +92,10 @@ import tv.own.owntv.ui.theme.OwnTVTheme
 
 private enum class SourceKind { XTREAM, M3U, STALKER }
 
+/** MPTV is pinned to a single Xtream provider, so new sources skip the server-URL field entirely
+ *  and only ask for username/password. */
+private const val DEFAULT_XTREAM_SERVER = "https://best-streams.tv"
+
 /** UI state of the Xtream "Test HLS support" probe. Local to this screen — the probe is one short
  *  request and saves nothing unless the source already exists. */
 private sealed interface HlsTestUi {
@@ -160,7 +164,7 @@ fun AddSourceScreen(
         )
     }
     var name by remember(initial) { mutableStateOf(initial?.name ?: "") }
-    var server by remember(initial) { mutableStateOf(if (initial != null && initial.type == SourceType.XTREAM) initial.url else "") }
+    var server by remember(initial) { mutableStateOf(if (initial != null && initial.type == SourceType.XTREAM) initial.url else DEFAULT_XTREAM_SERVER) }
     var username by remember(initial) { mutableStateOf(initial?.username ?: "") }
     var password by remember(initial) { mutableStateOf(initial?.password ?: "") }
     var m3uUrl by remember(initial) { mutableStateOf(if (initial != null && initial.type == SourceType.M3U) initial.url else "") }
@@ -460,8 +464,12 @@ fun AddSourceScreen(
 
             when (kind) {
                 SourceKind.XTREAM -> {
-                    OwnTVTextField(server, { server = it }, label = stringResource(R.string.setup_server_url), placeholder = stringResource(R.string.setup_server_example), keyboardType = KeyboardType.Uri, modifier = Modifier.fillMaxWidth())
-                    Spacer(Modifier.height(14.dp))
+                    // New sources are pinned to DEFAULT_XTREAM_SERVER, so only editing an existing
+                    // source (which may predate the pin, or need troubleshooting) shows this field.
+                    if (editing) {
+                        OwnTVTextField(server, { server = it }, label = stringResource(R.string.setup_server_url), placeholder = stringResource(R.string.setup_server_example), keyboardType = KeyboardType.Uri, modifier = Modifier.fillMaxWidth())
+                        Spacer(Modifier.height(14.dp))
+                    }
                     OwnTVTextField(username, { username = it }, label = stringResource(R.string.setup_username), modifier = Modifier.fillMaxWidth())
                     Spacer(Modifier.height(14.dp))
                     OwnTVTextField(password, { password = it }, label = if (editing) stringResource(R.string.setup_password_keep) else stringResource(R.string.setup_password), isPassword = true, modifier = Modifier.fillMaxWidth())
