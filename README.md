@@ -14,9 +14,6 @@
   <img alt="Player" src="https://img.shields.io/badge/engines-libmpv%20%2B%20ExoPlayer-FB8C00">
   <img alt="License" src="https://img.shields.io/badge/license-GPLv3-blue">
   <img alt="Built with the help of AI" src="https://img.shields.io/badge/built%20with-the%20help%20of%20AI-8A2BE2">
-  <a href="https://hosted.weblate.org/engage/owntv/">
-    <img alt="Translation status" src="https://hosted.weblate.org/widget/owntv/svg-badge.svg">
-  </a>
 </p>
 
 <p align="center">
@@ -44,11 +41,8 @@ launcher, D-pad first.
 
 ## 💬 Community
 
-Questions, ideas, bug reports — **join the OwnTV Telegram group:**
-
-### 👉 [t.me/owntvplayer](https://t.me/owntvplayer)
-
-<a href="https://t.me/owntvplayer"><img src="extras/telegram_qr_code.jpg" alt="Scan to join the OwnTV Telegram group" width="150"></a>
+Questions, ideas, bug reports — use this repo's [Issues](https://github.com/tousantjr/tousantjr09-/issues).
+This is an independent MPTV build; please don't bring issues to OwnTV's own community channels.
 
 ---
 
@@ -198,7 +192,7 @@ https://github.com/tousantjr/tousantjr09-/releases/latest/download/MPTV.apk
 [OwnTV_Core](https://github.com/ahXN00/OwnTV_Core) repository and is pulled from GitHub Packages,
 which always asks who you are. Without it, Gradle sync fails with a `401`.
 
-1. **Get the code** — `git clone https://github.com/ahXN00/OwnTV.git` (or download the ZIP).
+1. **Get the code** — `git clone https://github.com/tousantjr/tousantjr09-.git` (or download the ZIP).
 2. **Add a token** — create a [personal access token (classic)](https://github.com/settings/tokens)
    with the single scope **`read:packages`**, then put it in `~/.gradle/gradle.properties`
    (`C:\Users\<you>\.gradle\gradle.properties`) — never inside the project:
@@ -221,18 +215,15 @@ Command line: `./gradlew assembleDebug` (`gradlew.bat` on Windows). The APK land
 Contributions, bug reports and ideas are welcome — open an issue or a pull request. Please keep the
 project's player-only, bring-your-own-source positioning and match the existing code style.
 
-<!-- i18n-contribution:start -->
-## Help translate OwnTV
-
-If your language is already available, contribute interface translations across OwnTV's six Android resource components on [Hosted Weblate](https://hosted.weblate.org/projects/owntv/). If it is not listed, [open a language request ticket](https://github.com/ahXN00/OwnTV/issues/new?template=feature_request.yml&title=%5BLanguage%5D%20Add%20) first. A maintainer will review the request, register the locale, and prepare its base translation files on Hosted Weblate. Once the language appears on Hosted Weblate, you can start translating it there. The strings themselves live in [OwnTV's core library repository](https://github.com/ahXN00/OwnTV_Core), together with the language contributor guide covering identifiers, validation, and promotion policy.
-<!-- i18n-contribution:end -->
+Translations for the shared strings come from the upstream [OwnTV_Core](https://github.com/ahXN00/OwnTV_Core)
+library this app is built against; this fork doesn't run its own translation project.
 
 ## 🙏 Credits
 
 <img src="extras/Weblate_logo.svg" alt="Weblate" width="200">
 
-OwnTV speaks 26 languages because people translate it on
-[**Weblate**](https://weblate.org/), which hosts the project free of charge for libre software.
+The app speaks 26 languages thanks to translators contributing to upstream OwnTV on
+[**Weblate**](https://weblate.org/), which hosts that project free of charge for libre software.
 Thank you to Weblate and to every translator who has given the app their language.
 
 <img src="extras/tmdb_logo.svg" alt="TMDB" width="200">
