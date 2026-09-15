@@ -1973,8 +1973,7 @@ private fun FocusHighlightDialog(
 
 
 /** Widened for More's About pane, which shows the same repository line the dialog does. */
-internal const val GITHUB_REPO = "github.com/ahXN00/OwnTV"
-private const val TELEGRAM_LINK = "t.me/owntvplayer"
+internal const val GITHUB_REPO = "github.com/tousantjr/tousantjr09-"
 
 /** About OwnTV: version, license, author and project link — all readable on screen (no TV browser). */
 @Composable
@@ -2005,28 +2004,6 @@ internal fun AboutDialog(onDismiss: () -> Unit) {
             Text(stringResource(R.string.settings_about_license), style = MaterialTheme.typography.bodyMedium, color = colors.onSurface)
             Spacer(Modifier.height(4.dp))
             Text(GITHUB_REPO, style = MaterialTheme.typography.bodyMedium, color = colors.primary)
-            Spacer(Modifier.height(16.dp))
-            // Community: Telegram link + a QR, side-by-side to keep the dialog compact, so TV users can
-            // join from their phone — no TV browser needed.
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                Column(Modifier.weight(1f)) {
-                    Text(stringResource(R.string.settings_join_telegram), style = MaterialTheme.typography.titleSmall, color = colors.onSurface)
-                    Spacer(Modifier.height(2.dp))
-                    Text(TELEGRAM_LINK, style = MaterialTheme.typography.bodyMedium, color = colors.primary)
-                    Spacer(Modifier.height(6.dp))
-                    Text(
-                        stringResource(R.string.settings_telegram_scan),
-                        style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant,
-                    )
-                }
-                Box(Modifier.clip(RoundedCornerShape(10.dp)).background(Color.White).padding(6.dp)) {
-                    Image(
-                        painter = androidx.compose.ui.res.painterResource(tv.own.owntv.R.drawable.telegram_qr),
-                        contentDescription = stringResource(R.string.settings_telegram_qr),
-                        modifier = Modifier.size(120.dp),
-                    )
-                }
-            }
             Spacer(Modifier.height(16.dp))
             Text(
                 stringResource(R.string.settings_contributions),
