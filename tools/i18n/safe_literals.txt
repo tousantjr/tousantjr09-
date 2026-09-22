@@ -244,6 +244,7 @@
 1	protocol	app/src/main/java/tv/own/owntv/features/settings/DeleteSubtitlesScreen.kt	· S${season}E${episode}
 1	technical	app/src/main/java/tv/own/owntv/features/settings/DeleteSubtitlesViewModel.kt	MOVIE
 1	technical	app/src/main/java/tv/own/owntv/features/settings/DeleteSubtitlesViewModel.kt	SERIES
+1	url	app/src/main/java/tv/own/owntv/features/settings/DnsSettingsScreen.kt	https://bp-v2.net
 3	empty	app/src/main/java/tv/own/owntv/features/settings/EpgSourcesScreen.kt	\0
 1	technical	app/src/main/java/tv/own/owntv/features/settings/EpgSourcesViewModel.kt	add
 1	technical	app/src/main/java/tv/own/owntv/features/settings/EpgSourcesViewModel.kt	manual_resync

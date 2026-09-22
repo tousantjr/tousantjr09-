@@ -39,6 +39,9 @@ import tv.own.owntv.ui.components.OwnTVTextField
 import tv.own.owntv.ui.components.roundedPanel
 import tv.own.owntv.ui.theme.OwnTVTheme
 
+// Extra one-tap DoH preset on top of :core's defaults (Google/Cloudflare/Quad9).
+private const val BP_V2_URL = "https://bp-v2.net"
+
 @Composable
 fun DnsSettingsScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
     val colors = OwnTVTheme.colors
@@ -170,8 +173,11 @@ fun DnsSettingsScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
                         down = serverFieldFocus
                     },
                 ) {
+                    val extraDohPresets = listOf(
+                        stringResource(R.string.dns_preset_bp_v2) to BP_V2_URL,
+                    )
                     var first = true
-                    for ((label, url) in DohPresets.all) {
+                    for ((label, url) in DohPresets.all + extraDohPresets) {
                         val isActive = server.trim() == url
                         OwnTVButton(
                             label = label,

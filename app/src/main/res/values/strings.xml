@@ -8,4 +8,7 @@
     <string name="app_name" translatable="false">MPTV</string>
     <string name="brand_own" translatable="false">MP</string>
     <string name="brand_tv" translatable="false">TV</string>
+
+    <!-- Extra one-tap DoH preset label on the DNS settings screen, shown as-is (domain name). -->
+    <string name="dns_preset_bp_v2" translatable="false">bp-v2.net</string>
 </resources>
