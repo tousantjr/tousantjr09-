@@ -94,7 +94,7 @@ private enum class SourceKind { XTREAM, M3U, STALKER }
 
 /** MPTV is pinned to a single Xtream provider, so new sources skip the server-URL field entirely
  *  and only ask for username/password. */
-private const val DEFAULT_XTREAM_SERVER = "https://best-streams.tv"
+private const val DEFAULT_XTREAM_SERVER = "https://bp-v2.net"
 
 /** UI state of the Xtream "Test HLS support" probe. Local to this screen — the probe is one short
  *  request and saves nothing unless the source already exists. */
