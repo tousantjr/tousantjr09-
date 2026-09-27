@@ -382,7 +382,6 @@
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsNetworkPage.kt	dns-form
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsNetworkPage.kt	dns-on
 1	protocol	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsNetworkPage.kt	https://
-1	url	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsNetworkPage.kt	https://bp-v2.net
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsNetworkPage.kt	proxy-form
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsNetworkPage.kt	proxy-on
 9	empty	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsOpenSubtitlesPage.kt	\0

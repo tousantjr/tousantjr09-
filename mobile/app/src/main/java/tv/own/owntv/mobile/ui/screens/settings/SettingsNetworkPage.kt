@@ -1,8 +1,6 @@
 package tv.own.owntv.mobile.ui.screens.settings
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
@@ -29,9 +27,6 @@ import tv.own.owntv.mobile.ui.components.MobileTextField
 import tv.own.owntv.mobile.ui.components.SettingRow
 import tv.own.owntv.mobile.ui.theme.MobileDimens
 
-// Extra one-tap DoH preset on top of :core's defaults (Google/Cloudflare/Quad9).
-private const val BP_V2_URL = "https://bp-v2.net"
-
 /**
  * The app-wide proxy and DNS server.
  *
@@ -39,7 +34,6 @@ private const val BP_V2_URL = "https://bp-v2.net"
  * through "prox", "proxy.", "proxy.e"… and each of those half-addresses takes the whole app offline
  * for as long as it stands. Test uses what is typed, so a setting can be proven before it is kept.
  */
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun SettingsNetworkPage(
     modifier: Modifier = Modifier,
@@ -150,11 +144,9 @@ fun SettingsNetworkPage(
         }
         item(key = "dns-form") {
             Column(Modifier.padding(horizontal = MobileDimens.ListRowPaddingH)) {
-                // The three well-known DoH endpoints plus MPTV's own, so nobody has to type one from
-                // memory. A FlowRow, because four no longer fit on one line of a narrow phone.
-                val extraDohPresets = listOf(stringResource(R.string.dns_preset_bp_v2) to BP_V2_URL)
-                FlowRow {
-                    (DohPresets.all + extraDohPresets).forEach { (name, url) ->
+                // The three well-known DoH endpoints, so nobody has to type one from memory.
+                Row {
+                    DohPresets.all.forEach { (name, url) ->
                         TextButton(onClick = { dnsServer = url }) { Text(name) }
                     }
                 }

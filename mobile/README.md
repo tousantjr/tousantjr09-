@@ -26,7 +26,7 @@
 
 > **MPTV Mobile** is this repository's phone/tablet build: [OwnTV Mobile](https://github.com/ahXN00/OwnTV_Mobile)
 > (GPLv3), imported into `mobile/` and rebranded MPTV like the TV app at the repository root — MPTV
-> name and icon, Xtream sources pinned to `bp-v2.net`, a `bp-v2.net` DNS preset, and no links to
+> name and icon, Xtream sources pinned to `bp-v2.net`, and no links to
 > OwnTV's own community channels. The upstream description follows.
 
 OwnTV Mobile is the phone and tablet member of the OwnTV family: a native Android IPTV **player**
