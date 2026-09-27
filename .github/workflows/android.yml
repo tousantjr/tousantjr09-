@@ -8,7 +8,8 @@ name: Android CI
 #                unchanged); they only get the test/lint verdict.
 on:
   push:
-    branches: [ main ]
+    # claude/owntv-repo-lxrkt5 is this fork's default branch; main kept in case it is renamed.
+    branches: [ main, claude/owntv-repo-lxrkt5 ]
     tags: [ "v*" ]
   # Any base branch: this fork's default branch is not named main.
   pull_request:
