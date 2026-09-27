@@ -1,0 +1,263 @@
+name: Android CI (Mobile)
+
+# The phone/tablet app in mobile/ (imported from ahXN00/OwnTV_Mobile, rebranded MPTV). Separate from
+# android.yml, which builds the TV app at the repository root. Two jobs:
+#   check — unit tests, lint and the i18n source checks. Gates the build.
+#   build — assembles the APKs, and publishes a GitHub Release on mobile-v* tags. Never runs for a PR.
+#
+# Tags: the TV app releases from v* tags, the phone app from mobile-v* tags (mobile-v1.2.0 -> 1.2.0),
+# so one tag never builds both. Phone releases are published with make_latest: false because the TV
+# app's in-app updater reads this repository's "latest" release — that must stay the TV APK.
+#
+# Core and libmpv resolve from OwnTV's public Maven repository (see mobile/settings.gradle.kts), so
+# unlike the TV build no GPR_TOKEN is needed here.
+on:
+  push:
+    branches: [ main ]
+    tags: [ "mobile-v*" ]
+    paths:
+      - 'mobile/**'
+      - '.github/workflows/android-mobile.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'mobile/**'
+      - '.github/workflows/android-mobile.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write   # required so tag builds can create a Release
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: mobile
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # The source-only i18n checks from upstream's i18n.yml. The ratchet runs in bootstrap mode
+      # (nothing unclassified, nothing stale) rather than against a merge base.
+      - name: i18n source checks
+        run: |
+          python3 tools/i18n/check_hardcoded_strings.py verify --bootstrap
+          python3 tools/i18n/check_number_locale.py
+          python3 tools/i18n/check_text_overflow.py
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'   # matches mobile/gradle/gradle-daemon-jvm.properties
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          # 'tools' is obsolete and Google removed it from the SDK repository; the
+          # action still asks for it by default, which fails the whole setup step.
+          packages: 'platform-tools'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      # One variant, not `test`/`lint` across every flavor: standard+debug is the variant the JVM
+      # tests are written against, and the ABI flavors differ only in the packaged native libs.
+      - name: Unit tests
+        run: |
+          chmod +x ./gradlew
+          ./gradlew testStandardDebugUnitTest --stacktrace
+
+      # abortOnError = true in mobile/app/build.gradle.kts, so this fails the job on a lint error.
+      - name: Lint
+        if: always()   # report both verdicts in one run instead of one failure at a time
+        run: ./gradlew lintStandardDebug --stacktrace
+
+      - name: Upload test and lint reports
+        if: always()   # the reports matter most when the step above failed
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-check-reports
+          path: |
+            mobile/app/build/reports/tests/**
+            mobile/app/build/reports/lint-results-*.html
+            mobile/app/build/reports/lint-results-*.txt
+          if-no-files-found: warn
+
+  build:
+    needs: check
+    # PRs get the check job only — no APK, no release.
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    env:
+      IS_TAG: ${{ startsWith(github.ref, 'refs/tags/mobile-v') }}
+      # Set at runtime via $GITHUB_ENV in the "Name the APK" step. Declared here (empty) so static
+      # linters don't flag the later ${{ env.APK_OUT }} references as "context access might be invalid".
+      APK_OUT: ""
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Compute version (from the git tag on releases)
+        id: ver
+        run: |
+          if [ "$IS_TAG" = "true" ]; then
+            NAME="${GITHUB_REF_NAME#mobile-v}"          # tag mobile-v0.1.0 -> 0.1.0
+            IFS='.' read -r MA MI PA <<< "$NAME"
+            CODE=$(( ${MA:-0} * 10000 + ${MI:-0} * 100 + ${PA:-0} ))   # 0.1.0 -> 100
+            [ "$CODE" -gt 0 ] || CODE=1
+          else
+            # Dev (non-tag) builds mirror the local-build fallback in mobile/app/build.gradle.kts:
+            # pinned HIGH so a dev APK always installs over any published release
+            # (no INSTALL_FAILED_VERSION_DOWNGRADE).
+            NAME="99.99.99"
+            CODE=99999
+          fi
+          echo "name=$NAME" >> "$GITHUB_OUTPUT"
+          echo "code=$CODE" >> "$GITHUB_OUTPUT"
+          echo "Version: $NAME (code $CODE)"
+
+      - name: Decode signing keystore (if configured)
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: |
+          # The same keystore secret as the TV app: a certificate must be stable per applicationId,
+          # not unique per app, and the two applicationIds differ.
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.keystore"
+            echo "KEYSTORE_FILE=$RUNNER_TEMP/release.keystore" >> "$GITHUB_ENV"
+            echo "Release signing configured."
+          else
+            echo "No KEYSTORE_BASE64 secret set — building a debug-signed APK."
+          fi
+
+      # Same edge-key derivation as the TV app — both apps talk to the same metadata worker. Falls
+      # back to the static OWNTV_EDGE_KEY, then to "", where core uses its open base URL.
+      - name: Derive the release edge key
+        env:
+          OWNTV_EDGE_MASTER: ${{ secrets.OWNTV_EDGE_MASTER }}
+          OWNTV_EDGE_KEY: ${{ secrets.OWNTV_EDGE_KEY }}
+          VERSION_NAME: ${{ steps.ver.outputs.name }}
+        run: |
+          if [ -n "$OWNTV_EDGE_MASTER" ]; then
+            KEY=$(printf '%s' "$VERSION_NAME" \
+              | openssl dgst -sha256 -hmac "$OWNTV_EDGE_MASTER" -hex \
+              | awk '{print $NF}')
+            echo "::add-mask::$KEY"
+            echo "OWNTV_EDGE_KEY=$KEY" >> "$GITHUB_ENV"
+            echo "Derived the edge key for $VERSION_NAME."
+          elif [ -n "$OWNTV_EDGE_KEY" ]; then
+            echo "::add-mask::$OWNTV_EDGE_KEY"
+            echo "OWNTV_EDGE_KEY=$OWNTV_EDGE_KEY" >> "$GITHUB_ENV"
+            echo "No OWNTV_EDGE_MASTER — using the static edge key."
+          else
+            echo "No edge secret configured — the app will use the unprotected base URL."
+          fi
+
+      - name: Build APK
+        env:
+          VERSION_NAME: ${{ steps.ver.outputs.name }}
+          VERSION_CODE: ${{ steps.ver.outputs.code }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          chmod +x ./gradlew
+          if [ -n "$KEYSTORE_FILE" ]; then
+            echo "Building signed release APKs (both ABI flavors)"
+            ./gradlew assembleRelease --stacktrace
+            #   standard/release  -> arm (arm64-v8a + armeabi-v7a) — real phones and tablets
+            #   x86_64/release    -> x86_64 — the emulator
+            ARM_SRC=$(ls app/build/outputs/apk/standard/release/*.apk | head -n1)
+            X86_SRC=$(ls app/build/outputs/apk/x86_64/release/*.apk | head -n1)
+            echo "ARM_SRC=$ARM_SRC" >> "$GITHUB_ENV"
+            echo "X86_SRC=$X86_SRC" >> "$GITHUB_ENV"
+          else
+            echo "Building debug APK"
+            ./gradlew assembleDebug
+            SRC=$(ls app/build/outputs/apk/standard/debug/*.apk | head -n1)
+            echo "ARM_SRC=$SRC" >> "$GITHUB_ENV"
+          fi
+
+      - name: Name the APK (MPTV-Mobile-v<version>)
+        run: |
+          mkdir -p dist
+          if [ "$IS_TAG" = "true" ]; then
+            OUT="MPTV-Mobile-v${{ steps.ver.outputs.name }}.apk"
+          else
+            OUT="MPTV-Mobile-dev-${GITHUB_SHA::7}.apk"
+          fi
+          cp "$ARM_SRC" "dist/$OUT"
+          echo "APK_OUT=$OUT" >> "$GITHUB_ENV"
+          echo "Packaged mobile/dist/$OUT (arm: arm64-v8a + armeabi-v7a)"
+          if [ "$IS_TAG" = "true" ] && [ -n "$X86_SRC" ]; then
+            cp "$X86_SRC" "dist/MPTV-Mobile-x86_64-v${{ steps.ver.outputs.name }}.apk"
+          fi
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.APK_OUT }}
+          path: mobile/dist/*
+          if-no-files-found: error
+
+      - name: Extract release notes from mobile/CHANGELOG.md
+        if: env.IS_TAG == 'true'
+        env:
+          # CHANGELOG.md headers are "## v<version>", not the mobile-v tag.
+          TAG: v${{ steps.ver.outputs.name }}
+        run: |
+          if [ -f CHANGELOG.md ]; then
+            awk -v ver="$TAG" '
+              $0 ~ ("^## " ver "([ \t]|$)") { flag=1; next }
+              /^## v/ && flag { flag=0 }
+              flag { print }
+            ' CHANGELOG.md > dist/RELEASE_NOTES.md || true
+            sed -i -e '/./,$!d' dist/RELEASE_NOTES.md
+            awk 'NF{p=NR} {a[NR]=$0} END{for(i=1;i<=p;i++) print a[i]}' \
+              dist/RELEASE_NOTES.md > dist/RELEASE_NOTES.trimmed.md
+            mv dist/RELEASE_NOTES.trimmed.md dist/RELEASE_NOTES.md
+          fi
+          if [ ! -s dist/RELEASE_NOTES.md ]; then
+            echo "::warning::No mobile/CHANGELOG.md section for $TAG — publishing a placeholder body."
+            echo "MPTV for Android phones and tablets, $TAG." > dist/RELEASE_NOTES.md
+          fi
+          cat dist/RELEASE_NOTES.md
+
+      - name: Publish GitHub Release
+        if: env.IS_TAG == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          name: MPTV Mobile v${{ steps.ver.outputs.name }}
+          files: |
+            mobile/dist/${{ env.APK_OUT }}
+            mobile/dist/MPTV-Mobile-x86_64-v${{ steps.ver.outputs.name }}.apk
+          body_path: mobile/dist/RELEASE_NOTES.md
+          generate_release_notes: false
+          # Never "latest": the TV app's in-app updater reads this repository's latest release.
+          make_latest: false

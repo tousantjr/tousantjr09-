@@ -20,40 +20,26 @@
     </style>
 
     <!--
-      Launch theme. Each icon colour's launcher activity starts in its own child of this, so the launch
-      screen shows that colour's flip card on the window background. postSplashScreenTheme hands back to
-      Theme.OwnTVMobile — the AppCompat theme the Cast chooser needs — as soon as MainActivity installs
-      the splash. Here (API < 31, drawn by the compat library) the icon is the still card; values-v31
-      swaps in the flip animation and adds the wordmark at the bottom.
+      Launch theme. Each icon colour's launcher activity starts in its own child of this, and
+      postSplashScreenTheme hands back to Theme.OwnTVMobile — the AppCompat theme the Cast chooser
+      needs — as soon as MainActivity installs the splash. MPTV: every colour shows the same MPTV icon
+      (core's per-colour OwnTV flip card and wordmark are not used), so the children are empty and
+      exist only because the manifest names them.
     -->
     <style name="Theme.OwnTVMobile.Starting" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">@color/owntv_window_bg</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/mptv_icon_foreground</item>
+        <item name="windowSplashScreenIconBackgroundColor">@color/mptv_icon_bg</item>
         <item name="postSplashScreenTheme">@style/Theme.OwnTVMobile</item>
     </style>
-    <style name="Theme.OwnTVMobile.Starting.Petrol">
-        <item name="windowSplashScreenAnimatedIcon">@drawable/owntv_splash_static_petrol</item>
-    </style>
-    <style name="Theme.OwnTVMobile.Starting.Sunflower">
-        <item name="windowSplashScreenAnimatedIcon">@drawable/owntv_splash_static_sunflower</item>
-    </style>
-    <style name="Theme.OwnTVMobile.Starting.Cobalt">
-        <item name="windowSplashScreenAnimatedIcon">@drawable/owntv_splash_static_cobalt</item>
-    </style>
-    <style name="Theme.OwnTVMobile.Starting.Tomato">
-        <item name="windowSplashScreenAnimatedIcon">@drawable/owntv_splash_static_tomato</item>
-    </style>
-    <style name="Theme.OwnTVMobile.Starting.Board">
-        <item name="windowSplashScreenAnimatedIcon">@drawable/owntv_splash_static_board</item>
-    </style>
-    <style name="Theme.OwnTVMobile.Starting.Eggshell">
-        <item name="windowSplashScreenAnimatedIcon">@drawable/owntv_splash_static_eggshell</item>
-    </style>
-    <style name="Theme.OwnTVMobile.Starting.Olive">
-        <item name="windowSplashScreenAnimatedIcon">@drawable/owntv_splash_static_olive</item>
-    </style>
-    <style name="Theme.OwnTVMobile.Starting.OliveCream">
-        <item name="windowSplashScreenAnimatedIcon">@drawable/owntv_splash_static_olive_cream</item>
-    </style>
+    <style name="Theme.OwnTVMobile.Starting.Petrol" />
+    <style name="Theme.OwnTVMobile.Starting.Sunflower" />
+    <style name="Theme.OwnTVMobile.Starting.Cobalt" />
+    <style name="Theme.OwnTVMobile.Starting.Tomato" />
+    <style name="Theme.OwnTVMobile.Starting.Board" />
+    <style name="Theme.OwnTVMobile.Starting.Eggshell" />
+    <style name="Theme.OwnTVMobile.Starting.Olive" />
+    <style name="Theme.OwnTVMobile.Starting.OliveCream" />
 
     <!--
       The route button's own dressing, and nothing else: which way round the icon is tinted. It is

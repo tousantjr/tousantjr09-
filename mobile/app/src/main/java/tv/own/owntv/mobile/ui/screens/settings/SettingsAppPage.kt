@@ -3,15 +3,10 @@ package tv.own.owntv.mobile.ui.screens.settings
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -21,22 +16,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 import tv.own.owntv.core.database.entity.ChannelEntity
-import tv.own.owntv.core.companion.CompanionLink
 import tv.own.owntv.core.i18n.LocaleStore
 import tv.own.owntv.core.i18n.SupportedLocales
 import tv.own.owntv.core.settings.StartupMode
@@ -54,7 +43,11 @@ import java.text.DateFormat
 import java.util.Date
 
 /**
- * Language, what the app opens on, and the update check.
+ * Language, what the app opens on, and (upstream) the update check.
+ *
+ * MPTV: the update rows are removed — core's updater reads the single "latest" release of
+ * CoreBuildInfo.releaseRepo, and this repository's latest release is the TV app, which the phone
+ * cannot install (different applicationId). Updating the phone app is a manual download.
  *
  * **This page once said there would never be an update check here**, on the grounds that a phone
  * gets its updates from the store it came from. This app does not come from a store — it is
@@ -76,12 +69,9 @@ fun SettingsAppPage(
     val mode = vm.startupMode.pref(StartupMode.HOME)
     val channel = vm.startupChannel.pref(null)
 
-    val updateOnStart = vm.settings.updateCheckOnStart.pref(true)
-
     val context = LocalContext.current
     var startupSheet by remember { mutableStateOf(false) }
     var channelSheet by remember { mutableStateOf(false) }
-    var updateSheet by remember { mutableStateOf(false) }
     val appIcon = vm.settings.appIcon.pref(tv.own.owntv.core.brand.AppIcon.DEFAULT)
     var showAppIcon by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
@@ -121,25 +111,8 @@ fun SettingsAppPage(
                 },
                 onClick = { startupSheet = true },
             )
-
-            SettingRow(
-                title = stringResource(R.string.settings_check_updates),
-                subtitle = stringResource(R.string.settings_check_updates_description),
-                onClick = { updateSheet = true },
-            )
-
-            SettingRow(
-                title = stringResource(R.string.settings_update_startup),
-                subtitle = stringResource(R.string.settings_update_startup_description),
-                checked = updateOnStart,
-                onCheckedChange = { on -> vm.edit { setUpdateCheckOnStart(on) } },
-            )
         }
 
-    }
-
-    if (updateSheet) {
-        UpdateSheet(onDismiss = { updateSheet = false }, checkOnOpen = true)
     }
 
     if (startupSheet) {
@@ -218,15 +191,6 @@ fun AboutPage(modifier: Modifier = Modifier) {
                 subtitle = GITHUB_REPO,
                 onClick = { openLink(context, "https://$GITHUB_REPO") },
             )
-
-            // The link is what a phone user taps; the QR is for the person sitting next to them, and
-            // it is drawn from the address rather than shipped as an image so the two cannot drift.
-            SettingRow(
-                title = stringResource(R.string.settings_join_telegram),
-                subtitle = TELEGRAM_LINK,
-                onClick = { openLink(context, "https://$TELEGRAM_LINK") },
-            )
-            TelegramQr()
         }
     }
 }
@@ -389,39 +353,7 @@ private fun LogEntry(entry: PlaybackErrorLog.Entry, when_: String) {
     }
 }
 
-private const val GITHUB_REPO = "github.com/ahXN00/OwnTV"
-private const val TELEGRAM_LINK = "t.me/owntvplayer"
-
-/** The group's address as a code to point a camera at, with the line that says what to do with it. */
-@Composable
-private fun TelegramQr() {
-    val qr = remember { CompanionLink.renderQr("https://$TELEGRAM_LINK") } ?: return
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(MobileDimens.ScreenPaddingH),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Box(
-            Modifier
-                .clip(RoundedCornerShape(12.dp))
-                .background(Color.White)
-                .padding(8.dp),
-        ) {
-            Image(
-                bitmap = qr.asImageBitmap(),
-                contentDescription = stringResource(R.string.settings_telegram_qr),
-                modifier = Modifier.size(160.dp),
-            )
-        }
-        Text(
-            text = stringResource(R.string.settings_telegram_scan),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(top = MobileDimens.GapSmall),
-        )
-    }
-}
+private const val GITHUB_REPO = "github.com/tousantjr/tousantjr09-"
 
 private fun openLink(context: Context, url: String) {
     runCatching {

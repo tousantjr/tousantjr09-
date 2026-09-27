@@ -1,8 +1,5 @@
 <p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: light)" srcset="extras/brand/app-logos/logo_eggshell_light.png">
-    <img src="extras/brand/app-logos/logo_eggshell.png" alt="OwnTV Mobile" width="360">
-  </picture>
+  <img src="../extras/mptv_logo.jpg" alt="MPTV" width="360">
 </p>
 
 <p align="center">
@@ -17,18 +14,20 @@
   <img alt="Player" src="https://img.shields.io/badge/engines-libmpv%20%2B%20ExoPlayer-FB8C00">
   <img alt="License" src="https://img.shields.io/badge/license-GPLv3-blue">
   <img alt="Built with the help of AI" src="https://img.shields.io/badge/built%20with-the%20help%20of%20AI-8A2BE2">
-  <a href="https://hosted.weblate.org/engage/owntv/">
-    <img alt="Translation status" src="https://hosted.weblate.org/widget/owntv/svg-badge.svg">
-  </a>
 </p>
 
 <p align="center">
-  <a href="https://github.com/ahXN00/OwnTV_Mobile/actions/workflows/android.yml">
-    <img alt="Android CI" src="https://github.com/ahXN00/OwnTV_Mobile/actions/workflows/android.yml/badge.svg">
+  <a href="https://github.com/tousantjr/tousantjr09-/actions/workflows/android-mobile.yml">
+    <img alt="Android CI (Mobile)" src="https://github.com/tousantjr/tousantjr09-/actions/workflows/android-mobile.yml/badge.svg">
   </a>
 </p>
 
 ---
+
+> **MPTV Mobile** is this repository's phone/tablet build: [OwnTV Mobile](https://github.com/ahXN00/OwnTV_Mobile)
+> (GPLv3), imported into `mobile/` and rebranded MPTV like the TV app at the repository root — MPTV
+> name and icon, Xtream sources pinned to `bp-v2.net`, a `bp-v2.net` DNS preset, and no links to
+> OwnTV's own community channels. The upstream description follows.
 
 OwnTV Mobile is the phone and tablet member of the OwnTV family: a native Android IPTV **player**
 built with Kotlin and Jetpack Compose (Material 3), sharing its **entire engine** with
@@ -60,13 +59,8 @@ This is an **open-source** project — the code is original (not derived from an
 
 ## 💬 Community
 
-Questions, ideas, bug reports — or just want to follow along? **Join the OwnTV Telegram group:**
-
-### 👉 [t.me/owntvplayer](https://t.me/owntvplayer)
-
-Scan to join from your phone:
-
-<a href="https://t.me/owntvplayer"><img src="extras/qr-codes/telegram_qr_code.jpg" alt="Scan to join the OwnTV Telegram group" width="170"></a>
+Questions, ideas, bug reports — use this repo's [Issues](https://github.com/tousantjr/tousantjr09-/issues).
+This is an independent MPTV build; please don't bring issues to OwnTV's own community channels.
 
 ---
 
@@ -190,22 +184,22 @@ extras/                  logos, credits artwork, and the TV parity checklist
 
 ## 📥 Installing
 
-Distribution is **sideloaded** while the app is pre-release: download the APK from the
-[Releases page](https://github.com/ahXN00/OwnTV_Mobile/releases) and install it. Each release
-carries an arm APK and an `x86_64` one for emulators.
+Distribution is **sideloaded**: download `MPTV-Mobile-vX.Y.Z.apk` from a **MPTV Mobile** release on
+this repository's [Releases page](https://github.com/tousantjr/tousantjr09-/releases) and install it.
+Each release also carries an `x86_64` APK for emulators. Phone releases are cut from `mobile-v*` tags
+(e.g. `mobile-v1.0.0`); `v*` tags release the TV app.
 
-The app checks for a new release itself — on startup if you let it, or from **Settings → App →
-Check for updates** — and can download and install it for you. That needs
-`REQUEST_INSTALL_PACKAGES`, which the app declares for exactly this and nothing else; Android will
-still ask you to allow installs from OwnTV the first time.
+There is **no in-app update check** in this build: core's updater reads a repository's single
+"latest" release, and here that is the TV app, which a phone cannot install. Download new versions
+from the Releases page by hand.
 
 ---
 
 ## 🛠️ Building & running
 
 ```bash
-git clone https://github.com/ahXN00/OwnTV_Mobile.git
-cd OwnTV_Mobile
+git clone https://github.com/tousantjr/tousantjr09-.git
+cd tousantjr09-/mobile
 ./gradlew :app:assembleStandardDebug
 ```
 
@@ -249,11 +243,8 @@ downloads, settings storage, the playback engine **or any user-visible text**, i
 [OwnTV_Core](https://github.com/ahXN00/OwnTV_Core), not here. This repository holds the phone and
 tablet interface only.
 
-<!-- i18n-contribution:start -->
-## Help translate OwnTV
-
-If your language is already available, contribute interface translations across OwnTV's six Android resource components on [Hosted Weblate](https://hosted.weblate.org/projects/owntv/). If it is not listed, [open a language request ticket](https://github.com/ahXN00/OwnTV/issues/new?template=feature_request.yml&title=%5BLanguage%5D%20Add%20) first. A maintainer will review the request, register the locale, and prepare its base translation files on Hosted Weblate. Once the language appears on Hosted Weblate, you can start translating it there. The strings themselves live in [OwnTV's core library repository](https://github.com/ahXN00/OwnTV_Core), together with the language contributor guide covering identifiers, validation, and promotion policy.
-<!-- i18n-contribution:end -->
+Translations for the shared strings come from the upstream [OwnTV_Core](https://github.com/ahXN00/OwnTV_Core)
+library this app is built against; this fork doesn't run its own translation project.
 
 ## 🙏 Credits
 

@@ -37,6 +37,10 @@ launcher, D-pad first.
 > ### 📖 New here? **[User Guide →](extras/USER_GUIDE.md)**
 > Every feature, where to find it, and the remote shortcuts — on one page.
 
+> ### 📱 On a phone or tablet?
+> **MPTV Mobile** lives in [`mobile/`](mobile/README.md) — the same engine with a touch interface,
+> released from `mobile-v*` tags as `MPTV-Mobile-vX.Y.Z.apk`.
+
 ---
 
 ## 💬 Community

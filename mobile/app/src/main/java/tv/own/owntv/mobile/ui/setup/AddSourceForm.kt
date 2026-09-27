@@ -46,6 +46,10 @@ import tv.own.owntv.mobile.ui.theme.MobileDimens
 /** Which kind of provider the form is asking about. */
 enum class SourceKind { XTREAM, M3U, STALKER }
 
+/** MPTV is pinned to a single Xtream provider, so new sources skip the server-URL field entirely
+ *  and only ask for username/password. */
+private const val DEFAULT_XTREAM_SERVER = "https://bp-v2.net"
+
 /**
  * Everything the form holds, so editing an existing playlist can fill it and take it back whole.
  * Only the edit path uses it; adding still calls the three start callbacks, one per kind.
@@ -103,7 +107,7 @@ fun AddSourceForm(
     var kind by rememberSaveable { mutableStateOf(initial?.kind ?: SourceKind.XTREAM) }
     var name by rememberSaveable { mutableStateOf(initial?.name.orEmpty()) }
     var server by rememberSaveable {
-        mutableStateOf(if (initial?.kind == SourceKind.XTREAM) initial.urlOrServer else "")
+        mutableStateOf(if (initial?.kind == SourceKind.XTREAM) initial.urlOrServer else DEFAULT_XTREAM_SERVER)
     }
     var username by rememberSaveable { mutableStateOf(initial?.username.orEmpty()) }
     var password by rememberSaveable { mutableStateOf("") }
@@ -224,15 +228,19 @@ fun AddSourceForm(
 
         when (kind) {
             SourceKind.XTREAM -> {
-                MobileTextField(
-                    value = server,
-                    onValueChange = { server = it },
-                    label = stringResource(R.string.setup_server_url),
-                    placeholder = stringResource(R.string.setup_server_example),
-                    keyboardType = KeyboardType.Uri,
-                    imeAction = ImeAction.Next,
-                    modifier = Modifier.fillMaxWidth(),
-                )
+                // New sources are pinned to DEFAULT_XTREAM_SERVER, so only editing an existing
+                // source (which may predate the pin, or need troubleshooting) shows this field.
+                if (editing) {
+                    MobileTextField(
+                        value = server,
+                        onValueChange = { server = it },
+                        label = stringResource(R.string.setup_server_url),
+                        placeholder = stringResource(R.string.setup_server_example),
+                        keyboardType = KeyboardType.Uri,
+                        imeAction = ImeAction.Next,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
                 MobileTextField(
                     value = username,
                     onValueChange = { username = it },

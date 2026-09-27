@@ -5,4 +5,6 @@
     <color name="owntv_window_bg">#040e0b</color>
     <!-- Adaptive launcher icon background. -->
     <color name="owntv_icon_bg">#050914</color>
+    <!-- MPTV launcher icon and launch-screen icon background (same as the TV app's owntv_icon_bg). -->
+    <color name="mptv_icon_bg">#0F0A1A</color>
 </resources>
