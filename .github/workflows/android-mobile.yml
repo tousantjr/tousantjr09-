@@ -6,14 +6,15 @@ name: Android CI (Mobile)
 #   build — assembles the APKs, and publishes a GitHub Release on mobile-v* tags. Never runs for a PR.
 #
 # Tags: the TV app releases from v* tags, the phone app from mobile-v* tags (mobile-v1.2.0 -> 1.2.0),
-# so one tag never builds both. Phone releases are published with make_latest: false because the TV
+# so one tag never builds both. Phone releases are published as pre-releases (never "latest") because the TV
 # app's in-app updater reads this repository's "latest" release — that must stay the TV APK.
 #
 # Core and libmpv resolve from OwnTV's public Maven repository (see mobile/settings.gradle.kts), so
 # unlike the TV build no GPR_TOKEN is needed here.
 on:
   push:
-    branches: [ main ]
+    # claude/owntv-repo-lxrkt5 is this fork's default branch; main kept in case it is renamed.
+    branches: [ main, claude/owntv-repo-lxrkt5 ]
     tags: [ "mobile-v*" ]
     paths:
       - 'mobile/**'
@@ -259,5 +260,9 @@ jobs:
             mobile/dist/MPTV-Mobile-x86_64-v${{ steps.ver.outputs.name }}.apk
           body_path: mobile/dist/RELEASE_NOTES.md
           generate_release_notes: false
-          # Never "latest": the TV app's in-app updater reads this repository's latest release.
+          # Never "latest": the TV app's in-app updater and the Downloader link
+          # (releases/latest/download/MPTV.apk) read this repository's latest release. make_latest
+          # alone was not enough — a release created from the GitHub UI keeps its own "latest" flag —
+          # and a pre-release can never be latest.
           make_latest: false
+          prerelease: true
