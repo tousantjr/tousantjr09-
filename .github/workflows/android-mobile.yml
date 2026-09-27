@@ -18,8 +18,8 @@ on:
     paths:
       - 'mobile/**'
       - '.github/workflows/android-mobile.yml'
+  # Any base branch: this fork's default branch is not named main.
   pull_request:
-    branches: [ main ]
     paths:
       - 'mobile/**'
       - '.github/workflows/android-mobile.yml'
