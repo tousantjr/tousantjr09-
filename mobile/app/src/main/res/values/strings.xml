@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  App-level brand overrides. :core ships defaults for these (app_name=OwnTV, brand_own=Own,
+  brand_tv=TV) in donottranslate.xml; the app module's copy of a same-named resource wins during
+  merge, so redefining just these three here rebrands the app without touching :core or any Kotlin.
+-->
+<resources>
+    <string name="app_name" translatable="false">MPTV</string>
+    <string name="brand_own" translatable="false">MP</string>
+    <string name="brand_tv" translatable="false">TV</string>
+</resources>
