@@ -108,7 +108,6 @@ val appModule = module {
             sourceDao = get(),
             sourceRepository = get(),
             settings = get(),
-            connectivity = get(),
             epgDao = get(),
             importFinalizer = get(),
             channelDao = get(),
@@ -130,11 +129,14 @@ val appModule = module {
             sourceTester = get(),
             companion = get(),
             vodEngineStore = get(),
+            forceMpvStore = get(),
+            archiveDecodeStore = get(),
             playbackPrefs = get(),
             connectionLimits = get(),
             player = get(),
             livePreview = get(),
             enginePool = get(),
+            importer = get(),
         )
     }
     viewModelOf(::LocalSyncViewModel)
