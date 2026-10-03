@@ -186,6 +186,12 @@ android {
         // local.properties is developer-local and never committed (its Windows SDK path cannot be
         // escaped without breaking the local tooling that writes it). CI has no such file at all.
         disable += "PropertyEscape"
+        // en-rGB is an intentional partial regional override of the canonical en-US source; its
+        // omitted keys fall back to values/ and must not make every default string a lint error.
+        // Same as the television app. It started firing here once the app module carried its own
+        // copies of core strings (res/values*/mptv_brand.xml, the MPTV rebrand), which core's
+        // partial en-rGB only covers 6 of.
+        disable += "MissingTranslation"
     }
 
     compileOptions {
