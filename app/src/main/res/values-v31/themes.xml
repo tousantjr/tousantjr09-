@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- MPTV: every icon colour shows the same MPTV icon (core's per-colour OwnTV flip card and
+         wordmark are not used), so every child here is empty and implicitly inherits
+         Theme.OwnTV.Starting's windowSplashScreenAnimatedIcon (values/themes.xml) instead of
+         overriding it with core's owntv_splash_<colour>/owntv_splash_name_<colour> assets. -->
+    <style name="Theme.OwnTV.Starting.Petrol" />
+    <style name="Theme.OwnTV.Starting.Sunflower" />
+    <style name="Theme.OwnTV.Starting.Cobalt" />
+    <style name="Theme.OwnTV.Starting.Tomato" />
+    <style name="Theme.OwnTV.Starting.Board" />
+    <style name="Theme.OwnTV.Starting.Eggshell" />
+    <style name="Theme.OwnTV.Starting.Olive" />
+    <style name="Theme.OwnTV.Starting.OliveCream" />
+    <style name="Theme.OwnTV.Starting.Pixel" />
+    <!-- Animations Off variants (Android 13+ setSplashScreenTheme): also empty, so they inherit the
+         same single MPTV icon from their non-Still parent above instead of core's static per-colour art. -->
+    <style name="Theme.OwnTV.Starting.Petrol.Still" />
+    <style name="Theme.OwnTV.Starting.Sunflower.Still" />
+    <style name="Theme.OwnTV.Starting.Cobalt.Still" />
+    <style name="Theme.OwnTV.Starting.Tomato.Still" />
+    <style name="Theme.OwnTV.Starting.Board.Still" />
+    <style name="Theme.OwnTV.Starting.Eggshell.Still" />
+    <style name="Theme.OwnTV.Starting.Olive.Still" />
+    <style name="Theme.OwnTV.Starting.OliveCream.Still" />
+    <style name="Theme.OwnTV.Starting.Pixel.Still" />
+</resources>

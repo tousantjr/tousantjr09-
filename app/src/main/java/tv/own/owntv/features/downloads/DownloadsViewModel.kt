@@ -2,6 +2,7 @@
 
 package tv.own.owntv.features.downloads
 
+import tv.own.owntv.core.storage.missingFiles
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -15,6 +16,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import tv.own.owntv.core.customize.CustomizationStore
 import tv.own.owntv.core.customize.CustomizeKeys
@@ -28,8 +30,10 @@ import tv.own.owntv.core.model.MediaType
 import tv.own.owntv.core.settings.SettingsRepository
 import tv.own.owntv.player.OwnTVPlayer
 
-/** Phase 12 — lists the active profile's downloads and plays completed ones from local storage. */
+/** Lists the active profile's downloads and plays completed ones from local storage. */
 class DownloadsViewModel(
+    /** Only to check whether finished files are still there. */
+    appContext: android.content.Context,
     private val downloadDao: DownloadDao,
     private val movieDao: MovieDao,
     private val seriesDao: SeriesDao,
@@ -42,7 +46,19 @@ class DownloadsViewModel(
     private val externalPlayerLauncher: tv.own.owntv.core.player.ExternalPlayerLauncher,
     private val subtitleController: tv.own.owntv.core.subtitles.SubtitleController,
     private val metadata: tv.own.owntv.core.metadata.MetadataRepository,
+    tracker: tv.own.owntv.core.download.DownloadActivityTracker,
 ) : ViewModel() {
+
+    /** What playing does to a running download on a one-stream playlist (the Downloads screen's tool). */
+    val downloadWatchChoice: StateFlow<SettingsRepository.DownloadWatchChoice> = settings.downloadWatchChoice
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SettingsRepository.DownloadWatchChoice.ASK)
+
+    fun setDownloadWatchChoice(choice: SettingsRepository.DownloadWatchChoice) {
+        viewModelScope.launch { settings.setDownloadWatchChoice(choice) }
+    }
+
+    /** The one transfer running now, with its speed, for the focused row's "12.4 MB/s · 3 min left". */
+    val active: StateFlow<tv.own.owntv.core.download.DownloadActivityTracker.ActiveDownload?> = tracker.active
 
     /**
      * The profile's downloads, minus rows whose movie/series the user has hidden — a hidden title
@@ -87,7 +103,45 @@ class DownloadsViewModel(
         else -> false
     }
 
-    /** Free/total space on the download volume — recomputed whenever the download list changes. */
+    /**
+     * What a row shows besides the stored title: the show's name for an episode, 16:9 art, and the
+     * parts of "2026 · 1 h 38 min · 1080p" / "Season 1 · Episode 3". Looked up once per download —
+     * the list re-emits on every progress tick — and absent for a title its playlist no longer has.
+     */
+    /** Paths of finished downloads whose file is gone (drive formatted, swapped or unplugged). */
+    val missingFiles: StateFlow<Set<String>> = downloads
+        .map { rows -> rows// A paused or failed one has a partial file that can go missing too (a formatted stick).
+        .filter { it.status == tv.own.owntv.core.model.DownloadStatus.COMPLETED || (it.status in RESUMABLE && it.downloadedBytes > 0) }.map { it.filePath } }
+        .missingFiles(appContext)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptySet())
+
+    val details: StateFlow<Map<Long, DownloadDetails>> = run {
+        val cache = HashMap<Long, DownloadDetails?>()
+        downloads.mapLatest { list ->
+            list.mapNotNull { d ->
+                val found = if (cache.containsKey(d.id)) cache[d.id] else lookUp(d).also { cache[d.id] = it }
+                found?.let { d.id to it }
+            }.toMap()
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
+    }
+
+    private suspend fun lookUp(d: DownloadEntity): DownloadDetails? = when (d.mediaType) {
+        MediaType.MOVIE -> movieDao.getById(d.itemId)?.let { m ->
+            DownloadDetails(
+                title = m.name, artUrl = m.backdropUrl ?: m.posterUrl, year = m.year ?: m.parsedYear, runtimeSecs = m.durationSecs,
+                quality = tv.own.owntv.features.shell.components.cinematicQualityBadges(m.qualityRank, null).firstOrNull(),
+            )
+        }
+        MediaType.EPISODE -> seriesDao.getEpisodeById(d.itemId)?.let { ep ->
+            val show = seriesDao.getSeriesById(ep.seriesId)
+            DownloadDetails(
+                title = show?.name ?: d.title, artUrl = show?.backdropUrl ?: show?.posterUrl ?: d.posterUrl,
+                runtimeSecs = ep.durationSecs, season = ep.seasonNumber, episode = ep.episodeNumber,
+            )
+        }
+        else -> null
+    }
+
     /**
      * Free and total space on the volume the downloads are written to.
      *
@@ -103,7 +157,7 @@ class DownloadsViewModel(
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     /**
-     * Where downloads are written. Plan Z moved this preference out of Settings and onto the gear
+     * Where downloads are written. This preference sits on the gear
      * beside this screen's title — it is the one thing on the screen it is about.
      */
     val downloadRoot: StateFlow<String> = settings.downloadRoot
@@ -124,7 +178,7 @@ class DownloadsViewModel(
         kotlinx.coroutines.flow.combine(settings.externalPlayerMovies, settings.externalPlayerSeries) { m, s -> m || s }
             .stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
-    /** Phase B: always play this download in an external player, regardless of the global toggle. */
+    /** Always play this download in an external player, regardless of the global toggle. */
     fun playExternal(download: DownloadEntity) {
         val path = download.filePath ?: return
         viewModelScope.launch {
@@ -154,8 +208,8 @@ class DownloadsViewModel(
     }
 
     /**
-     * Downloaded movies/episodes get the same external-subtitle experience as streams (subtitle plan
-     * §3.3): previously downloaded subs re-list offline (§9), local files attach, and a new search —
+     * Downloaded movies/episodes get the same external-subtitle experience as streams:
+     * previously downloaded subs re-list offline, local files attach, and a new search —
      * when online — carries the optional moviehash enhancer via [localPath]. Best-effort: a download
      * whose source item was deleted just plays without a subtitle context, as before.
      */
@@ -196,3 +250,17 @@ class DownloadsViewModel(
     fun resume(download: DownloadEntity) = downloadManager.resume(download)
     fun delete(download: DownloadEntity) = downloadManager.delete(download)
 }
+
+/** See [DownloadsViewModel.details]. */
+data class DownloadDetails(
+    val title: String,
+    val artUrl: String?,
+    val year: Int? = null,
+    val runtimeSecs: Int? = null,
+    val quality: String? = null,
+    val season: Int? = null,
+    val episode: Int? = null,
+)
+
+/** Stopped downloads that keep a partial file on the drive. */
+private val RESUMABLE = setOf(tv.own.owntv.core.model.DownloadStatus.PAUSED, tv.own.owntv.core.model.DownloadStatus.FAILED)

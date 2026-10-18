@@ -1,7 +1,6 @@
 package tv.own.owntv.ui.components
 
 import androidx.compose.foundation.ScrollState
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
@@ -40,10 +39,9 @@ fun Modifier.trapVerticalFocusExit(): Modifier = focusProperties {
  * leaving the group).
  */
 fun Modifier.trapAllFocusExit(): Modifier =
-    // Modal scrims are the common host for popups. Consuming the IME inset here makes centred
-    // content lay out above an on-screen keyboard; dialogPanel's verticalScroll keeps tall forms
-    // reachable in the reduced height.
-    imePadding().focusProperties { onExit = { cancelFocusChange() } }
+    // No imePadding here: OwnTVPopup already lays a popup out in the room above the keyboard, and
+    // padding by the keyboard again left a 74 px strip — only the popup's heading — on the TCL.
+    focusProperties { onExit = { cancelFocusChange() } }
 
 /**
  * Put focus back on the control that opened a dialog, and hold the list still while it lands.
@@ -57,7 +55,7 @@ fun Modifier.trapAllFocusExit(): Modifier =
  *     that is suddenly exposed again; it lands on the first row, resets the offset and
  *     bringIntoView-animates. The previous fix snapped the offset back **once** and then waited 80 ms
  *     before asking for focus — which works only while the dialog tears down inside that one frame. A
- *     heavier dialog (Glass Effect, About) tore down *after* the snap, so the re-search scrolled the
+ *     heavier dialog (Glass & background, About) tore down *after* the snap, so the re-search scrolled the
  *     list anyway and the restore then animated all the way back down: the "focus arriving from
  *     another setting" the user sees. Re-asserting the offset every frame leaves the re-search nothing
  *     to animate.
@@ -78,7 +76,7 @@ suspend fun restoreAfterDialogClose(
             // scrollTo takes the scroll mutex, so it also cancels a bringIntoView animation in flight.
             runCatching { scrollState.scrollTo(scrollOffset) }
         }
-        if (!landed) landed = opener != null && runCatching { opener.requestFocus() }.isSuccess
+        if (!landed) landed = opener != null && runCatching { opener.requestFocus() }.getOrDefault(false)
         if (landed && ++settled > RESTORE_SETTLE_FRAMES) return
     }
 }
@@ -104,7 +102,7 @@ suspend fun restoreAfterDialogClose(
         if (listState.firstVisibleItemIndex != index || listState.firstVisibleItemScrollOffset != offset) {
             runCatching { listState.scrollToItem(index, offset) }
         }
-        if (!landed) landed = opener != null && runCatching { opener.requestFocus() }.isSuccess
+        if (!landed) landed = opener != null && runCatching { opener.requestFocus() }.getOrDefault(false)
         if (landed && ++settled > RESTORE_SETTLE_FRAMES) return
     }
 }
@@ -148,7 +146,7 @@ fun rememberDialogFocusRestore(
             savedScroll.intValue = scrollState?.value ?: 0
             return@LaunchedEffect
         }
-        restoreAfterDialogClose(target.value, scrollState, savedScroll.intValue)
+        if (target.value != null) restoreAfterDialogClose(target.value, scrollState, savedScroll.intValue)
         target.value = null
     }
     return target

@@ -88,7 +88,9 @@ This is an independent MPTV build; please don't bring issues to OwnTV's own comm
 - Offline movies and episodes with pause, resume, retry and a storage bar
 
 ### 🎨 Look & robustness
-- Material 3 theming, your own accent and focus highlight, and an interaction-aware **Glass Effect**
+- Your own accent colour and focus highlight, frosted **Glass** with adjustable opacity, and a Stage,
+  Picture or Plain background
+- **Dark and Light themes** (or follow the TV) across the whole app, the player included
 - Font sizing for the interface and for popups, independently
 - **Remote Shortcuts** — map spare colour, number, channel and media keys to 26 actions
 - **26 interface languages**, RTL-aware, chosen before anything else on a fresh install
@@ -178,7 +180,6 @@ OwnTV_Mobile/  (separate repo, the phone and tablet app on the same core)
 - 📖 **[User Guide](extras/USER_GUIDE.md)** — every feature and where to find it.
 - 📄 **[Master Product Brief](extras/OwnTV_Master_Product_Brief.md)** — the full as-built feature and
   architecture reference.
-- 📺 **[Player design reference](extras/player.html)** — an interactive mockup of the player UI.
 
 ## 📥 Installing (Fire TV / Android TV)
 
@@ -245,6 +246,11 @@ Subtitle search & download is powered by [OpenSubtitles.com](https://www.opensub
 **This product uses the OpenSubtitles API but is not endorsed or certified by OpenSubtitles.** You sign
 in with your own OpenSubtitles account and are subject to their terms and download quotas.
 
+### 🎨 Brand
+
+The lowercase **owntv** wordmark was designed for OwnTV by [@m3th0d93](https://github.com/m3th0d93)
+in [issue #227](https://github.com/ahXN00/OwnTV/issues/227).
+
 ### ▶️ Playback engines
 
 - **[mpv](https://mpv.io/)** (via [libmpv](https://github.com/mpv-android/mpv-android), built on
@@ -253,7 +259,7 @@ in with your own OpenSubtitles account and are subject to their terms and downlo
   preview and HLS.
 
 Which of the two starts a stream is yours to set, separately for Live TV and for Movies & Series
-(Settings → Video Player): either order, or one engine only with the automatic handover turned off.
+(Settings → Player): either order, or one engine only with the automatic handover turned off.
 
 ### 🧩 Built with
 

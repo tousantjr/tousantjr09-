@@ -110,6 +110,20 @@ class LiveZapList(
         }
     }
 
+    /** Load a custom category or a built-in rail (Favorites / History / Catch-up / All), picked in the
+     *  in-player category browser — same contract as [armForCategory]. Members come from many provider
+     *  folders, so there is no single [categoryId]; built-in rails pass no [title] (their names are UI
+     *  strings, chosen from [key]). */
+    fun armForKey(key: LiveKey, title: String?, load: suspend () -> List<ChannelEntity>, onLoaded: () -> Unit) {
+        loadJob?.cancel()
+        loadJob = scope.launch {
+            val loaded = load()
+            if (loaded.isEmpty()) return@launch
+            publish(loaded, categoryId = null, title = title, key = key)
+            onLoaded()
+        }
+    }
+
     /** Adopt a list the caller already has — the browse rail a channel was opened from, which must not
      *  be replaced by the channel's provider-category metadata. */
     fun armFromBrowse(

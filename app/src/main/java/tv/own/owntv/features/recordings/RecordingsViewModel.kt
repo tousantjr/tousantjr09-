@@ -1,5 +1,7 @@
 package tv.own.owntv.features.recordings
 
+import kotlinx.coroutines.flow.map
+import tv.own.owntv.core.storage.missingFiles
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -7,11 +9,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import tv.own.owntv.core.database.entity.RecordingEntity
@@ -19,7 +19,6 @@ import tv.own.owntv.core.model.MediaType
 import tv.own.owntv.core.model.RecordingStatus
 import tv.own.owntv.core.player.ExternalPlayerLauncher
 import tv.own.owntv.core.recording.RecordingManager
-import tv.own.owntv.core.recording.RecordingStorageInfo
 import tv.own.owntv.core.settings.SettingsRepository
 import tv.own.owntv.player.OwnTVPlayer
 
@@ -33,6 +32,8 @@ import tv.own.owntv.player.OwnTVPlayer
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class RecordingsViewModel(
+    /** Only to check whether finished files are still there. */
+    appContext: android.content.Context,
     private val settings: SettingsRepository,
     private val recordings: RecordingManager,
     val player: OwnTVPlayer,
@@ -44,22 +45,16 @@ class RecordingsViewModel(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     /**
-     * Free and total space on the volume recordings are written to, plus the floor they stop at.
-     *
-     * Keyed on the download **root** as well as on the list — the same defect the Downloads screen
-     * had: keyed on the list alone, pointing the folder at another volume left the bar showing the
-     * old one until the app was restarted, and with nothing recorded yet the list never changes.
-     */
-    val storage: StateFlow<RecordingStorageInfo?> =
-        combine(rows, settings.downloadRoot) { _, _ -> Unit }
-            .mapLatest { recordings.storageInfo() }
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
-
-    /**
      * False when Android will not let the app set exact alarms, so the screen can say that a
      * recording may begin a few minutes late. Read once: revoking the permission stops the app, so
      * the answer cannot change under a running process.
      */
+    /** Paths of finished recordings whose file is gone (drive formatted, swapped or unplugged). */
+    val missingFiles: StateFlow<Set<String>> = rows
+        .map { list -> list.filter { it.status == RecordingStatus.COMPLETED }.map { it.filePath } }
+        .missingFiles(appContext)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptySet())
+
     val timersAreExact: Boolean = recordings.timersAreExact()
 
     private val _lastPlayedId = MutableStateFlow<Long?>(null)
@@ -101,7 +96,7 @@ class RecordingsViewModel(
     /** Drops a scheduled recording. Nothing on disk is touched, because nothing is there yet. */
     fun cancel(recording: RecordingEntity) = recordings.cancel(recording)
 
-    /** Removes the row **and** the file. The only thing here that deletes anything (D2). */
+    /** Removes the row **and** the file. The only thing here that deletes anything. */
     fun delete(recording: RecordingEntity) = recordings.delete(recording)
 
     /**
