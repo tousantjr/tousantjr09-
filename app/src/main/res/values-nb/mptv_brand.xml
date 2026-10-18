@@ -20,20 +20,33 @@
     <string name="local_sync_browser_body">Denne adressen er for MPTV-appen på den andre enheten. Åpne Lokal synkronisering der og velg denne enheten fra listen.</string>
     <string name="local_sync_browser_title">MPTV lokal synkronisering</string>
     <string name="local_sync_error_unreachable">Enheten kunne ikke nås. Åpne MPTV → Innstillinger → Data → Lokal synkronisering på den og slå på Synkroniseringsmodus. Begge enhetene må være på samme Wi-Fi.</string>
-    <string name="multiview_unknown_connections">MPTV fant ikke ut hvor mange strømmer denne spillelisten tillater. Hvis en rute mislykkes, er det derfor.</string>
+    <string name="player_trailer_blocked_title">Denne traileren kan ikke spilles av i MPTV</string>
     <string name="recording_failed_drm">Denne kanalen er DRM-beskyttet, så den kan ses, men ikke tas opp. Beskyttelsen kommer fra leverandøren din, ikke fra MPTV.</string>
     <string name="recovery_title">MPTV kunne ikke åpne databasen sin</string>
-    <string name="settings_about_license">© 2026 MPTV · GPLv3-lisens</string>
+    <string name="settings_app_icon_sheet_mobile">Hvordan MPTV vises på startskjermen din. Appen starter på nytt én gang.</string>
     <string name="settings_app_icon_summary">Farge på MPTV-ikonet og -logoen</string>
     <string name="settings_app_startup_description">Hva MPTV åpner ved oppstart</string>
     <string name="settings_auto_frame_rate_warning_description">Denne enheten kjører Android <xliff:g id="android_version">%1$s</xliff:g>. Under Android 12 kan TV-en ikke fortelle MPTV hvilke oppdateringsfrekvenser den kan bytte til uten problemer, så det å endre oppdateringsfrekvensen kan føre til at skjermen blir svart i et par sekunder — noen ganger mer enn én gang under et program.\n\nVi anbefaler å la Auto bildefrekvens være av her. Hvis TV-en din bytter problemfritt, slå den på og se: du kan endre den tilbake når som helst.</string>
     <string name="settings_auto_frame_rate_warning_description_mobile">Denne enheten kjører Android <xliff:g id="android_version">%1$s</xliff:g>. Under Android 12 kan enheten ikke fortelle MPTV hvilke oppdateringsfrekvenser den kan bytte til uten problemer, så det å endre oppdateringsfrekvensen kan føre til at skjermen blir svart i et par sekunder — noen ganger mer enn én gang under et program.\n\nVi anbefaler å la Auto bildefrekvens være av her. Hvis skjermen din bytter problemfritt, slå den på og se: du kan endre den tilbake når som helst.</string>
     <string name="settings_catchup_player_internal">MPTV-avspiller</string>
     <string name="settings_dns_toggle_description">Utfør alle domeneoppslag for MPTV via en egendefinert DNS-server.</string>
-    <string name="settings_glass_master_description">Gjennomsiktige, frostede paneler over et bakgrunnsbilde eller over appens egen bakgrunn.</string>
+    <string name="settings_help_app_icon">MPTV-ikonet på TV-ens startskjerm. Det kan ta et øyeblikk før startskjermen viser endringen.</string>
+    <string name="settings_help_bg_background">Stage viser MPTVs egne myke farger. Bilde viser ditt eget bilde bak hver skjerm. Ensfarget er en flat mørk flate.</string>
+    <string name="settings_help_brand_accent">MPTV-logoen i menyen, Om og oppsettet viser avspillingstrekanten i aksentfargen din. Ikonet på startskjermen beholder sine egne farger.</string>
+    <string name="settings_help_check_updates">Ser etter en nyere MPTV på GitHub nå og tilbyr å installere den. Spillelistene, favorittene og innstillingene dine forblir som de er.</string>
+    <string name="settings_help_fonts">Skrifttypen i hele MPTV og hvor stor teksten er. Popup-vinduer bruker samme skrifttype.</string>
+    <plurals name="settings_help_language">
+        <item quantity="one">Språket i alle menyer og meldinger i MPTV. <xliff:g id="count">%1$d</xliff:g> språk; følger TV-ens eget språk til du velger ett.</item>
+        <item quantity="other">Språket i alle menyer og meldinger i MPTV. <xliff:g id="count">%1$d</xliff:g> språk; følger TV-ens eget språk til du velger ett.</item>
+    </plurals>
+    <string name="settings_help_startup">Hva MPTV viser ved oppstart: Hjem, kanalen du så sist, favorittene dine eller en kanal du velger.</string>
+    <string name="settings_help_theme">MPTV er laget for mørkt tema. System følger TV-ens egen innstilling hvis den finnes; lyst passer i et lyst rom.</string>
+    <string name="settings_help_update_startup">Ser etter en ny versjon hver gang MPTV starter, og sier fra når det finnes en. Ingenting installeres uten å spørre.</string>
     <string name="settings_language_contribution_description">Skann QR-koden eller åpne lenken for å velge et hvilket som helst tilgjengelig språk og bidra på tvers av alle seks MPTV-oversettelseskomponentene.</string>
     <string name="settings_language_contribution_qr_description">QR-kode for oversikten over MPTV-oversettelsesprosjektet</string>
     <string name="settings_language_help_translate">Hjelp med å oversette MPTV til ditt språk</string>
+    <string name="settings_language_pick_help">Bruk <xliff:g id="language">%1$s</xliff:g> i MPTV, uansett hvilket språk TV-en har.</string>
+    <string name="settings_language_system_help">MPTV følger TV-ens språk (nå <xliff:g id="language">%1$s</xliff:g>). Velg et nedenfor for å bruke det bare i MPTV.</string>
     <string name="settings_live_tune_timeout_description">Hvis en direktekanal ikke har vist bilde innen dette tidspunktet, slutter MPTV å prøve og sier fra, i stedet for å la en svart skjerm bli stående mens den går gjennom alle spillerne sine. «Aldri» fortsetter å prøve, noe som på en kanal leverandøren din har fjernet kan ta godt over ett minutt. Ventetid leverandøren selv ber om, telles ikke med.</string>
     <string name="settings_metadata_clear_advanced_message">TMDB API-nøkkelen din og adressen til din egen server slettes fra denne enheten, og MPTV går tilbake til den innebygde delte tjenesten med den daglige andelen.</string>
     <string name="settings_metadata_fair_share">Den innebygde metadatatjenesten deles av alle som bruker MPTV, så hver enhet får sin egen andel hver dag. Hvis du bruker opp andelen din, settes plakater og beskrivelser på pause til den fylles på igjen — informasjonen fra din egen spilleliste fungerer som normalt. Å legge til din egen TMDB API-nøkkel eller server fjerner grensen: det er gratis, og en personlig nøkkel har praktisk talt ingen grense.</string>
@@ -41,13 +54,20 @@
     <string name="settings_open_subtitles_access_priority">La begge stå tomme for å bruke MPTVs delte Worker. En egen Worker-URL har forrang over en direkte API-nøkkel. Kontoøkter er fortsatt profilspesifikke.</string>
     <string name="settings_proxy_description">Send all MPTV-trafikk og avspilling gjennom en HTTP-proxy.</string>
     <string name="settings_recording_timers_inexact">Denne enheten lar ikke MPTV sette nøyaktige alarmer, så et opptak kan starte noen minutter for sent. Opptak starter tidligere for å veie opp for det.</string>
-    <string name="settings_restore_remote_description">Skann QR-koden (eller åpne nettadressen) på en telefon, et nettbrett eller en datamaskin på samme Wi-Fi, skriv inn denne PIN-koden, velg MPTV-sikkerhetskopifilen, og trykk på Send til TV. Deretter velger du hva som skal gjenopprettes her.</string>
+    <string name="settings_restore_remote_description">På en hvilken som helst enhet med nettleser på samme Wi-Fi – telefon, datamaskin eller en annen TV – skann QR-koden (eller åpne URL-en), skriv inn denne PIN-koden, velg MPTV-sikkerhetskopien din og send den. Deretter velger du her hva som skal gjenopprettes.</string>
     <string name="settings_sources_probe_unknown">MPTV klarte ikke å finne ut hvor mange kanaler denne leverandøren tillater.</string>
     <string name="settings_sources_probe_warning">Mange leverandører sier aldri hvor mange kanaler du kan se samtidig, så MPTV finner det ut ved å åpne noen og se hvilke som holder. Alt som spilles av nå, stopper, og dette kan ta opptil to minutter.</string>
     <string name="settings_surround_forced_description">Surround – send Dolby/DTS til en ekte 5.1/7.1-mottaker. Hvis det blir stille eller hakker, faller MPTV fortsatt tilbake til stereo og gir beskjed.</string>
     <string name="setup_byo_source_description">MPTV er en avspiller – bruk din egen Xtream-, M3U- eller Stalker-kilde.</string>
     <string name="setup_disclaimer">MPTV er bare en medieavspiller. Appen inneholder ingen kanaler, spillelister eller noe innhold. Du er selv ansvarlig for å legge til egne Xtream-, M3U- eller Stalker-kilder som du har lovlig tilgang til.</string>
+    <string name="setup_line_app_icon">Hvordan MPTV vises på TV-ens startskjerm</string>
+    <string name="setup_line_app_icon_mobile">Hvordan MPTV vises på startskjermen din</string>
     <string name="setup_set_up_owntv">Konfigurer MPTV</string>
     <string name="setup_sync_device_description">Kopier alt fra den andre MPTV-enheten din over Wi-Fi</string>
+    <string name="setup_welcome_title">Velkommen til MPTV</string>
+    <string name="sports_alerts_footnote">Når MPTV er lukket, kommer varsler vanligvis innen ett minutt. Har telefonen ligget stille med skjermen av lenge, kan Android holde dem tilbake i opptil rundt 15 minutter. Det direkte resultatkortet holdes ikke tilbake.</string>
+    <string name="sports_alerts_when_closed">Varsler når MPTV er lukket</string>
+    <string name="sports_no_playlist_body">Resultater, tabeller og varsler virker uten. Med en spilleliste finner MPTV alle kanaler som viser kampen.</string>
+    <string name="sports_sport_buttons_description">Mine sporter: bare det du har valgt. Alle sporter: alle ligaer MPTV kjenner, og det tar lengre tid å laste inn.</string>
     <string name="update_ready">MPTV v<xliff:g id="available">%1$s</xliff:g> er klar (du har v<xliff:g id="current">%2$s</xliff:g>).</string>
 </resources>
