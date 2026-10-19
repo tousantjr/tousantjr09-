@@ -90,7 +90,7 @@ class BoxingSource(client: OkHttpClient) {
         try {
             call.execute().use { response ->
                 if (!response.isSuccessful) throw SportsHttpException(response.code)
-                response.body.string()
+                response.body?.string().orEmpty()
             }
         } finally {
             hook?.dispose()
