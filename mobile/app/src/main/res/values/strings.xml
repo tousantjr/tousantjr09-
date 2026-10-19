@@ -8,4 +8,11 @@
     <string name="app_name" translatable="false">MPTV</string>
     <string name="brand_own" translatable="false">MP</string>
     <string name="brand_tv" translatable="false">TV</string>
+
+    <!-- Quick-switch between known provider login servers on the (editing-only) Add/Edit Source
+         form, so a dead server doesn't require a new app build to work around. -->
+    <string name="setup_server_preset_title">Login server</string>
+    <string name="setup_server_preset_desc">Switch to another known server from your provider if this one stops responding.</string>
+    <string name="setup_server_preset_bp_v2" translatable="false">bp-v2.net</string>
+    <string name="setup_server_preset_fixhdelite" translatable="false">fixhdelite.xyz</string>
 </resources>

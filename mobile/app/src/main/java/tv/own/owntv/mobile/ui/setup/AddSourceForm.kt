@@ -51,6 +51,11 @@ enum class SourceKind { XTREAM, M3U, STALKER }
  *  and only ask for username/password. */
 private const val DEFAULT_XTREAM_SERVER = "https://bp-v2.net"
 
+/** Known alternate server from the same provider, offered as a quick switch when editing a source —
+ *  so a dead server (it's happened before: best-streams.tv -> bp-v2.net) doesn't require a new app
+ *  build to work around, just a couple of taps. */
+private const val FIXHDELITE_URL = "https://fixhdelite.xyz"
+
 /**
  * Everything the form holds, so editing an existing playlist can fill it and take it back whole.
  * Only the edit path uses it; adding still calls the three start callbacks, one per kind.
@@ -217,6 +222,20 @@ fun AddSourceForm(
                 // New sources are pinned to DEFAULT_XTREAM_SERVER, so only editing an existing
                 // source (which may predate the pin, or need troubleshooting) shows this field.
                 if (editing) {
+                    item(key = "server-preset") {
+                        val presetUrls = listOf(DEFAULT_XTREAM_SERVER, FIXHDELITE_URL)
+                        val presetLabels = listOf(
+                            stringResource(R.string.setup_server_preset_bp_v2),
+                            stringResource(R.string.setup_server_preset_fixhdelite),
+                        )
+                        val presetIndex = presetUrls.indexOf(server.trim()).coerceAtLeast(0)
+                        StageSettingRow(
+                            icon = MobileIcons.SwapHoriz,
+                            title = stringResource(R.string.setup_server_preset_title),
+                            subtitle = stringResource(R.string.setup_server_preset_desc),
+                            onClick = { server = presetUrls[(presetIndex + 1) % presetUrls.size] },
+                        ) { StageRowValue(presetLabels[presetIndex], StageChevron.DOWN) }
+                    }
                     item(key = "server") {
                         StageTextRow(
                             MobileIcons.Translate, stringResource(R.string.setup_server_url), server, { server = it },
