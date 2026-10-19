@@ -1046,8 +1046,7 @@ fun SettingsScreen(
                 chip = if (catchupOverrides == 0) stringResource(R.string.common_off)
                     else pluralStringResource(R.plurals.settings_live_preroll_overrides, catchupOverrides, catchupOverrides),
                 chipTone = if (catchupOverrides > 0) TileTone.PRIMARY else TileTone.SECONDARY) { saveScroll(); dialogReturn = searchFieldFocus; showCatchupSources = true } else null,
-            // Four screens that had no entry at all, so nothing on them could be found by name.
-            SettingsSearchEntry(stringResource(R.string.settings_group_watching_recording), stringResource(R.string.recording_settings_group), stringResource(R.string.settings_search_keywords_recording), OwnTVIcon.LIVE_TV, TileTone.TERTIARY) { searchQuery = ""; selectedGroup = SettingsGroup.WATCHING.ordinal },
+            // Three screens that had no entry at all, so nothing on them could be found by name.
             SettingsSearchEntry(stringResource(R.string.settings_group_content_metadata), stringResource(R.string.settings_open_subtitles), stringResource(R.string.settings_search_keywords_subtitle_appearance), OwnTVIcon.SUBTITLE, TileTone.PRIMARY) { open(SettingsTab.OPEN_SUBTITLES) },
             SettingsSearchEntry(stringResource(R.string.settings_group_appearance), stringResource(R.string.settings_glass_bg_title), stringResource(R.string.settings_search_keywords_glass), OwnTVIcon.SPARKLE, TileTone.PRIMARY,
                 chip = glassBackgroundSummary(settingsVm.backgroundConfig.collectAsStateWithLifecycle().value, glassConfig), chipTone = if (glassOn) TileTone.PRIMARY else TileTone.SECONDARY) { open(SettingsTab.GLASS_EFFECT) },
@@ -1114,8 +1113,6 @@ fun SettingsScreen(
             titles.map { SettingsSearchEntry(group, stringResource(it), stringResource(keywords), icon, TileTone.TERTIARY, onClick = onClick) }
         val subStyleRef = tv.own.owntv.features.settings.VIDEO_QUICK_ROWS.first { it.key == "vp_sub_style" }
         val screenRowEntries =
-            rowsOf(stringResource(R.string.settings_breadcrumb, stringResource(R.string.settings_group_watching_recording), stringResource(R.string.recording_settings_group)),
-                tv.own.owntv.features.settings.RECORDING_SEARCH_ROWS, R.string.settings_search_keywords_recording, OwnTVIcon.LIVE_TV) { searchQuery = ""; selectedGroup = SettingsGroup.WATCHING.ordinal } +
             rowsOf(stringResource(R.string.settings_breadcrumb, tv.own.owntv.features.settings.videoRowPath("vp_sub_style"), stringResource(R.string.settings_subtitle_appearance)),
                 tv.own.owntv.features.settings.SUBTITLE_APPEARANCE_SEARCH_ROWS, R.string.settings_search_keywords_subtitle_appearance, OwnTVIcon.SUBTITLE, jumpTo(subStyleRef)) +
             rowsOf(stringResource(R.string.settings_breadcrumb, stringResource(R.string.settings_breadcrumb, stringResource(R.string.settings_group_app), stringResource(R.string.settings_group_network)), stringResource(R.string.common_proxy)),
@@ -1193,7 +1190,6 @@ fun SettingsScreen(
                         openMiniPlayer = openMiniPlayer,
                         focusRowKey = videoRowKey,
                     )
-                    if (group == SettingsGroup.WATCHING) tv.own.owntv.features.settings.RecordingSettingsRows(pageScroll)
                 }
                 group == SettingsGroup.PROFILE -> tv.own.owntv.features.settings.ProfileSettingsRows()
                 // Only Quick can be empty, and only because the user emptied it.

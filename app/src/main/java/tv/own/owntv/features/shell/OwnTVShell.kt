@@ -318,7 +318,6 @@ fun OwnTVShell(
     var showHistoryList by remember { mutableStateOf(false) }
     // Multiview: the grid, while it is up, and which tile is waiting for a channel to be picked.
     val multiviewEnabled by settingsRepo.multiviewEnabled.collectAsStateWithLifecycle(false)
-    val recordWatchingEnabled by settingsRepo.recordWhatImWatching.collectAsStateWithLifecycle(false)
     val liveLeftRightRewinds by settingsRepo.liveLeftRightRewinds.collectAsStateWithLifecycle(false)
     val multiviewTileCount by settingsRepo.multiviewTiles.collectAsStateWithLifecycle(
         tv.own.owntv.core.live.DEFAULT_MULTIVIEW_TILES,
@@ -343,7 +342,7 @@ fun OwnTVShell(
     }
     // The pool outlives this composable (it is app-wide), the grid state does not. If the shell is torn
     // down with the grid up, release its engines and stream claims, or they play on as ghosts that
-    // refuse later tiles and recordings.
+    // refuse later tiles.
     val currentMultiview by rememberUpdatedState(multiview)
     DisposableEffect(Unit) {
         onDispose { currentMultiview?.releaseAll() }
@@ -366,7 +365,6 @@ fun OwnTVShell(
     val browserRailItems by liveVm.railItems.collectAsStateWithLifecycle()
     val browserRailCounts by liveVm.railCounts.collectAsStateWithLifecycle()
     val previewChannel by liveVm.previewChannel.collectAsStateWithLifecycle()
-    val playerRecording by liveVm.playerRecording.collectAsStateWithLifecycle()
     val overlayProgrammes by liveVm.nowProgrammes.collectAsStateWithLifecycle()
     val overlayFavoriteIds by liveVm.favoriteIds.collectAsStateWithLifecycle()
     val overlayPlaylistMarks by liveVm.playlistMarks.collectAsStateWithLifecycle()
@@ -394,7 +392,7 @@ fun OwnTVShell(
     // Tell core which playlist is on screen, so its background catalogue drain steps aside while the
     // user is watching. Core cannot work this out alone: the player engines are handed
     // a URL and have no notion of a sourceId, and fullscreen playback deliberately never claims a
-    // connection in OpenStreamRegistry — that register is the Multiview/recording budget. This screen
+    // connection in OpenStreamRegistry — that register is the Multiview budget. This screen
     // holds the row, so this is the only place the answer exists.
     val watchSession = koinInject<tv.own.owntv.core.live.WatchSession>()
     val watchingSourceId = if (playerMode == PlayerMode.NONE) {
@@ -1304,7 +1302,6 @@ fun OwnTVShell(
                         selectedSection == MainSection.DOWNLOADS -> DownloadsScreen(
                             onFullscreen = { openFullscreen() },
                             onChildFocused = { focusedLayer = ShellLayer.CONTENT },
-                            onOpenGuide = { onSelectSection(MainSection.EPG) },
                             restoreFocus = restoreFocus,
                             onRestored = { restoreFocus = false },
                             onEntryHook = { downloadsEntry = it },
@@ -1631,14 +1628,6 @@ fun OwnTVShell(
                     } else {
                         null
                     },
-                    // The button exists only once the setting is on, and only on a live
-                    // channel: there is nothing to record off a film that is already a file.
-                    // The engine does not come into it. Recording fetches the channel itself rather
-                    // than copying the open stream, so it works the same whichever engine is playing.
-                    onRecordThis = previewChannel
-                        ?.takeIf { recordWatchingEnabled && isTunedLive }
-                        ?.let { channel -> { liveVm.togglePlayerRecording(channel) } },
-                    recordingThis = playerRecording != null,
                     onOpenHistoryList = if (isTunedLive) { { showHistoryList = true } } else null,
                     onRewindLive = if (isTunedLive && canRewindLive) liveVm::rewindLive else null,
                     onForwardLive = if (isTunedLive) liveVm::forwardLive else null,

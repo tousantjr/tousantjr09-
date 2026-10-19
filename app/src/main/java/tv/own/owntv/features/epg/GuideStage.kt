@@ -317,11 +317,6 @@ internal class GuideProgrammeActions(
     val startsAt: Long,
     val catchupPlayer: SettingsRepository.CatchupPlayer,
     val onCatchupPlayer: (SettingsRepository.CatchupPlayer) -> Unit,
-    val recordLabel: String,
-    val onRecord: (() -> Unit)?,
-    val seriesActive: Boolean,
-    val onSeries: (() -> Unit)?,
-    val onRecordFromCatchup: (() -> Unit)?,
     val isFavorite: Boolean,
     val onFavorite: () -> Unit,
     val onPickEpg: (() -> Unit)?,
@@ -333,9 +328,8 @@ internal class GuideProgrammeActions(
 
 /**
  * What [p] on [ch] can do at [now], through the guide's view model: Remind me until it starts, Watch
- * from start once the archive has it, Record / Stop / Cancel by the recording already there, Record
- * every showing while it is still to come, Record from catch-up after it. The TV Guide and Live TV's
- * schedule both build their menu from this, so the two never disagree.
+ * from start once the archive has it. The TV Guide and Live TV's schedule both build their menu from
+ * this, so the two never disagree.
  */
 @Composable
 internal fun guideProgrammeActions(
@@ -350,17 +344,10 @@ internal fun guideProgrammeActions(
     /** Only where the review popup is on screen to show the result (the guide, not Live TV's list). */
     autoMatch: Boolean = true,
 ): GuideProgrammeActions {
-    val recordingRows by vm.recordingRows.collectAsStateWithLifecycle()
     val reminderRows by vm.reminderRows.collectAsStateWithLifecycle()
     val favoriteIds by vm.favoriteChannelIds.collectAsStateWithLifecycle()
     val catchupPlayer by vm.catchupPlayer.collectAsStateWithLifecycle()
-    val recording = remember(recordingRows, ch.id, p.startMs) { vm.recordingFor(ch, p) }
-    val seriesRule by androidx.compose.runtime.produceState<tv.own.owntv.core.database.entity.RecordingRuleEntity?>(null, ch.id, p.title, recordingRows) {
-        value = vm.seriesRuleFor(ch, p)
-    }
     val canCatchup = vm.canCatchup(ch, p, now)
-    val upcoming = p.stopMs > now
-    val status = recording?.status
     return GuideProgrammeActions(
         reminderSet = reminderRows.any { it.channelId == ch.id && it.startMs == p.startMs },
         onReminder = if (p.startMs > now) ({ vm.toggleReminder(ch, p) }) else null,
@@ -369,21 +356,6 @@ internal fun guideProgrammeActions(
         startsAt = p.startMs,
         catchupPlayer = catchupPlayer,
         onCatchupPlayer = vm::setCatchupPlayer,
-        recordLabel = stringResource(
-            when (status) {
-                tv.own.owntv.core.model.RecordingStatus.RECORDING -> R.string.recording_stop
-                tv.own.owntv.core.model.RecordingStatus.SCHEDULED -> R.string.common_cancel
-                else -> R.string.recording_record
-            },
-        ),
-        onRecord = when (status) {
-            tv.own.owntv.core.model.RecordingStatus.RECORDING -> ({ vm.stopRecording(recording) })
-            tv.own.owntv.core.model.RecordingStatus.SCHEDULED -> ({ vm.cancelRecording(recording) })
-            else -> if (upcoming) ({ vm.record(ch, p) }) else null
-        },
-        seriesActive = seriesRule != null,
-        onSeries = if (upcoming) ({ seriesRule?.let { vm.stopSeries(it) } ?: vm.recordSeries(ch, p) }) else null,
-        onRecordFromCatchup = if (!upcoming && canCatchup && recording == null) ({ vm.record(ch, p) }) else null,
         isFavorite = ch.id in favoriteIds,
         onFavorite = { vm.toggleFavoriteChannel(ch) },
         onPickEpg = onPickEpg,
@@ -397,8 +369,7 @@ internal fun guideProgrammeActions(
 /**
  * ☰ Programme options, 560 wide at the right: "Wish" + "20:05 – 21:40 · 259 Sky Cinema Family";
  * NEW Remind me (5 min before) · WATCH Watch channel, Watch from start ("after 20:05" until it starts),
- * Play catch-up in… (Ask) · RECORD Record, Record every showing, Record from catch-up · CHANNEL
- * favourite, Pick EPG manually, EPG time offset (Global). Also Live TV's ▶ Schedule → OK menu.
+ * Play catch-up in… (Ask) · CHANNEL favourite, Pick EPG manually, EPG time offset (Global).
  */
 @Composable
 internal fun GuideProgrammeMenu(title: String, subtitle: String, actions: GuideProgrammeActions, leadMinutes: Int, onDismiss: () -> Unit) {
@@ -449,23 +420,6 @@ internal fun GuideProgrammeMenu(title: String, subtitle: String, actions: GuideP
                 actions.onCatchupPlayer(all[(all.indexOf(player) + 1) % all.size])
             },
         )
-        StageGroupLabel(stringResource(R.string.content_menu_group_record).uppercase(locale))
-        StageMenuItem(
-            text = actions.recordLabel, icon = OwnTVIcon.REC, iconFilled = true,
-            enabled = actions.onRecord != null,
-            onClick = { actions.onRecord?.invoke(); onDismiss() },
-        )
-        StageMenuItem(
-            text = stringResource(if (actions.seriesActive) R.string.recording_stop_series else R.string.recording_record_series),
-            icon = OwnTVIcon.REC, iconFilled = true,
-            enabled = actions.onSeries != null,
-            onClick = { actions.onSeries?.invoke(); onDismiss() },
-        )
-        StageMenuItem(
-            text = stringResource(R.string.recording_from_archive), icon = OwnTVIcon.REWIND,
-            enabled = actions.onRecordFromCatchup != null,
-            onClick = { actions.onRecordFromCatchup?.invoke(); onDismiss() },
-        )
         StageGroupLabel(stringResource(R.string.content_menu_group_channel).uppercase(locale))
         StageMenuItem(
             text = stringResource(if (actions.isFavorite) R.string.content_epg_remove_favourite else R.string.content_epg_add_favourite),
@@ -482,28 +436,6 @@ internal fun GuideProgrammeMenu(title: String, subtitle: String, actions: GuideP
             StageMenuItem(
                 text = stringResource(R.string.content_epg_time_offset), icon = OwnTVIcon.CLOCK, value = actions.epgOffsetValue,
                 onClick = { onDismiss(); actions.onEpgOffset.invoke() },
-            )
-        }
-    }
-}
-
-/** Record ▾ under the programme: Record (or Stop / Cancel), and Record every showing (or its stop). */
-@Composable
-internal fun GuideRecordMenu(title: String, actions: GuideProgrammeActions, onDismiss: () -> Unit) {
-    val focus = remember { FocusRequester() }
-    LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
-    GuideMenuHost(x = 956f, top = 440.mpx, width = 470.mpx, onDismiss = onDismiss) {
-        StageMenuHeader(title = title, subtitle = null)
-        StageMenuItem(
-            text = actions.recordLabel, icon = OwnTVIcon.REC, iconFilled = true, enabled = actions.onRecord != null,
-            onClick = { actions.onRecord?.invoke(); onDismiss() },
-            modifier = Modifier.focusRequester(focus),
-        )
-        if (actions.onSeries != null) {
-            StageMenuItem(
-                text = stringResource(if (actions.seriesActive) R.string.recording_stop_series else R.string.recording_record_series),
-                icon = OwnTVIcon.REC, iconFilled = true,
-                onClick = { actions.onSeries.invoke(); onDismiss() },
             )
         }
     }

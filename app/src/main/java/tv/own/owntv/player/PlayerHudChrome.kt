@@ -331,7 +331,7 @@ internal fun BottomBar(
     onPreviousChannel: (() -> Unit)? = null,
     onOtherChannels: (() -> Unit)? = null, otherChannelsCount: Int = 0,
     onOpenDialog: (HudDialog) -> Unit, onPip: (() -> Unit)?, onAudioMode: (() -> Unit)?,
-    onMultiview: (() -> Unit)? = null, onRecordThis: (() -> Unit)? = null, recordingThis: Boolean = false,
+    onMultiview: (() -> Unit)? = null,
     /** Given to whichever timeline is drawn, so Left/Right with the controls hidden can land on it. */
     seekFocus: FocusRequester? = null,
     onBack: () -> Unit, modifier: Modifier = Modifier,
@@ -480,21 +480,10 @@ internal fun BottomBar(
                         PlayerControl.MULTIVIEW -> if (onMultiview != null) {
                             CtrlButton(OwnTVIcon.LIST_GRID, label = stringResource(R.string.multiview_button)) { onMultiview() }
                         }
-                        // Record what is already on screen. Present only when the setting is on, so
-                        // it never needs to explain itself here — the trade-off was accepted when it
-                        // was enabled. Tinted while running, and the label flips, because
-                        // "Record" on a button that is already recording is the kind of thing that
-                        // loses an hour of somebody's evening.
-                        PlayerControl.RECORD -> if (onRecordThis != null) {
-                            CtrlButton(
-                                OwnTVIcon.LIVE_TV,
-                                active = recordingThis,
-                                activeTint = androidx.compose.ui.graphics.Color(0xFFEF4444),
-                                label = stringResource(
-                                    if (recordingThis) R.string.recording_stop else R.string.recording_record,
-                                ),
-                            ) { onRecordThis() }
-                        }
+                        // Recording is not offered from the player: the feature has been removed from
+                        // the app's UI entirely. `:core` still defines this control, so the branch
+                        // stays to keep the `when` exhaustive.
+                        PlayerControl.RECORD -> Unit
                         // Stop after a while; tinted while a countdown is running.
                         PlayerControl.SLEEP_TIMER ->
                             CtrlButton(OwnTVIcon.BEDTIME, active = sleepRunning, label = stringResource(R.string.player_sleep_timer)) { onOpenDialog(HudDialog.SLEEP_TIMER) }

@@ -68,7 +68,7 @@ private const val SECTION_DIAGNOSTICS = 11
 
 /**
  * The Settings groups that hold Video player rows: each part is a sub-heading and the sections
- * listed under it. App adds Diagnostics under its own rows; Watching & recording adds Recording after.
+ * listed under it. App adds Diagnostics under its own rows.
  */
 internal enum class VideoGroup(val titleRes: Int, val parts: List<Pair<Int, List<Int>>>) {
     PLAYER(R.string.settings_vp_cat_player, listOf(R.string.settings_vp_cat_player to listOf(SECTION_PLAYER), R.string.settings_vp_cat_streaming to listOf(SECTION_STREAMING))),

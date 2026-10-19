@@ -139,14 +139,8 @@ fun PlayerHud(
     // Switch to audio-only mode (stops video decode, surfaces the top-bar now-playing bar). Null hides it.
     onAudioMode: (() -> Unit)? = null,
     // Live only, and only when Multiview is switched on in Settings: turn this channel into tile 1 of
-    // the grid. Null hides the button entirely — the feature is opt-in, like the record button.
+    // the grid. Null hides the button entirely — the feature is opt-in.
     onMultiview: (() -> Unit)? = null,
-    // Live only, and only once "Record what I'm watching" is switched on in Settings: record the
-    // channel already playing, over the connection already open. Null hides the button entirely —
-    // the feature does not exist until the user has accepted the one-connection trade-off.
-    onRecordThis: (() -> Unit)? = null,
-    /** True while that recording is running, so the button can say Stop instead of Record. */
-    recordingThis: Boolean = false,
     // True while the shell draws an overlay ABOVE the HUD (e.g. the channel-list overlay). The HUD goes
     // inert: its auto-hide timer pauses and — crucially — it makes no focus requests, so it can't yank
     // D-pad focus off the overlay. The existing dialog guard below covers only the HUD's OWN dialogs;
@@ -636,15 +630,6 @@ fun PlayerHud(
             }
         }
 
-        // The REC badge, and it is deliberately OUTSIDE `if (controlsVisible)`.
-        //
-        // The shell hides the status pill during fullscreen playback, so without this a recording
-        // running behind the picture would be completely invisible — which is the one thing that
-        // must not happen. It is drawn whenever anything is recording, HUD up or down, and it is not
-        // focusable and not interactive: stopping a recording is the Recordings screen's job, and a
-        // stop button one stray D-pad press from the middle of a programme is not a kindness.
-        RecordingBadge(modifier = Modifier.align(Alignment.TopEnd))
-
         if (controlsVisible) {
             // Scrims: a FLAT semi-transparent panel behind the controls, feathered to transparent only at
             // the inner edge. A pure gradient faded out exactly where the chips and the Now/Next text sit,
@@ -728,7 +713,7 @@ fun PlayerHud(
                     },
                     favorite = favorite, onToggleFavorite = onToggleFavorite,
                     onOpenDialog = { dialog = it }, onPip = onPip, onAudioMode = onAudioMode,
-                    onMultiview = onMultiview, onRecordThis = onRecordThis, recordingThis = recordingThis, onBack = onBack,
+                    onMultiview = onMultiview, onBack = onBack,
                     modifier = Modifier.align(Alignment.BottomStart),
                 )
             }
@@ -791,40 +776,8 @@ fun PlayerHud(
                         Text(stringResource(R.string.player_raw_error, it), style = tv.own.owntv.ui.theme.stageText(22, 400), color = Color.White.copy(alpha = 0.6f), textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth(0.8f))
                     }
                 }
-                // While a recording is what took the picture away, this screen has TWO buttons
-                // instead of a lone Retry, because Retry alone cannot work: the provider's only
-                // stream is busy and trying again just fails again.
-                //
-                // The default protects the recording — a live programme is gone forever, a rewatch
-                // is not — and the user can overrule it in one press. The parenthetical on the first
-                // button is the whole point: nobody should stop a recording without being told.
-                val recordingConflict = rememberRecordingConflict(error)
                 Spacer(Modifier.height(18.dp))
-                if (recordingConflict != null) {
-                    Text(
-                        stringResource(R.string.player_recording_conflict),
-                        style = tv.own.owntv.ui.theme.stageText(25, 400),
-                        color = Color.White.copy(alpha = 0.92f),
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth(0.8f),
-                    )
-                    Spacer(Modifier.height(14.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        tv.own.owntv.ui.stage.StageButton(
-                            stringResource(R.string.player_keep_watching_stop_recording),
-                            onClick = { recordingConflict.stopAndRetry() },
-                            modifier = Modifier.focusRequester(retryFocus),
-                            icon = OwnTVIcon.PLAY,
-                            tinted = true,
-                        )
-                        tv.own.owntv.ui.stage.StageButton(
-                            stringResource(R.string.settings_close),
-                            onClick = onBack,
-                        )
-                    }
-                } else {
-                    tv.own.owntv.ui.stage.StageButton(stringResource(R.string.common_retry), onClick = { player.retry() }, modifier = Modifier.focusRequester(retryFocus), icon = OwnTVIcon.PLAY, tinted = true)
-                }
+                tv.own.owntv.ui.stage.StageButton(stringResource(R.string.common_retry), onClick = { player.retry() }, modifier = Modifier.focusRequester(retryFocus), icon = OwnTVIcon.PLAY, tinted = true)
             }
             // A provider wait looks like loading, because that is what it is: the channel is queued behind
             // the panel's own countdown and the engine re-asks by itself. The line under the spinner says

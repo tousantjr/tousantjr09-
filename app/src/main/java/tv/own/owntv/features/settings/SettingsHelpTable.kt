@@ -4,7 +4,7 @@ import tv.own.owntv.R
 
 /*
  * The words of each Settings row on a Stage page, by row key: root rows by their own key
- * ("theme", "tab_SOURCES"), Video player rows by their Quick key ("vp_hw"), Recording rows by "rec_*".
+ * ("theme", "tab_SOURCES"), Video player rows by their Quick key ("vp_hw").
  * A row's own title and description are used wherever a key is missing here; a long description
  * the row used to carry becomes its panel text when [SETTING_HELP] has nothing better.
  */
@@ -98,10 +98,6 @@ internal val SETTING_LINE: Map<String, Int> = mapOf(
     "vp_mini" to R.string.settings_line_mini,
     "vp_measured_stats" to R.string.settings_line_measured_stats,
     "vp_logging" to R.string.settings_line_logging,
-    "rec_reserve" to R.string.settings_line_rec_reserve,
-    "rec_watching" to R.string.settings_line_rec_watching,
-    "rec_pre_roll" to R.string.settings_line_rec_pre_roll,
-    "rec_post_roll" to R.string.settings_line_rec_post_roll,
 )
 
 /** A row's name where the page words it differently from the app's older screens. */
@@ -180,5 +176,4 @@ internal val SWITCH_RECOMMENDED: Map<String, Boolean> = mapOf(
     "vp_sw_above_1080p" to false,
     "vp_measured_stats" to false,
     "vp_logging" to false,
-    "rec_reserve" to true,
 )

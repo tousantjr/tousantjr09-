@@ -51,8 +51,6 @@ import tv.own.owntv.core.customize.CategoryRestorePlan
 import tv.own.owntv.core.customize.planCategoryRestore
 import tv.own.owntv.core.customize.restoreCategoryToDefault
 import tv.own.owntv.core.epg.CatchupUrl
-import tv.own.owntv.core.live.StreamGrant
-import tv.own.owntv.core.recording.RecordingSchedule
 import tv.own.owntv.core.customize.SectionCustomizations
 import tv.own.owntv.core.customize.CategoryMove
 import tv.own.owntv.core.customize.CategoryRailEditor
@@ -132,132 +130,9 @@ class LiveViewModel(
     private val streamUrlResolver: tv.own.owntv.core.stalker.StreamUrlResolver,
     private val epgRepository: tv.own.owntv.core.repository.EpgRepository,
     private val externalPlayerLauncher: tv.own.owntv.core.player.ExternalPlayerLauncher,
-    private val recordings: tv.own.owntv.core.recording.RecordingManager,
     /** Keeps the preview pane off a one-stream playlist while a download is using it. */
     private val downloadWatchGuard: tv.own.owntv.core.download.DownloadWatchGuard,
 ) : ViewModel() {
-
-    // --- "Record what I'm watching" --------------------------------------------------------------
-
-    /**
-     * The row opened for the channel currently being recorded off the player's own stream, or null.
-     *
-     * Held here rather than derived from the table because this recording belongs to *this* playing
-     * stream: it ends when the stream does, and nothing in the database says which stream that was.
-     */
-    private val _playerRecording =
-        MutableStateFlow<tv.own.owntv.core.database.entity.RecordingEntity?>(null)
-
-    val playerRecording: StateFlow<tv.own.owntv.core.database.entity.RecordingEntity?> = _playerRecording
-
-    /**
-     * Start or stop recording the channel on screen, from its start time of *now*.
-     *
-     * **This fetches the channel itself rather than copying the open stream, and that is deliberate.**
-     * The original design tapped mpv's `stream-record`, which costs no second connection — but that
-     * copies bytes as they pass through mpv's stream layer, and an HLS channel never puts them there:
-     * FFmpeg's `hls` demuxer opens each segment on its own. mpv accepted the instruction
-     * (`Set property: stream-record="…" -> 1`) and wrote nothing, every time, on every HLS channel —
-     * which on a normal IPTV playlist is all of them. Proven on the television's own mpv log.
-     *
-     * So it goes through the same engine as a scheduled recording, and inherits its behaviour: it
-     * costs one of the playlist's connections, it **keeps running** when the channel is changed or the
-     * player is left, and the Recordings screen can stop it. The connection is why
-     * [RecordingManager.canRecordOn] is asked first — a refusal is a sentence, not a failed recording.
-     */
-    fun togglePlayerRecording(channel: ChannelEntity) {
-        viewModelScope.launch {
-            val open = _playerRecording.value
-            if (open != null) {
-                recordings.stop(open)
-                _playerRecording.value = null
-                return@launch
-            }
-            val pid = currentProfileId() ?: return@launch
-            _playerRecording.value = startRecordingNow(channel, pid, nowNext.value?.now)
-        }
-    }
-
-    /**
-     * Record this channel from now, whether or not it is the one on screen.
-     *
-     * The guide's Record needs a programme to record, so a channel the provider publishes no guide
-     * for cannot be recorded from there at all — and those are exactly the channels a user is most
-     * likely to want kept. This is the same recording by another door: long-press the channel in the
-     * list. With a programme on screen it ends when that programme does; with none it runs for
-     * [RecordingSchedule.NO_GUIDE_RUNTIME_MINUTES] and is stopped from Downloads → Live TV.
-     */
-    fun recordNow(channel: ChannelEntity) {
-        viewModelScope.launch {
-            val pid = currentProfileId() ?: return@launch
-            // The programme is only known for the channel the guide pane is showing; from the list
-            // this is a channel like any other, so its own now-programme is looked up here.
-            startRecordingNow(channel, pid, epgReader.nowNext(channel, custom.value, epgOffset.value)?.now)
-        }
-    }
-
-    /** Channels with a recording running right now, so their menu offers Stop instead of Record. */
-    val recordingChannelIds: StateFlow<Set<Long>> = recordings.observeRunning()
-        .map { rows -> rows.mapTo(HashSet()) { it.channelId } }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptySet())
-
-    /** Stop the running recording(s) of this channel, keeping what was captured. */
-    fun stopRecordingOn(channel: ChannelEntity) {
-        viewModelScope.launch {
-            recordings.observeRunning().first().filter { it.channelId == channel.id }.forEach { row ->
-                recordings.stop(row)
-                if (_playerRecording.value?.id == row.id) _playerRecording.value = null
-            }
-        }
-    }
-
-    /** What already claims this channel's playlist over the window — the clash the dialog warns about. */
-    suspend fun recordingClashes(channel: ChannelEntity, startMs: Long, stopMs: Long): List<tv.own.owntv.core.database.entity.RecordingEntity> {
-        val window = RecordingSchedule.manualWindow(startMs, stopMs, System.currentTimeMillis()) ?: return emptyList()
-        return recordings.clashesWith(channel.sourceId, window.first, window.last)
-    }
-
-    /** Record [channel] between two picked times (#2); [onScheduled] gets the start once it is saved. */
-    fun scheduleRecording(channel: ChannelEntity, startMs: Long, stopMs: Long, onScheduled: (Long) -> Unit) {
-        viewModelScope.launch {
-            val pid = currentProfileId() ?: return@launch
-            recordings.scheduleManual(pid, channel, startMs, stopMs)?.let { onScheduled(it.programmeStartMs) }
-        }
-    }
-
-    private suspend fun startRecordingNow(
-        channel: ChannelEntity,
-        profileId: Long,
-        programme: tv.own.owntv.core.parser.XtEpgEntry?,
-    ): tv.own.owntv.core.database.entity.RecordingEntity? {
-        if (recordings.canRecordOn(channel.sourceId) !is StreamGrant.Allowed) return null
-        val startMs = System.currentTimeMillis()
-        // Start now: the programme is already under way and a live edge cannot be rewound, so the
-        // pre-roll has nothing to reach back to. The end is the programme's own, padding included.
-        val stopMs = programme
-            ?.let { recordings.windowFor(it.startMs, it.stopMs).last }
-            ?.takeIf { it > startMs }
-            ?: (startMs + RecordingSchedule.NO_GUIDE_RUNTIME_MINUTES * 60_000L)
-        return recordings.schedule(
-            tv.own.owntv.core.database.entity.RecordingEntity(
-                profileId = profileId,
-                sourceId = channel.sourceId,
-                channelId = channel.id,
-                channelName = channel.name,
-                channelIconUrl = channel.logoUrl,
-                epgChannelId = channel.epgChannelId,
-                streamUrl = channel.streamUrl,
-                httpHeaders = channel.httpHeaders,
-                title = programme?.title ?: channel.name,
-                description = programme?.description,
-                programmeStartMs = programme?.startMs ?: startMs,
-                programmeStopMs = programme?.stopMs ?: stopMs,
-                startMs = startMs,
-                stopMs = stopMs,
-            ),
-        )
-    }
-
 
     data class ChannelMoveState(val items: List<ChannelEntity>, val activeIndex: Int, val contextKey: String)
     private val _moveState = MutableStateFlow<ChannelMoveState?>(null)

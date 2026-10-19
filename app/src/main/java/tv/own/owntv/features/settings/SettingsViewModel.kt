@@ -702,20 +702,6 @@ class SettingsViewModel(
     fun setAudioDelayMs(ms: Int) { viewModelScope.launch { settings.setAudioDelayMs(ms) } }
 
     // --- CH+- key paging (browse panels): master toggle + per-direction skip counts ---
-    // --- Recording ---
-    val recordWhatImWatching: StateFlow<Boolean> =
-        settings.recordWhatImWatching.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
-    fun setRecordWhatImWatching(enabled: Boolean) { viewModelScope.launch { settings.setRecordWhatImWatching(enabled) } }
-    val recordingReserveConnection: StateFlow<Boolean> =
-        settings.recordingReserveConnection.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), true)
-    fun setRecordingReserveConnection(reserve: Boolean) { viewModelScope.launch { settings.setRecordingReserveConnection(reserve) } }
-    val recordingPreRollMinutes: StateFlow<Int> = settings.recordingPreRollMinutes
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), tv.own.owntv.core.recording.RecordingSchedule.DEFAULT_PRE_ROLL_MINUTES)
-    fun setRecordingPreRollMinutes(minutes: Int) { viewModelScope.launch { settings.setRecordingPreRollMinutes(minutes) } }
-    val recordingPostRollMinutes: StateFlow<Int> = settings.recordingPostRollMinutes
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), tv.own.owntv.core.recording.RecordingSchedule.DEFAULT_POST_ROLL_MINUTES)
-    fun setRecordingPostRollMinutes(minutes: Int) { viewModelScope.launch { settings.setRecordingPostRollMinutes(minutes) } }
-
     val chNavEnabled: StateFlow<Boolean> = settings.chNavEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), true)
     fun setChNavEnabled(enabled: Boolean) { viewModelScope.launch { settings.setChNavEnabled(enabled) } }
     val chNavUpSkip: StateFlow<Int> = settings.chNavUpSkip.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ChNavLimits.DEFAULT_SKIP)

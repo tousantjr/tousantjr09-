@@ -15,7 +15,6 @@ import org.koin.dsl.module
 import tv.own.owntv.features.customize.CustomizeItemsViewModel
 import tv.own.owntv.features.customize.CustomizeViewModel
 import tv.own.owntv.features.downloads.DownloadsViewModel
-import tv.own.owntv.features.recordings.RecordingsViewModel
 import tv.own.owntv.features.epg.EpgViewModel
 import tv.own.owntv.core.content.SearchReader
 import tv.own.owntv.core.home.HomeFeedReader
@@ -175,7 +174,6 @@ val appModule = module {
     viewModelOf(::DeleteSubtitlesViewModel)
     viewModelOf(::SubtitleSearchViewModel)
     viewModelOf(::DownloadsViewModel)
-    viewModelOf(::RecordingsViewModel)
     viewModelOf(::EpgViewModel)
     viewModelOf(::CustomizeViewModel)
     viewModelOf(::CustomizeItemsViewModel)

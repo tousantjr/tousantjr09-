@@ -59,7 +59,6 @@ import tv.own.owntv.R
 import tv.own.owntv.core.database.entity.ChannelEntity
 import tv.own.owntv.core.database.entity.EpgProgrammeEntity
 import tv.own.owntv.core.live.LiveKey
-import tv.own.owntv.core.model.RecordingStatus
 import tv.own.owntv.core.settings.SettingsRepository
 import tv.own.owntv.features.live.LiveCategories
 import tv.own.owntv.features.live.LiveViewModel
@@ -191,7 +190,6 @@ fun EpgScreen(
     val categoryFilter by vm.categoryFilter.collectAsStateWithLifecycle()
     val guideWidthShares by vm.guideWidthShares.collectAsStateWithLifecycle()
     val catchupPlayer by vm.catchupPlayer.collectAsStateWithLifecycle()
-    val recordingRows by vm.recordingRows.collectAsStateWithLifecycle()
     val reminderRows by vm.reminderRows.collectAsStateWithLifecycle()
     val leadMinutes by vm.reminderLeadMinutes.collectAsStateWithLifecycle()
     val railItems by liveVm.railItems.collectAsStateWithLifecycle()
@@ -312,7 +310,6 @@ fun EpgScreen(
     // --- Overlays --------------------------------------------------------------------------------------
     var menuFor by remember { mutableStateOf<Pair<ChannelEntity, EpgProgrammeEntity>?>(null) }
     var channelMenuFor by remember { mutableStateOf<ChannelEntity?>(null) }
-    var recordMenuFor by remember { mutableStateOf<Pair<ChannelEntity, EpgProgrammeEntity>?>(null) }
     var askPlayerFor by remember { mutableStateOf<Pair<ChannelEntity, EpgProgrammeEntity>?>(null) }
     var matchingChannel by remember { mutableStateOf<ChannelEntity?>(null) }
     var offsetChannel by remember { mutableStateOf<ChannelEntity?>(null) }
@@ -325,7 +322,7 @@ fun EpgScreen(
     var searchHadFocus by remember { mutableStateOf(false) }
     // Where focus goes back to when an overlay closes: the control or button that opened it.
     var returnTo by remember { mutableStateOf<(() -> Unit)?>(null) }
-    val anyOverlay = menuFor != null || channelMenuFor != null || recordMenuFor != null || askPlayerFor != null || matchingChannel != null ||
+    val anyOverlay = menuFor != null || channelMenuFor != null || askPlayerFor != null || matchingChannel != null ||
         offsetChannel != null || orderOpen || dayOpen || review.isNotEmpty()
     var hadOverlay by remember { mutableStateOf(false) }
     LaunchedEffect(anyOverlay) {
@@ -357,7 +354,7 @@ fun EpgScreen(
         if (p != null && p.stopMs <= now && vm.canCatchup(ch, p, now)) playFromStart(ch, p) else watch(ch)
     }
 
-    /** What [p] on [ch] can do right now — the programme menu, Record ▾ and the buttons on top share it. */
+    /** What [p] on [ch] can do right now — the programme menu and the buttons on top share it. */
     @Composable
     fun actionsFor(ch: ChannelEntity, p: EpgProgrammeEntity): GuideProgrammeActions = guideProgrammeActions(
         vm, ch, p, liveNow,
@@ -379,10 +376,6 @@ fun EpgScreen(
         return rest?.takeIf { it.isNotEmpty() } ?: name
     }
     val remindersByChannel = remember(reminderRows) { reminderRows.groupBy({ it.channelId }, { it.startMs }).mapValues { it.value.toSet() } }
-    val recordingsByChannel = remember(recordingRows) {
-        recordingRows.filter { it.status != RecordingStatus.CANCELLED }
-            .groupBy({ it.channelId }, { it.programmeStartMs }).mapValues { it.value.toSet() }
-    }
 
     val dayTool = remember { FocusRequester() }
     val categoryTool = remember { FocusRequester() }
@@ -565,7 +558,6 @@ fun EpgScreen(
                                     cursorTime = cursorTime,
                                     cellMode = inCellMode,
                                     onEnterCell = { cursorTime = System.currentTimeMillis(); inCellMode = true },
-                                    recordingStarts = recordingsByChannel[channel.id].orEmpty(),
                                     reminderStarts = remindersByChannel[channel.id].orEmpty(),
                                     onFocused = {
                                         focusedRow = index
@@ -655,7 +647,6 @@ fun EpgScreen(
             onDismiss = { menuFor = null },
         )
     }
-    recordMenuFor?.let { (ch, p) -> GuideRecordMenu(title = p.title, actions = actionsFor(ch, p), onDismiss = { recordMenuFor = null }) }
     askPlayerFor?.let { (ch, p) ->
         GuideCatchupChooser(
             onInternal = { vm.noteChannelTuned(ch); onPlayCatchup(ch, p) },
@@ -763,7 +754,6 @@ private fun GuideRow(
     cursorTime: Long,
     cellMode: Boolean,
     onEnterCell: () -> Unit,
-    recordingStarts: Set<Long>,
     reminderStarts: Set<Long>,
     onFocused: () -> Unit,
     onCursor: (Long) -> Unit,
@@ -835,7 +825,6 @@ private fun GuideRow(
                     now = now,
                     focusTime = if (focused && cellMode) cursorTime else null,
                     catchupIds = catchupIds,
-                    recordingStarts = recordingStarts,
                     reminderStarts = reminderStarts,
                     scrollPx = scrollPx,
                 )

@@ -47,7 +47,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -64,30 +63,24 @@ import org.koin.androidx.compose.koinViewModel
 import tv.own.owntv.R
 import tv.own.owntv.core.settings.SettingsRepository
 import tv.own.owntv.core.database.entity.DownloadEntity
-import tv.own.owntv.core.database.entity.RecordingEntity
 import tv.own.owntv.core.download.DownloadActivityTracker
 import tv.own.owntv.core.download.DownloadQueue
 import tv.own.owntv.core.model.DownloadStatus
-import tv.own.owntv.core.model.RecordingStatus
 import tv.own.owntv.core.storage.MediaFolders
 import tv.own.owntv.core.storage.StorageAccess
 import tv.own.owntv.features.epg.guideDayLabel
 import tv.own.owntv.features.epg.localMidnight
 import tv.own.owntv.features.live.edgeScrollSpec
-import tv.own.owntv.features.recordings.RecordingsViewModel
-import tv.own.owntv.features.recordings.recordingItems
 import tv.own.owntv.features.shell.components.vodRuntime
 import tv.own.owntv.ui.components.BrowseMode
 import tv.own.owntv.ui.components.OwnTVIcon
 import tv.own.owntv.ui.components.StorageBrowser
-import tv.own.owntv.ui.stage.StageButton
 import tv.own.owntv.ui.stage.StageFocus
 import tv.own.owntv.ui.stage.StageProgress
 import tv.own.owntv.ui.stage.StageSurface
 import tv.own.owntv.ui.stage.StageTab
 import tv.own.owntv.ui.stage.StageTool
 import tv.own.owntv.ui.stage.stageFocusLook
-import tv.own.owntv.ui.stage.stageGlass
 import tv.own.owntv.ui.theme.StageColors
 import tv.own.owntv.ui.theme.mpx
 import tv.own.owntv.ui.theme.mpxSp
@@ -96,23 +89,21 @@ import tv.own.owntv.ui.theme.stageText
 import java.text.NumberFormat
 import kotlin.math.ceil
 
-/** Movies and Series hold downloads; Recordings is live TV saved by the recorder — a file of the user's all the same. */
+/** Movies and Series hold downloads — a file of the user's, saved on this TV. */
 private enum class DownloadsTab(val labelRes: Int) {
     MOVIES(R.string.common_nav_movies),
     SERIES(R.string.common_nav_series),
-    RECORDINGS(R.string.recording_title),
 }
 
 /**
- * Downloads: title + storage crumb, the Movies · Series · Recordings tabs and the
- * Download folder tool, the list grouped DOWNLOADING / ON THIS TV, and the Recordings card on the right.
+ * Downloads: title + storage crumb, the Movies · Series tabs and the
+ * Download folder tool, the list grouped DOWNLOADING / ON THIS TV.
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun DownloadsScreen(
     onFullscreen: () -> Unit,
     onChildFocused: () -> Unit,
-    onOpenGuide: () -> Unit,
     restoreFocus: Boolean = false,
     onRestored: () -> Unit = {},
     onEntryHook: (((() -> Boolean)?) -> Unit)? = null,
@@ -121,7 +112,6 @@ fun DownloadsScreen(
     modifier: Modifier = Modifier,
 ) {
     val vm: DownloadsViewModel = koinViewModel()
-    val recVm: RecordingsViewModel = koinViewModel()
     val downloads by vm.downloads.collectAsStateWithLifecycle()
     val details by vm.details.collectAsStateWithLifecycle()
     val active by vm.active.collectAsStateWithLifecycle()
@@ -130,9 +120,6 @@ fun DownloadsScreen(
     val externalPlayerOn by vm.externalPlayerOn.collectAsStateWithLifecycle()
     val storage by vm.storage.collectAsStateWithLifecycle()
     val downloadRoot by vm.downloadRoot.collectAsStateWithLifecycle()
-    val recordings by recVm.rows.collectAsStateWithLifecycle()
-    val recExternal by recVm.externalPlayerOn.collectAsStateWithLifecycle()
-    val recMissing by recVm.missingFiles.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
@@ -140,7 +127,6 @@ fun DownloadsScreen(
     // Which tab holds which kind is core's rule: an episode download is EPISODE, which files under Series.
     val movies = remember(downloads) { downloads.filter { MediaFolders.folderFor(it.mediaType) == MediaFolders.MOVIES } }
     val series = remember(downloads) { downloads.filter { MediaFolders.folderFor(it.mediaType) == MediaFolders.SERIES } }
-    val recorded = recordings.count { it.status == RecordingStatus.COMPLETED || it.status == RecordingStatus.RECORDING }
     val shown = if (tab == DownloadsTab.SERIES) series else movies
     // DOWNLOADING in queue order (the running one first, so "starts after" reads downwards), then ON THIS TV.
     val downloading = remember(shown) {
@@ -149,7 +135,7 @@ fun DownloadsScreen(
     }
     val onTv = remember(shown) { shown.filter { it.status == DownloadStatus.COMPLETED } }
     // The ids in the list, top to bottom, for focus: entry, restore after playing, the neighbour after a delete.
-    val listIds: List<Long> = if (tab == DownloadsTab.RECORDINGS) recordingIdsInOrder(recordings) else downloading.map { it.id } + onTv.map { it.id }
+    val listIds: List<Long> = downloading.map { it.id } + onTv.map { it.id }
 
     val rowFocus = remember { HashMap<Long, FocusRequester>() }
     fun focusOf(id: Long) = rowFocus.getOrPut(id) { FocusRequester() }
@@ -179,7 +165,7 @@ fun DownloadsScreen(
     // Returning from the player: back on the download that was played.
     LaunchedEffect(restoreFocus, listIds.size) {
         if (!restoreFocus || listIds.isEmpty()) return@LaunchedEffect
-        val id = lastPlayedId ?: recVm.lastPlayedId.value
+        val id = lastPlayedId
         withFrameNanos { }
         if (id != null && id in listIds) focusRow(id) else entry()
         onRestored()
@@ -198,14 +184,13 @@ fun DownloadsScreen(
     }
     val acted: (Long) -> Unit = { id -> actedId = id; actedIndex = listIds.indexOf(id) }
 
-    // A row that changes group (a download finishes, a recording ends) is laid out anew and drops focus, which
+    // A row that changes group (a download finishes) is laid out anew and drops focus, which
     // then falls to the tabs. Put it back on that row — only when focus left the list at that very moment.
     var lastFocusedId by remember { mutableStateOf<Long?>(null) }
     var listFocused by remember { mutableStateOf(false) }
     var listFocusLostAt by remember { mutableStateOf(0L) }
     val focusedGroup = lastFocusedId?.let { id ->
-        if (tab == DownloadsTab.RECORDINGS) recordings.firstOrNull { it.id == id }?.status
-        else downloads.firstOrNull { it.id == id }?.let { it.status == DownloadStatus.COMPLETED }
+        downloads.firstOrNull { it.id == id }?.let { it.status == DownloadStatus.COMPLETED }
     }
     LaunchedEffect(focusedGroup) {
         val id = lastFocusedId ?: return@LaunchedEffect
@@ -274,7 +259,7 @@ fun DownloadsScreen(
             horizontalArrangement = Arrangement.spacedBy(22.mpx),
             verticalAlignment = Alignment.Bottom,
         ) {
-            listOf(DownloadsTab.MOVIES to movies.size, DownloadsTab.SERIES to series.size, DownloadsTab.RECORDINGS to recorded).forEach { (t, n) ->
+            listOf(DownloadsTab.MOVIES to movies.size, DownloadsTab.SERIES to series.size).forEach { (t, n) ->
                 StageTab(
                     label = stringResource(t.labelRes), count = n.toString(), selected = t == tab,
                     onClick = { tab = t; scope.launch { runCatching { listState.scrollToItem(0) } } },
@@ -298,12 +283,11 @@ fun DownloadsScreen(
         }
 
         // Where this tab's files go: the folder in use plus core's fixed subfolder, right under
-        // the Download folder tool that changes it, in the free band above the Recordings card.
+        // the Download folder tool that changes it.
         storage?.let { info ->
             val sub = when (tab) {
                 DownloadsTab.MOVIES -> MediaFolders.MOVIES
                 DownloadsTab.SERIES -> MediaFolders.SERIES
-                DownloadsTab.RECORDINGS -> MediaFolders.TV
             }
             val root = remember(downloadRoot, info.usingFallback) {
                 downloadRoot.takeUnless { info.usingFallback }?.let(StorageAccess::folderLabel)
@@ -317,17 +301,18 @@ fun DownloadsScreen(
             )
         }
 
-        // The list: 1110 wide from the content edge, laid out wider by the focused row's glow and padded back.
+        // The list: full content width now that nothing shares the row with it (the Recordings card
+        // used to claim the right-hand third), laid out wider by the focused row's glow and padded back.
         val glowRoom = 24.mpx
         val glowWide = Modifier.layout { measurable, constraints ->
             val extra = glowRoom.roundToPx()
             val placeable = measurable.measure(constraints.copy(minWidth = constraints.minWidth + extra * 2, maxWidth = constraints.maxWidth + extra * 2))
             layout(constraints.maxWidth, constraints.maxHeight) { placeable.place(-extra, 0) }
         }
-        Box(Modifier.padding(start = contentStart, top = 210.mpx + warnShift).width(fx(1260) - contentStart).fillMaxSize()) {
+        Box(Modifier.padding(start = contentStart, top = 210.mpx + warnShift).width(fx(1856) - contentStart).fillMaxSize()) {
             if (listIds.isEmpty()) {
                 Text(
-                    stringResource(if (tab == DownloadsTab.RECORDINGS) R.string.recording_empty else R.string.content_downloads_empty),
+                    stringResource(R.string.content_downloads_empty),
                     style = stageText(20, 500), color = StageColors.Muted, modifier = Modifier.padding(start = 20.mpx, top = 26.mpx),
                 )
             } else {
@@ -342,35 +327,16 @@ fun DownloadsScreen(
                             }
                             .focusGroup(),
                     ) {
-                        if (tab == DownloadsTab.RECORDINGS) {
-                            recordingItems(
-                                recordings = recordings,
-                                focusOf = ::focusOf,
-                                onFocused = rowFocused,
-                                onPlay = { r -> recVm.play(r); if (!recExternal) onFullscreen() else wentExternal() },
-                                onStop = { r -> recVm.stop(r) },
-                                onCancel = { r -> acted(r.id); recVm.cancel(r) },
-                                onRetry = { r -> recVm.retry(r) },
-                                onDelete = { r -> acted(r.id); recVm.delete(r) },
-                                missing = recMissing,
-                            )
-                        } else {
-                            downloadGroup(R.string.content_downloads_group_downloading, downloading, first = true) { d ->
-                                DownloadItem(d, details[d.id], active?.takeIf { it.id == d.id }, downloading, vm, onFullscreen, externalPlayerOn, focusOf(d.id), acted, rowFocused, wentExternal, gone = d.filePath in missing)
-                            }
-                            downloadGroup(R.string.content_downloads_group_on_tv, onTv, first = downloading.isEmpty()) { d ->
-                                DownloadItem(d, details[d.id], null, downloading, vm, onFullscreen, externalPlayerOn, focusOf(d.id), acted, rowFocused, wentExternal, gone = d.filePath in missing)
-                            }
+                        downloadGroup(R.string.content_downloads_group_downloading, downloading, first = true) { d ->
+                            DownloadItem(d, details[d.id], active?.takeIf { it.id == d.id }, downloading, vm, onFullscreen, externalPlayerOn, focusOf(d.id), acted, rowFocused, wentExternal, gone = d.filePath in missing)
+                        }
+                        downloadGroup(R.string.content_downloads_group_on_tv, onTv, first = downloading.isEmpty()) { d ->
+                            DownloadItem(d, details[d.id], null, downloading, vm, onFullscreen, externalPlayerOn, focusOf(d.id), acted, rowFocused, wentExternal, gone = d.filePath in missing)
                         }
                     }
                 }
             }
         }
-
-        RecordingsCard(
-            recordings = recordings, recorded = recorded, onOpenGuide = onOpenGuide,
-            modifier = Modifier.padding(start = fx(1330), top = 236.mpx + warnShift).width(fx(526)),
-        )
     }
 
     // The volume picker Settings used to open, unchanged — only its door moved. Closing it returns to the tool.
@@ -616,55 +582,12 @@ internal fun StageDownloadRow(
 }
 
 /**
- * The glass card beside the list (526 wide, radius 30, padding 30): ● Recordings, "Nothing recorded yet" (or
- * how many there are), how to record, Open TV Guide, and under a divider the next scheduled recording.
+ * "Today 21:10", "Tomorrow 06:00", "Thu 2 Oct 20:15" — the guide's own day words. Used wherever a
+ * past or scheduled moment (a watch-history entry, a sync time) needs the same short, local phrasing.
  */
-@Composable
-private fun RecordingsCard(recordings: List<RecordingEntity>, recorded: Int, onOpenGuide: () -> Unit, modifier: Modifier = Modifier) {
-    val accent = stageAccent.accent
-    val next = remember(recordings) { recordings.filter { it.status == RecordingStatus.SCHEDULED }.minByOrNull { it.programmeStartMs } }
-    Column(modifier.stageGlass(30.mpx).padding(30.mpx)) {
-        Row(horizontalArrangement = Arrangement.spacedBy(10.mpx), verticalAlignment = Alignment.CenterVertically) {
-            tv.own.owntv.ui.components.OwnTVIcon(OwnTVIcon.REC, accent, Modifier.size(18.mpx), filled = true)
-            Text(stringResource(R.string.recording_title), style = stageText(18, 700), color = accent, maxLines = 1, overflow = TextOverflow.Ellipsis)
-        }
-        Text(
-            if (recorded == 0) stringResource(R.string.recording_card_empty_title) else pluralStringResource(R.plurals.recording_card_count, recorded, recorded),
-            style = stageText(30, 800), color = StageColors.Text, modifier = Modifier.padding(top = 14.mpx, bottom = 8.mpx),
-        )
-        Text(stringResource(R.string.recording_card_body), style = stageText(18, 500).copy(lineHeight = 27.mpxSp), color = StageColors.Muted)
-        StageButton(
-            text = stringResource(R.string.recording_open_guide), onClick = onOpenGuide, icon = OwnTVIcon.EPG,
-            height = 58.mpx, textSize = 20, modifier = Modifier.padding(top = 22.mpx),
-        )
-        if (next != null) {
-            Box(Modifier.padding(top = 28.mpx, bottom = 22.mpx).fillMaxWidth().height(1.mpx).background(StageColors.Ink.copy(alpha = 0.1f)))
-            Row(horizontalArrangement = Arrangement.spacedBy(10.mpx), verticalAlignment = Alignment.CenterVertically) {
-                tv.own.owntv.ui.components.OwnTVIcon(OwnTVIcon.CLOCK, StageColors.Muted, Modifier.size(18.mpx))
-                Text(stringResource(R.string.recording_group_scheduled), style = stageText(18, 700), color = StageColors.Muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            }
-            Row(Modifier.padding(top = 14.mpx), horizontalArrangement = Arrangement.spacedBy(16.mpx), verticalAlignment = Alignment.CenterVertically) {
-                tv.own.owntv.features.live.LivePlate(next.channelIconUrl, 70.mpx, 50.mpx)
-                Column {
-                    Text(next.title, style = stageText(20, 700), color = StageColors.Text, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    Text(
-                        recordingWhen(next.programmeStartMs) + stringResource(R.string.content_epg_bits_separator) + next.channelName,
-                        style = stageText(16, 500), color = StageColors.Muted, maxLines = 1, overflow = TextOverflow.Ellipsis,
-                    )
-                }
-            }
-        }
-    }
-}
-
-/** "Today 21:10", "Tomorrow 06:00", "Thu 2 Oct 20:15" — the guide's own day words. */
 @Composable
 internal fun recordingWhen(atMs: Long): String =
     guideDayLabel(localMidnight(atMs)) + " " + tv.own.owntv.ui.format.rememberBestDateFormatter("jm")(atMs)
-
-/** The recordings tab's rows, top to bottom, in the order [recordingItems] draws them. */
-private fun recordingIdsInOrder(recordings: List<RecordingEntity>): List<Long> =
-    tv.own.owntv.features.recordings.recordingGroups(recordings).flatMap { (_, list) -> list.map { it.id } }
 
 /** 3.1 GB from a gigabyte up, 840.2 MB below it. */
 @Composable

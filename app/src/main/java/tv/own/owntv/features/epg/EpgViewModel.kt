@@ -109,7 +109,6 @@ class EpgViewModel(
     private val streamUrlResolver: tv.own.owntv.core.stalker.StreamUrlResolver,
     private val externalPlayerLauncher: tv.own.owntv.core.player.ExternalPlayerLauncher,
     private val customCategoryDao: tv.own.owntv.core.database.dao.CustomCategoryDao,
-    private val recordings: tv.own.owntv.core.recording.RecordingManager,
     /** The provider-guide half of a row, for channels whose stored guide stops short — the app-wide
      *  reader Live TV uses too, so both screens share one cache. */
     private val liveEpgReader: tv.own.owntv.core.live.LiveEpgReader,
@@ -130,108 +129,6 @@ class EpgViewModel(
 
     /** The match scan itself — core's, so the television, the phone and the single-channel run agree. */
     private val autoMatcher = EpgAutoMatcher(channelDao, guideCandidates)
-
-    // --- Recording, from the guide ---------------------------------------------------------------
-
-    /**
-     * This profile's recordings, so a programme cell knows whether it is already spoken for.
-     *
-     * The whole list rather than a per-programme lookup: the guide draws hundreds of cells and a
-     * query each would be hundreds of queries. There are never many recordings.
-     */
-    val recordingRows: StateFlow<List<tv.own.owntv.core.database.entity.RecordingEntity>> =
-        settings.activeProfileId
-            .flatMapLatest { pid -> if (pid < 0) flowOf(emptyList()) else recordings.observe(pid) }
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
-
-    /** The recording already covering this programme, if there is one. */
-    fun recordingFor(
-        channel: ChannelEntity,
-        programme: EpgProgrammeEntity,
-    ): tv.own.owntv.core.database.entity.RecordingEntity? = recordingRows.value.firstOrNull {
-        it.channelId == channel.id && it.programmeStartMs == programme.startMs &&
-            it.status != tv.own.owntv.core.model.RecordingStatus.CANCELLED
-    }
-
-    /**
-     * Record this programme — scheduled if it is still to come, pulled from the archive if it has
-     * already been on and the channel keeps one.
-     *
-     * A programme that has already finished and whose channel has no catch-up cannot be recorded at
-     * all; [canRecord] is what stops the button being offered for it.
-     */
-    fun record(channel: ChannelEntity, programme: EpgProgrammeEntity) {
-        viewModelScope.launch {
-            val pid = currentProfileId() ?: return@launch
-            val source = sourceDao.getById(channel.sourceId) ?: return@launch
-            val now = System.currentTimeMillis()
-            if (programme.stopMs <= now) {
-                recordings.recordFromArchive(
-                    profileId = pid,
-                    channel = channel,
-                    programme = programme,
-                    source = source,
-                    timeZone = settings.resolveCatchupTimeZone(source),
-                    xtream = xtream,
-                )
-                return@launch
-            }
-            val window = recordings.windowFor(programme.startMs, programme.stopMs)
-            recordings.schedule(
-                tv.own.owntv.core.database.entity.RecordingEntity(
-                    profileId = pid,
-                    sourceId = channel.sourceId,
-                    channelId = channel.id,
-                    channelName = channel.name,
-                    channelIconUrl = channel.logoUrl,
-                    epgChannelId = channel.epgChannelId,
-                    streamUrl = channel.streamUrl,
-                    httpHeaders = channel.httpHeaders,
-                    title = programme.title,
-                    description = programme.description,
-                    programmeStartMs = programme.startMs,
-                    programmeStopMs = programme.stopMs,
-                    startMs = window.first,
-                    stopMs = window.last,
-                ),
-            )
-        }
-    }
-
-    /**
-     * Whether Record can be offered for this programme at all: still to come, or already been on and
-     * within a catch-up channel's archive.
-     */
-    fun canRecord(channel: ChannelEntity, programme: EpgProgrammeEntity, now: Long): Boolean =
-        programme.stopMs > now || canCatchup(channel, programme, now)
-
-    fun stopRecording(recording: tv.own.owntv.core.database.entity.RecordingEntity) =
-        recordings.stop(recording)
-
-    fun cancelRecording(recording: tv.own.owntv.core.database.entity.RecordingEntity) =
-        recordings.cancel(recording)
-
-    /** The standing "record every showing" rule covering this programme, or null. */
-    suspend fun seriesRuleFor(
-        channel: ChannelEntity,
-        programme: EpgProgrammeEntity,
-    ): tv.own.owntv.core.database.entity.RecordingRuleEntity? {
-        val pid = currentProfileId() ?: return null
-        return recordings.ruleFor(pid, channel.id, programme.title)
-    }
-
-    /** Record every future showing of this title on this channel. */
-    fun recordSeries(channel: ChannelEntity, programme: EpgProgrammeEntity) {
-        viewModelScope.launch {
-            val pid = currentProfileId() ?: return@launch
-            recordings.addSeriesRule(pid, channel, programme.title)
-        }
-    }
-
-    /** Stop the standing rule, and drop the showings it had queued but not yet recorded. */
-    fun stopSeries(rule: tv.own.owntv.core.database.entity.RecordingRuleEntity) {
-        viewModelScope.launch { recordings.removeSeriesRule(rule) }
-    }
 
     /** Every windowed guide read this screen makes. The caches around it stay here — what to keep
      *  depends on how the grid scrolls, which is the screen's business, not core's. */

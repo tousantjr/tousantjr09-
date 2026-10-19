@@ -40,14 +40,6 @@ class SettingsSearchRowsTest {
         assertEquals("$file rows missing from $list", emptySet<String>(), drawn - listed(source, list))
     }
 
-    @Test
-    fun `recording rows are searchable`() =
-        check(
-            "RecordingSettingsScreen.kt", "RECORDING_SEARCH_ROWS",
-            // The group's heading and the "record while watching" warning dialog are not rows.
-            notRows = setOf("recording_settings_group", "settings_record_watching_warning_title"),
-        )
-
     // A Stage full page's own title is the screen itself, which has a search entry of its own.
     @Test
     fun `proxy rows are searchable`() = check("NetworkSettingsScreen.kt", "PROXY_SEARCH_ROWS", notRows = setOf("common_proxy"))

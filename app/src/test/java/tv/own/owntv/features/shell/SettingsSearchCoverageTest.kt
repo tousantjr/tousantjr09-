@@ -154,14 +154,13 @@ class SettingsSearchCoverageTest {
         "settings_sources_resync_title_full", "settings_sources_resync_now_full", "settings_sources_resync_remove_full",
         "settings_sources_test_title", "player_subtitles_sign_in_title", "settings_open_subtitles_setup_title",
         "settings_panel_width_dialog_title", "settings_panel_width_disable_preview_title",
-        "settings_record_watching_warning_title",
     )
 
     @Test
     fun `every setting inside a settings sub-screen can be found by search`() {
         val helperFrom = source.indexOf("private fun subScreenSearchEntries")
         assertTrue("could not find subScreenSearchEntries", helperFrom >= 0)
-        // The per-screen `*_SEARCH_ROWS` lists (Proxy, DNS, Recording…) feed search too.
+        // The per-screen `*_SEARCH_ROWS` lists (Proxy, DNS…) feed search too.
         val screenRows = File("src/main/java/tv/own/owntv/features/settings").listFiles { f -> f.isFile && f.name.endsWith(".kt") }.orEmpty()
             .joinToString("\n") { f ->
                 Regex("""internal val [A-Z_]+_SEARCH_ROWS: List<Int> =\s*listOf\(([^)]*)\)""")

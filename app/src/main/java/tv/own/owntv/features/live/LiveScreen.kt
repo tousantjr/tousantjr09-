@@ -216,8 +216,6 @@ fun LiveScreen(
     var matchingEpg by remember { mutableStateOf<ChannelEntity?>(null) }
     var offsettingEpg by remember { mutableStateOf<ChannelEntity?>(null) }
     var catchupChannel by remember { mutableStateOf<ChannelEntity?>(null) }
-    // The channel the "Schedule recording…" dialog is open for (#2).
-    var schedulingChannel by remember { mutableStateOf<ChannelEntity?>(null) }
     // Programme picked in the catch-up dialog, awaiting the "Watch from start / Watch channel" choice.
     // The Live picker used to start the archive straight from the pick, so the same programme opened
     // from the Guide (which asks) and from here behaved differently — this makes the two match.
@@ -232,9 +230,7 @@ fun LiveScreen(
     val multiviewTiles by liveSettings.multiviewTiles.collectAsStateWithLifecycle(
         tv.own.owntv.core.live.DEFAULT_MULTIVIEW_TILES,
     )
-    // Also says where a scheduled recording landed ("Will record Sat 21:00").
     val multiviewToast = tv.own.owntv.ui.components.rememberInAppToast()
-    val recordingChannelIds by vm.recordingChannelIds.collectAsStateWithLifecycle()
     // Resolved through resources rather than stringResource: the count is only known inside the click.
     val multiviewRes = androidx.compose.ui.platform.LocalContext.current.resources
     var contextCategory by remember { mutableStateOf<LiveRailItem?>(null) }
@@ -355,14 +351,6 @@ fun LiveScreen(
         if (catchupChannel != null || catchupDetail != null) { catchupWasOpen = true; return@LaunchedEffect }
         if (!catchupWasOpen) return@LaunchedEffect
         catchupWasOpen = false
-        restoreToContextRow()
-    }
-    // Schedule-recording restoration.
-    var schedulingWasOpen by remember { mutableStateOf(false) }
-    LaunchedEffect(schedulingChannel) {
-        if (schedulingChannel != null) { schedulingWasOpen = true; return@LaunchedEffect }
-        if (!schedulingWasOpen) return@LaunchedEffect
-        schedulingWasOpen = false
         restoreToContextRow()
     }
     // Channel reorder restoration.
@@ -1023,9 +1011,6 @@ fun LiveScreen(
             onMatchEpg = { matchingEpg = ch; contextChannel = null },
             onEpgOffset = { offsettingEpg = ch; contextChannel = null },
             onCatchup = { catchupChannel = ch; contextChannel = null },
-            isRecording = ch.id in recordingChannelIds,
-            onRecord = { if (ch.id in recordingChannelIds) vm.stopRecordingOn(ch) else vm.recordNow(ch); contextChannel = null },
-            onScheduleRecord = { schedulingChannel = ch; contextChannel = null },
             onPlayExternal = { vm.playExternal(ch); contextChannel = null },
             // Only offered once Multiview is switched on. Adding is silent apart from the toast: the
             // grid opens when the user plays a channel, which is the gesture that says "now".
@@ -1059,22 +1044,6 @@ fun LiveScreen(
             onRemoveFromHistory = { vm.removeFromHistory(ch.id); contextChannel = null },
             onRemoveFromCategory = (selectedKey as? LiveKey.Custom)?.let { k -> { vm.removeFromCustomCategory(ch, k); contextChannel = null } },
             onDismiss = { contextChannel = null },
-        )
-    }
-
-    val scheduledDay = tv.own.owntv.ui.format.rememberBestDateFormatter("EEEMMMd")
-    val scheduledTime = tv.own.owntv.ui.format.rememberSystemTimeFormatter()
-    schedulingChannel?.let { ch ->
-        ScheduleRecordingDialog(
-            channelName = ch.name,
-            clashesFor = { start, stop -> vm.recordingClashes(ch, start, stop) },
-            onSchedule = { start, stop ->
-                schedulingChannel = null
-                vm.scheduleRecording(ch, start, stop) { at ->
-                    multiviewToast.show(multiviewRes.getString(R.string.recording_scheduled_for, scheduledDay(at) + " " + scheduledTime(at)))
-                }
-            },
-            onDismiss = { schedulingChannel = null },
         )
     }
 
@@ -1176,10 +1145,6 @@ private fun ChannelContextMenu(
     onMatchEpg: () -> Unit,
     onEpgOffset: () -> Unit,
     onCatchup: () -> Unit,
-    // A recording of this channel is running: Record becomes Stop recording.
-    isRecording: Boolean,
-    onRecord: () -> Unit,
-    onScheduleRecord: () -> Unit,
     onPlayExternal: () -> Unit,
     // Null unless Multiview is switched on: keep this channel for the grid.
     onAddToMultiview: (() -> Unit)?,
@@ -1201,11 +1166,6 @@ private fun ChannelContextMenu(
     val watch = 0; val chan = 1; val guide = 2; val organise = 3
     val actions = buildList {
         if (channel.catchup) add(MenuAction("catchup", stringResource(R.string.content_catchup), OwnTVIcon.REWIND, group = watch, onClick = onCatchup))
-        // Record this channel from now. The guide's Record needs a programme, so a channel
-        // the provider publishes no guide for can only be recorded from here. While it records, the
-        // same row stops it — pressing Record again would start a second copy on another connection.
-        add(MenuAction("record", stringResource(if (isRecording) R.string.recording_stop else R.string.recording_record), OwnTVIcon.REC, group = watch, onClick = onRecord))
-        add(MenuAction("schedule_record", stringResource(R.string.recording_schedule), OwnTVIcon.CLOCK, group = watch, onClick = onScheduleRecord))
         if (onAddToMultiview != null) {
             add(MenuAction("add_to_multiview", stringResource(R.string.multiview_add_to), OwnTVIcon.MULTIVIEW, group = watch, onClick = onAddToMultiview))
         }
