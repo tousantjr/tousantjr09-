@@ -44,6 +44,7 @@ fun SettingsHomePage(
         if (profileId < 0) flowOf(HomeConfig()) else vm.settings.homeConfig(profileId)
     }.pref(HomeConfig())
     val availability by vm.trendingAvailability.collectAsStateWithLifecycle()
+    val hideAdultCategoriesHome by vm.hideAdultCategoriesHome.collectAsStateWithLifecycle()
 
     fun editHome(transform: (HomeConfig) -> HomeConfig) {
         if (profileId < 0) return
@@ -81,6 +82,13 @@ fun SettingsHomePage(
                     )
                 }
             }
+            // Additive to :core's own kids-profile category hiding — see HomeContentFilterSettings.
+            StageSettingRow(
+                title = stringResource(R.string.settings_home_hide_adult_categories),
+                subtitle = stringResource(R.string.settings_home_hide_adult_categories_description),
+                role = Role.Switch,
+                onClick = { vm.setHideAdultCategoriesHome(!hideAdultCategoriesHome) },
+            ) { StageSwitch(hideAdultCategoriesHome) }
         }
 
         settingsSection(R.string.settings_sections)

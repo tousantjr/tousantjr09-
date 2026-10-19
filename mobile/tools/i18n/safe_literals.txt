@@ -177,6 +177,8 @@
 1	log	app/src/main/java/tv/own/owntv/mobile/ui/screens/guide/GuideViewModel.kt	guide_stats programmes=$programmes guideChannels=$guideChannels
 1	log	app/src/main/java/tv/own/owntv/mobile/ui/screens/guide/GuideViewModel.kt	sources=${ids.size} cachedRows=${synchronized(rowCache) { rowCache.size }}
 1	log	app/src/main/java/tv/own/owntv/mobile/ui/screens/guide/GuideViewModel.kt	totalMs=${android.os.SystemClock.elapsedRealtime() - startedAt}
+1	preference-key	app/src/main/java/tv/own/owntv/mobile/ui/screens/home/HomeContentFilterSettings.kt	hide_adult_categories_home
+1	preference-key	app/src/main/java/tv/own/owntv/mobile/ui/screens/home/HomeContentFilterSettings.kt	home_content_filter
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/home/HomeScreen.kt	home
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/home/HomeText.kt	%1$d
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/home/HomeText.kt	·

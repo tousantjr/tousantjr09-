@@ -1,8 +1,10 @@
 package tv.own.owntv.mobile.di
 
+import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 import tv.own.owntv.core.home.HomeFeedReader
+import tv.own.owntv.mobile.ui.screens.home.HomeContentFilterSettings
 import tv.own.owntv.mobile.ui.screens.home.HomeViewModel
 
 /**
@@ -25,5 +27,8 @@ val homeModule = module {
             guide = get(),
         )
     }
+    // Home's "Hide adult categories" toggle (Settings → Layout → Home): app-level, not per-profile,
+    // and additive to :core's own kids-profile category hiding — see HomeContentFilterSettings.
+    single { HomeContentFilterSettings(androidContext()) }
     viewModelOf(::HomeViewModel)
 }

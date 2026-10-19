@@ -353,6 +353,9 @@ dependencies {
     implementation(libs.androidx.paging.runtime)
     implementation(libs.androidx.paging.compose)
 
+    // DataStore — HomeContentFilterSettings' one persisted flag, outside :core's compiled SettingsRepository.
+    implementation(libs.androidx.datastore.preferences)
+
     // Image loading
     // Media3's SubtitleView, for the image subtitles the engine renders through ExoPlayer.
     implementation(libs.androidx.media3.ui)

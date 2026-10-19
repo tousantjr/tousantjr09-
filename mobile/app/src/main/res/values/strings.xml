@@ -51,4 +51,9 @@
     <string name="diagnostics_speed_test_desc">Downloads a small file from a public test server to measure your speed</string>
     <string name="diagnostics_speed_test_result">%1$s Mbps download</string>
     <string name="diagnostics_speed_test_failed">Speed test failed — check your connection</string>
+
+    <!-- Settings → Layout → Home: additive, all-profiles filter for Home's Trending rail, separate
+         from (and on top of) the existing kids-profile category hiding. -->
+    <string name="settings_home_hide_adult_categories">Hide adult categories from Home</string>
+    <string name="settings_home_hide_adult_categories_description">Keep categories matching adult content out of Trending on Home, for every profile</string>
 </resources>

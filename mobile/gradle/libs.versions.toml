@@ -16,6 +16,9 @@ adaptive = "1.3.0"
 lifecycle = "2.11.0"
 navigationCompose = "2.10.1"
 work = "2.11.2"
+# Home's "Hide adult categories" toggle (HomeContentFilterSettings): an app-level flag that cannot
+# live in :core's compiled SettingsRepository. Matches the TV app's own pin.
+datastore = "1.2.1"
 
 # --- Paging ---
 paging = "3.5.1"
@@ -110,6 +113,9 @@ androidx-work-runtime = { group = "androidx.work", name = "work-runtime-ktx", ve
 # Paging — core's DAOs return PagingSource for the big catalogs (170k+ movies).
 androidx-paging-runtime = { group = "androidx.paging", name = "paging-runtime", version.ref = "paging" }
 androidx-paging-compose = { group = "androidx.paging", name = "paging-compose", version.ref = "paging" }
+
+# DataStore — HomeContentFilterSettings' one persisted flag, outside :core's compiled SettingsRepository.
+androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
 
 # Coroutines
 kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }

@@ -50,6 +50,7 @@ val settingsModule = module {
             player = get(),
             livePreview = get(),
             enginePool = get(),
+            homeContentFilter = get(),
         )
     }
     viewModel {

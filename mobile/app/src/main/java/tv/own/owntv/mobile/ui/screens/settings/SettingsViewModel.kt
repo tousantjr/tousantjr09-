@@ -103,6 +103,7 @@ class SettingsViewModel(
     private val player: tv.own.owntv.player.OwnTVPlayer,
     private val livePreview: tv.own.owntv.player.LivePreviewEngine,
     private val enginePool: tv.own.owntv.player.LiveEnginePool,
+    private val homeContentFilter: tv.own.owntv.mobile.ui.screens.home.HomeContentFilterSettings,
 ) : ViewModel() {
 
     /** Run a setter on a scope that survives the row being scrolled off the screen. */
@@ -156,6 +157,14 @@ class SettingsViewModel(
                 building = active.keys.any { it in data.sourceIds },
             )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), TrendingAvailability.WaitingForSync)
+
+    /** "Hide adult categories from Home" (Trending): app-level, every profile, default on. */
+    val hideAdultCategoriesHome: StateFlow<Boolean> = homeContentFilter.hideAdultCategories
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), true)
+
+    fun setHideAdultCategoriesHome(hidden: Boolean) {
+        viewModelScope.launch { homeContentFilter.setHideAdultCategories(hidden) }
+    }
 
     /** The playlist the rest of the app is filtered to, or -1 when every playlist is shown. */
     val defaultSourceId: StateFlow<Long> = settings.defaultSourceId

@@ -72,6 +72,7 @@ class HomeViewModel(
     private val progressDao: ProgressDao,
     private val channelDao: ChannelDao,
     private val categoryDao: CategoryDao,
+    private val homeContentFilter: HomeContentFilterSettings,
 ) : ViewModel() {
 
     private val profileId: StateFlow<Long> = settings.activeProfileId
@@ -103,7 +104,16 @@ class HomeViewModel(
         reloads.tryEmit(Unit)
         viewModelScope.launch {
             combine(profileId, reloads) { pid, _ -> pid }.collectLatest { pid ->
-                val feed = if (pid < 0) HomeFeed() else reader.load(pid)
+                val loaded = if (pid < 0) HomeFeed() else reader.load(pid)
+                // :core's own HomeFeedReader already hides an adult category for a KIDS profile (a
+                // hard block); this filters Home's Trending rail the same way for EVERY profile, behind
+                // a Settings toggle that defaults on (HomeContentFilterSettings) — additive, never a
+                // replacement for it.
+                val feed = if (homeContentFilter.hideAdultCategories.first()) {
+                    loaded.copy(trendingItems = filterAdultTrending(loaded.trendingItems))
+                } else {
+                    loaded
+                }
                 _feed.value = feed
                 resolveHeroBackdrops(feed.heroItems)
             }
@@ -112,6 +122,27 @@ class HomeViewModel(
 
     fun refresh() {
         reloads.tryEmit(Unit)
+    }
+
+    /**
+     * Kotlin-side filter over an already-resolved rail, applied after [HomeFeedReader]'s own query —
+     * not a SQL join. Trending holds a handful of items at most, so this is a handful of
+     * [CategoryDao.getById] point lookups, the same DAO `:core` itself reads from in
+     * [tv.own.owntv.core.content.AdultCategoryClassifier.hiddenCategoryIds] — there is no bulk
+     * "categories by id" query to join against for a list this small.
+     */
+    private suspend fun filterAdultTrending(items: List<TrendingHomeItem>): List<TrendingHomeItem> {
+        if (items.isEmpty()) return items
+        fun categoryIdOf(item: TrendingHomeItem): Long? = when (item) {
+            is TrendingHomeItem.Movie -> item.movie.categoryId
+            is TrendingHomeItem.Series -> item.series.categoryId
+        }
+        val categoryNames = items.mapNotNull(::categoryIdOf).distinct()
+            .associateWith { id -> categoryDao.getById(id)?.name }
+        return items.filterNot { item ->
+            val name = categoryIdOf(item)?.let(categoryNames::get)
+            AdultCategoryClassifier.isAdult(name)
+        }
     }
 
     // --- Keep watching stills -------------------------------------------------------------------

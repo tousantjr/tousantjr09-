@@ -211,6 +211,7 @@ private val LEAF_ROWS: List<Pair<SettingsLeaf, Int>> = listOf(
     SettingsLeaf.HOME to R.string.settings_live_keep_watching,
     SettingsLeaf.HOME to R.string.settings_movies_keep_watching,
     SettingsLeaf.HOME to R.string.settings_series_keep_watching,
+    SettingsLeaf.HOME to R.string.settings_home_hide_adult_categories,
     SettingsLeaf.BROWSING to R.string.settings_browsing_last_category,
     SettingsLeaf.BROWSING to R.string.settings_browsing_last_item,
     SettingsLeaf.METADATA to R.string.settings_metadata_source,
