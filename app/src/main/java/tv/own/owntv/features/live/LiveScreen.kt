@@ -316,7 +316,7 @@ fun LiveScreen(
         contextMenuOpen = false
         // A follow-up dialog (rename / match EPG / catch-up / move) grabs focus itself — only restore
         // for plain closes (Cancel, Favourite, Hide, Close). Those dialogs restore on their own close.
-        if (renaming != null || matchingEpg != null || offsettingEpg != null || catchupChannel != null || schedulingChannel != null || enteringMoveMode ||
+        if (renaming != null || matchingEpg != null || offsettingEpg != null || catchupChannel != null || enteringMoveMode ||
             moveItem != null || creatingCategory
         ) return@LaunchedEffect
         restoreToContextRow()
