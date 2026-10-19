@@ -41,6 +41,7 @@ import tv.own.owntv.mobile.ui.screens.sports.SportsLeagueScreen
 import tv.own.owntv.mobile.ui.screens.sports.SportsMatchScreen
 import tv.own.owntv.mobile.ui.screens.sports.SportsPlayback
 import tv.own.owntv.mobile.ui.screens.sports.SportsScreen
+import tv.own.owntv.mobile.ui.screens.sports.SportsUpcomingScreen
 import tv.own.owntv.mobile.ui.screens.settings.SettingsGroup
 import tv.own.owntv.mobile.ui.screens.settings.SettingsGroupScreen
 import tv.own.owntv.mobile.ui.screens.settings.LocalSettingsNav
@@ -148,6 +149,7 @@ fun MobileNavHost(
                         onOpenMatch = { navController.navigate(sportsMatchRoute(it.key)) },
                         onPlayChannel = playChannel,
                         onChooseSports = { navController.navigate(SettingsLeaf.SPORTS_LEAGUES.route) },
+                        onOpenUpcoming = { navController.navigate(SPORTS_UPCOMING) },
                     )
                     MobileDestination.MOVIES, MobileDestination.SERIES, MobileDestination.LIBRARY ->
                         LibraryScreen(
@@ -200,6 +202,12 @@ fun MobileNavHost(
             SportsLeagueScreen(
                 leagueKey = entry.arguments?.getString(ARG_KEY).orEmpty(),
                 onOpenMatch = { navController.navigate(sportsMatchRoute(it.key)) },
+            )
+        }
+        page(SPORTS_UPCOMING) {
+            SportsUpcomingScreen(
+                onOpenMatch = { navController.navigate(sportsMatchRoute(it.key)) },
+                onChooseSports = { navController.navigate(SettingsLeaf.SPORTS_LEAGUES.route) },
             )
         }
         page(
@@ -329,6 +337,9 @@ private const val ARG_KEY = "key"
 private const val SPORTS_MATCH = "sports/match"
 private const val SPORTS_LEAGUE = "sports/league"
 private const val SPORTS_MATCH_PATTERN = "$SPORTS_MATCH/{$ARG_KEY}"
+
+/** Sports hub → Upcoming: the 7-day view, outside core's Demand/Feed board (see SportsUpcomingViewModel). */
+const val SPORTS_UPCOMING = "sports/upcoming"
 
 /** A match's page; its key carries slashes ("soccer/ger.1/…"), so it is encoded. */
 fun sportsMatchRoute(key: String): String = "$SPORTS_MATCH/${Uri.encode(key)}"

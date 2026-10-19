@@ -85,6 +85,7 @@ fun SportsScreen(
     onOpenMatch: (Match) -> Unit,
     onPlayChannel: (Long) -> Unit,
     onChooseSports: () -> Unit,
+    onOpenUpcoming: () -> Unit,
     vm: SportsViewModel = koinViewModel(),
 ) {
     val state by vm.hub.collectAsStateWithLifecycle()
@@ -133,6 +134,14 @@ fun SportsScreen(
                 if (state.board.paused) {
                     Text(stringResource(R.string.sports_paused), style = stageText(12.5f, 600), color = LocalStagePalette.current.warn, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
+            }
+        }
+        // Beyond today/tomorrow: the next 7 days per followed league, fetched on its own (core's
+        // Demand/Feed model has no "day N" — see SportsUpcomingViewModel). Shown regardless of what
+        // is followed — Upcoming's own empty state is what points a new user at Settings → Sports.
+        item(key = "upcoming") {
+            Row(Modifier.padding(horizontal = 14.dp, vertical = 10.dp), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                StageTool(onClick = onOpenUpcoming, label = stringResource(R.string.sports_upcoming_title), icon = MobileIcons.CalendarMonth)
             }
         }
         if (config.followedLeagues().isNotEmpty()) {
@@ -246,7 +255,7 @@ private fun HubSubtitle(today: List<Match>) {
 
 /** The hub with nothing followed: what to do, where, why to choose with care — and the way there. */
 @Composable
-private fun NothingFollowedNote(onChooseSports: () -> Unit) {
+internal fun NothingFollowedNote(onChooseSports: () -> Unit) {
     val palette = LocalStagePalette.current
     Column(Modifier.padding(horizontal = 14.dp, vertical = 32.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(stringResource(R.string.sports_empty_nothing_followed), style = stageText(16f, 800), color = palette.text)
