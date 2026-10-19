@@ -28,6 +28,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import tv.own.owntv.core.i18n.AppLocale
@@ -57,6 +58,7 @@ open class MainActivity : FragmentActivity() {
     private val cast: CastController by inject()
     private val localeStore: LocaleStore by inject()
     private val settings: SettingsRepository by inject()
+    private val autoRefresh: tv.own.owntv.core.sync.AutoRefresh by inject()
 
     /**
      * The engine actually holding the stream — mpv for a film, a download or a recording, ExoPlayer
@@ -101,6 +103,22 @@ open class MainActivity : FragmentActivity() {
         }
     }
 
+    /**
+     * The chosen app language, on the Activity's own resources — the screen reads its strings from here, not
+     * from the Application's. Without it a language picked in the app showed again only until the next cold
+     * start, then the phone's own language came back while Settings still named the chosen one (the TV wraps
+     * its Activity the same way).
+     *
+     * An override of the locales alone, not the TV's wrapped context: that context is a frozen copy of the
+     * whole configuration, and this Activity handles rotation itself, so after turning the phone back
+     * upright the shell still read the landscape width and kept the side rail.
+     */
+    override fun attachBaseContext(newBase: android.content.Context) {
+        super.attachBaseContext(newBase)
+        val locales = AppLocale.wrap(newBase, LocaleStore.from(newBase).readBlocking()).resources.configuration.locales
+        applyOverrideConfiguration(android.content.res.Configuration().apply { setLocales(locales) })
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         // The launch screen (the icon colour's flip card) must be installed before super.onCreate;
         // it then swaps the activity to Theme.OwnTVMobile via postSplashScreenTheme.
@@ -108,6 +126,8 @@ open class MainActivity : FragmentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         askForNotifications()
+        // Turning Sports goal alerts on asks here (core calls it; only an activity can ask).
+        tv.own.owntv.core.sports.MatchAlertHost.requestNotificationPermission = askPermission
         readOpenPlayerRequest(intent)
         // The buttons say Play or Pause depending on what is happening, so they are rebuilt whenever
         // that changes — a PiP window whose button lies is worse than one with no buttons.
@@ -123,7 +143,14 @@ open class MainActivity : FragmentActivity() {
         lifecycleScope.launch { settings.backgroundPlayback.collect { backgroundPlayback = it } }
         lifecycleScope.launch { settings.audioOnScreenOff.collect { audioOnScreenOff = it } }
         keepScreenOnWhileThereIsAPicture()
+        // "Refresh on startup" and the interval modes of the Auto refresh settings, once a profile is
+        // active (straight away, or as soon as first-run setup has made one).
+        lifecycleScope.launch {
+            settings.activeProfileId.first { it >= 0 }
+            autoRefresh.check(includeStartup = true)
+        }
         setContent {
+            tv.own.owntv.mobile.ui.LocalizedContent(localeStore) {
             MobileTheme {
                 // The wallpaper and its blurred copy sit outside the shell, so the frost every glass
                 // panel samples is one image for the whole app rather than one per panel.
@@ -137,6 +164,7 @@ open class MainActivity : FragmentActivity() {
                         MobileShell(windowWidthDp = LocalConfiguration.current.screenWidthDp)
                     }
                 }
+            }
             }
         }
     }
@@ -224,6 +252,11 @@ open class MainActivity : FragmentActivity() {
         if (intent?.getBooleanExtra(EXTRA_OPEN_PLAYER, false) == true) {
             pip.openPlayerRequested.value = true
         }
+        // A Sports alert, reminder or live score card: the shell opens that match's page.
+        intent?.getStringExtra(tv.own.owntv.core.sports.MatchNotifications.EXTRA_MATCH_KEY)?.let { key ->
+            intent.removeExtra(tv.own.owntv.core.sports.MatchNotifications.EXTRA_MATCH_KEY)
+            org.koin.core.context.GlobalContext.get().get<tv.own.owntv.mobile.ui.screens.sports.SportsPlayback>().openMatchKey.value = key
+        }
     }
 
     /**
@@ -248,6 +281,8 @@ open class MainActivity : FragmentActivity() {
             return
         }
         if (pip.inPip.value) return
+        // A preview is a glance, not watching: leaving the app ends it rather than playing on unseen.
+        if (tuner.previewing.value) return tuner.stop()
         if (!tuner.hasStream) return
         val playing = engine
         if (!backgroundPlayback) {
@@ -268,6 +303,17 @@ open class MainActivity : FragmentActivity() {
         playing.enterAudioOnly()
     }
 
+    /** This activity's answer to core's permission hook, kept so only this one is taken away again. */
+    private val askPermission: () -> Unit = { askForNotifications() }
+
+    /** The permission hook holds this activity; let it go unless a newer activity has already set its own. */
+    override fun onDestroy() {
+        if (tv.own.owntv.core.sports.MatchAlertHost.requestNotificationPermission === askPermission) {
+            tv.own.owntv.core.sports.MatchAlertHost.requestNotificationPermission = null
+        }
+        super.onDestroy()
+    }
+
     /** Back on screen at full size, so the window was tapped rather than closed. */
     override fun onResume() {
         super.onResume()
@@ -276,6 +322,8 @@ open class MainActivity : FragmentActivity() {
 
     override fun onStart() {
         super.onStart()
+        // Back in the foreground: interval refreshes only; core throttles a quick in-and-out.
+        lifecycleScope.launch { autoRefresh.check(includeStartup = false) }
         if (droppedVideoForBackground) {
             droppedVideoForBackground = false
             engine.exitAudioOnly()
@@ -290,7 +338,7 @@ open class MainActivity : FragmentActivity() {
      * Nobody touches the screen during a film, and the phone's own timeout does not know that.
      *
      * Held on the window, by the activity, once — not by the composable that draws the picture. There
-     * are three of those (the channel screen, the full screen player, the mini player) and they hand
+     * are three of those (Live TV's preview, the full screen player, the mini player) and they hand
      * the stream to one another: the arriving one would set the flag and the leaving one would then
      * clear it, which is exactly why the screen still went dark mid-film.
      */
@@ -298,9 +346,13 @@ open class MainActivity : FragmentActivity() {
         // Asked of whichever engine holds the stream, and re-asked when that changes. Read from mpv
         // alone, this stayed false for the whole of a live channel — so the screen dimmed and locked
         // in the middle of a match, exactly as it would while reading a page.
+        // Buffering counts as playing: the screen timeout runs from the last touch, so letting go for a
+        // one-second rebuffer deep into a film turned the screen off at once.
         tuner.activeEngine.flatMapLatest { playing ->
-            combine(playing.isPlaying, playing.audioOnly, playing.audioOnlyMedia) { on, off, radio ->
-                on && !off && !radio
+            combine(
+                playing.isPlaying, playing.buffering, playing.error, playing.audioOnly, playing.audioOnlyMedia,
+            ) { on, loading, failed, off, radio ->
+                (on || loading) && failed == null && !off && !radio
             }
         }.distinctUntilChanged().collect { keep ->
             if (keep) {

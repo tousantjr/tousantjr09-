@@ -83,6 +83,7 @@ val settingsModule = module {
             contentOrderDao = get(),
             customCategoryDao = get(),
             customize = get(),
+            userDataWriter = get(),
         )
     }
     viewModel { OpenSubtitlesViewModel(settings = get(), accounts = get()) }

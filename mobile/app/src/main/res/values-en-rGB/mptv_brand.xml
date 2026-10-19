@@ -9,4 +9,8 @@
     <string name="local_sync_browser_title">MPTV local sync</string>
     <string name="local_sync_error_unreachable">This device could not be reached. On it, open MPTV → Settings → Data → Local sync and turn Sync mode on. Both devices must be on the same Wi-Fi.</string>
     <string name="settings_app_icon_summary">Colour of the MPTV icon and logo</string>
+    <string name="settings_help_bg_background">Stage draws MPTV’s own soft colours. Picture shows a picture of yours behind every screen. Plain is a flat dark fill.</string>
+    <string name="settings_help_brand_accent">The MPTV logo in the menu, About and setup shows its play triangle in your accent colour. The icon on the home screen keeps its own colours.</string>
+    <string name="settings_help_check_updates">Looks on GitHub for a newer MPTV now and offers to install it. Your playlists, favourites and settings stay as they are.</string>
+    <string name="settings_help_startup">What MPTV shows when it starts: Home, the channel you watched last, your favourites, or a channel you pick.</string>
 </resources>

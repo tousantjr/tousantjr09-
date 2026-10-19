@@ -3,6 +3,7 @@ package tv.own.owntv.mobile.ui.screens.library
 import android.content.Context
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -176,10 +177,22 @@ class VodTuner(
                 recordHistory(q.profileId, MediaType.EPISODE, episode.id)
             }
         }
+        // The five-second resume-position saver, alive only while something is playing. It used
+        // to tick forever from here, waking every 5 s for the life of the process even with
+        // nothing on screen; saveProgress() itself already no-ops on null, this just stops the
+        // wakeups too.
+        var saver: Job? = null
         scope.launch {
-            while (true) {
-                delay(PROGRESS_INTERVAL_MS)
-                saveProgress()
+            playing.collect { item ->
+                saver?.cancel()
+                saver = item?.let {
+                    scope.launch {
+                        while (true) {
+                            delay(PROGRESS_INTERVAL_MS)
+                            saveProgress()
+                        }
+                    }
+                }
             }
         }
     }
@@ -194,10 +207,10 @@ class VodTuner(
         if (!AdultCategoryClassifier.allows(pid, movie.categoryId, profileDao, categoryDao)) return false
         val source = withContext(Dispatchers.IO) { sourceDao.getById(movie.sourceId) }
 
-        // #115 — a protected item cannot go to an external player: no intent extra carries a licence
+        // A protected item cannot go to an external player: no intent extra carries a licence
         // URL, so the other app would open it and fail on the first segment.
         if (settings.externalPlayerMovies.first() && movie.drmConfig == null) {
-            return handOver(movie.name, source, movie.streamUrl, movie.httpHeaders, pid, MediaType.MOVIE, movie.id)
+            return handOver(movie.name, source, movie.streamUrl, movie.httpHeaders, pid, MediaType.MOVIE, movie.id, startPositionMs)
         }
 
         if (!dataSaver.allowsStreaming()) return false
@@ -255,7 +268,7 @@ class VodTuner(
         val subtitle = episodeLabel(episode)
 
         if (settings.externalPlayerSeries.first() && episode.drmConfig == null) {
-            return handOver(title, source, episode.streamUrl, episode.httpHeaders, pid, MediaType.EPISODE, episode.id)
+            return handOver(title, source, episode.streamUrl, episode.httpHeaders, pid, MediaType.EPISODE, episode.id, startPositionMs)
         }
 
         if (!dataSaver.allowsStreaming()) return false
@@ -263,6 +276,7 @@ class VodTuner(
         liveTuner.stop()
 
         val episodes = withContext(Dispatchers.IO) { seriesDao.episodesBySeriesOnce(show.id) }
+            .sortedWith(tv.own.owntv.core.content.EpisodeOrder.episodes)
             .ifEmpty { listOf(episode) }
         val startIndex = episodes.indexOfFirst { it.id == episode.id }.coerceAtLeast(0)
         val needsResolve = streamUrlResolver.needsResolve(source)
@@ -293,7 +307,7 @@ class VodTuner(
                         subtitle = episodeLabel(ep),
                         logoUrl = show.posterUrl,
                         contentKey = enginePinKey(show.sourceId, "EPISODE", ep.remoteId),
-                        // v44 — audio/subtitle choices are remembered per series (owner decision 11).
+                        // v44 — audio/subtitle choices are remembered per series.
                         trackKey = enginePinKey(show.sourceId, "SERIES", show.remoteId),
                         seasonNumber = ep.seasonNumber,
                         episodeNumber = ep.episodeNumber,
@@ -436,12 +450,13 @@ class VodTuner(
     }
 
     /** Hand the item to VLC, MX Player or whatever else is installed — the long-press action, and the
-     *  "External player" setting's route. History is still recorded; a resume position cannot be. */
+     *  "External player" setting's route. History is recorded and the saved resume point handed over;
+     *  where the other app stops cannot be read back. */
     suspend fun playExternal(movie: MovieEntity): Boolean {
         val pid = currentProfileId() ?: return false
         if (!AdultCategoryClassifier.allows(pid, movie.categoryId, profileDao, categoryDao)) return false
         val source = withContext(Dispatchers.IO) { sourceDao.getById(movie.sourceId) }
-        return handOver(movie.name, source, movie.streamUrl, movie.httpHeaders, pid, MediaType.MOVIE, movie.id)
+        return handOver(movie.name, source, movie.streamUrl, movie.httpHeaders, pid, MediaType.MOVIE, movie.id, savedPositionMs(pid, MediaType.MOVIE, movie.id))
     }
 
     /** [playExternal] for an episode of [show]. */
@@ -449,8 +464,11 @@ class VodTuner(
         val pid = currentProfileId() ?: return false
         if (!AdultCategoryClassifier.allows(pid, show.categoryId, profileDao, categoryDao)) return false
         val source = withContext(Dispatchers.IO) { sourceDao.getById(show.sourceId) }
-        return handOver(show.name, source, episode.streamUrl, episode.httpHeaders, pid, MediaType.EPISODE, episode.id)
+        return handOver(show.name, source, episode.streamUrl, episode.httpHeaders, pid, MediaType.EPISODE, episode.id, savedPositionMs(pid, MediaType.EPISODE, episode.id))
     }
+
+    private suspend fun savedPositionMs(profileId: Long, mediaType: MediaType, itemId: Long): Long =
+        withContext(Dispatchers.IO) { progressDao.get(profileId, mediaType, itemId)?.positionMs ?: 0L }
 
     /** Stop playing altogether — the mini player's close button, and nothing else. */
     fun stop() {
@@ -552,6 +570,7 @@ class VodTuner(
         profileId: Long,
         mediaType: MediaType,
         itemId: Long,
+        startPositionMs: Long,
     ): Boolean {
         val url = resolve(source, streamUrl) ?: return false
         externalPlayerLauncher.launch(
@@ -559,6 +578,7 @@ class VodTuner(
             title = title,
             userAgent = source?.userAgent,
             httpHeaders = SourceOverrides.headersWithReferer(httpHeaders, source),
+            startPositionMs = startPositionMs,
         )
         runCatching {
             withContext(Dispatchers.IO) {

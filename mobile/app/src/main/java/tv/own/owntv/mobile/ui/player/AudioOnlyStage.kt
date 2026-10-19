@@ -20,10 +20,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -48,7 +48,11 @@ import tv.own.owntv.mobile.R
 import tv.own.owntv.player.ScreenOff
 import tv.own.owntv.player.SleepTimer
 import tv.own.owntv.mobile.ui.components.MobileBottomSheet
-import tv.own.owntv.mobile.ui.components.MobileListRow
+import tv.own.owntv.mobile.ui.stage.StageMenuItem
+import tv.own.owntv.mobile.ui.stage.StageSettingRow
+import tv.own.owntv.mobile.ui.stage.StageSheetHeader
+import tv.own.owntv.mobile.ui.stage.StageSwitch
+import androidx.compose.ui.semantics.Role
 import tv.own.owntv.mobile.ui.components.SheetScroll
 import tv.own.owntv.mobile.ui.theme.MobileDimens
 import tv.own.owntv.mobile.ui.theme.MobileSheetShape
@@ -89,7 +93,9 @@ fun AudioOnlyBackdrop(
     programmeEndMs: Long? = null,
     sleepTimer: SleepTimer = koinInject(),
 ) {
-    val remaining by sleepTimer.remainingMs.collectAsStateWithLifecycle()
+    // Held as State: it ticks every second while a timer runs, and only the button below reads
+    // it — a value here would recompose the artwork, texts and waveform with it.
+    val remainingState = sleepTimer.remainingMs.collectAsStateWithLifecycle()
     var timerSheet by remember { mutableStateOf(false) }
 
     Box(
@@ -153,21 +159,28 @@ fun AudioOnlyBackdrop(
             // The one thing the player's own bar does not already offer, and the reason most people
             // drop the picture in the first place. The bar itself covers this spot, so it waits for
             // the controls to go away — which they do on their own after a few seconds.
-            if (!compact) TextButton(onClick = { timerSheet = true }) {
-                Icon(MobileIcons.Bedtime, contentDescription = null, tint = Color.White)
-                Text(
-                    text = remaining?.let {
-                        stringResource(R.string.player_sleep_timer_remaining, minutesLabel(it))
-                    } ?: stringResource(R.string.player_sleep_timer),
-                    color = Color.White,
-                    modifier = Modifier.padding(start = MobileDimens.GapSmall),
-                )
-            }
+            if (!compact) SleepTimerButton(remaining = remainingState, onClick = { timerSheet = true })
         }
     }
 
     if (timerSheet) {
         SleepTimerSheet(programmeEndMs = programmeEndMs, onDismiss = { timerSheet = false })
+    }
+}
+
+/** The sleep-timer entry point, alone in its own composable so the per-second countdown
+ *  recomposes only this button, not the backdrop above it. */
+@Composable
+private fun SleepTimerButton(remaining: State<Long?>, onClick: () -> Unit) {
+    TextButton(onClick = onClick) {
+        Icon(MobileIcons.Bedtime, contentDescription = null, tint = Color.White)
+        Text(
+            text = remaining.value?.let {
+                stringResource(R.string.player_sleep_timer_remaining, minutesLabel(it))
+            } ?: stringResource(R.string.player_sleep_timer),
+            color = Color.White,
+            modifier = Modifier.padding(start = MobileDimens.GapSmall),
+        )
     }
 }
 
@@ -181,11 +194,14 @@ fun SleepTimerSheet(
     val remaining by sleepTimer.remainingMs.collectAsStateWithLifecycle()
     // Only while a movie or episode plays; live and catch-up have "End of programme" instead.
     val endKind = remember { sleepTimer.itemEndKind() }
-    MobileBottomSheet(onDismissRequest = onDismiss, title = stringResource(R.string.player_sleep_timer)) {
+    val title = stringResource(R.string.player_sleep_timer)
+    MobileBottomSheet(onDismissRequest = onDismiss, title = title) {
+        StageSheetHeader(title)
         SheetScroll {
             if (remaining != null) {
-                MobileListRow(
-                    title = stringResource(R.string.common_off),
+                StageMenuItem(
+                    stringResource(R.string.common_off),
+                    icon = MobileIcons.Close,
                     onClick = {
                         sleepTimer.cancel()
                         onDismiss()
@@ -193,8 +209,9 @@ fun SleepTimerSheet(
                 )
             }
             SleepTimer.CHOICES_MINUTES.forEach { minutes ->
-                MobileListRow(
-                    title = stringResource(R.string.player_duration_minutes, minutes),
+                StageMenuItem(
+                    stringResource(R.string.player_duration_minutes, minutes),
+                    icon = MobileIcons.Bedtime,
                     onClick = {
                         sleepTimer.start(minutes * 60_000L)
                         onDismiss()
@@ -204,8 +221,9 @@ fun SleepTimerSheet(
             // Only with a guide behind it, and only while that programme is still on: "end of
             // programme" with no programme, or one already over, is a button that stops the stream at once.
             programmeEndMs?.takeIf { it > System.currentTimeMillis() }?.let { endMs ->
-                MobileListRow(
-                    title = stringResource(R.string.player_sleep_timer_end_of_programme),
+                StageMenuItem(
+                    stringResource(R.string.player_sleep_timer_end_of_programme),
+                    icon = MobileIcons.Schedule,
                     onClick = {
                         sleepTimer.start(endMs - System.currentTimeMillis())
                         onDismiss()
@@ -213,8 +231,9 @@ fun SleepTimerSheet(
                 )
             }
             endKind?.let { kind ->
-                MobileListRow(
-                    title = stringResource(if (kind == SleepTimer.EndKind.EPISODE) R.string.player_sleep_timer_end_of_episode else R.string.player_sleep_timer_end_of_movie),
+                StageMenuItem(
+                    stringResource(if (kind == SleepTimer.EndKind.EPISODE) R.string.player_sleep_timer_end_of_episode else R.string.player_sleep_timer_end_of_movie),
+                    icon = MobileIcons.Schedule,
                     onClick = {
                         sleepTimer.startUntilItemEnd()
                         onDismiss()
@@ -245,11 +264,12 @@ private fun ScreenOffRow(screenOff: ScreenOff = koinInject()) {
             }
         }
     }
-    MobileListRow(
+    StageSettingRow(
         title = stringResource(R.string.player_sleep_timer_screen_off),
-        trailing = { Switch(checked = allowed, onCheckedChange = { toggle() }) },
+        minHeight = 48.dp,
+        role = Role.Switch,
         onClick = toggle,
-    )
+    ) { StageSwitch(allowed) }
 }
 
 /** The countdown reads in whole minutes, rounded up — see [SleepTimer.minutesLeft]. */

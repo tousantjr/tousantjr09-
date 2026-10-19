@@ -31,9 +31,6 @@ import tv.own.owntv.core.content.AdultCategoryClassifier
 import tv.own.owntv.core.customize.CustomizationStore
 import tv.own.owntv.core.customize.CustomizeKeys
 import tv.own.owntv.core.customize.SectionCustomizations
-import tv.own.owntv.core.customize.CategoryRailEditor
-import tv.own.owntv.core.customize.MoveKind
-import tv.own.owntv.core.customize.railCategories
 import tv.own.owntv.core.database.dao.CategoryDao
 import tv.own.owntv.core.database.dao.ChannelDao
 import tv.own.owntv.core.database.dao.ContentOrderDao
@@ -45,7 +42,6 @@ import tv.own.owntv.core.database.dao.SourceDao
 import tv.own.owntv.core.database.entity.ChannelEntity
 import tv.own.owntv.core.database.entity.EpgProgrammeEntity
 import tv.own.owntv.core.database.entity.FavoriteEntity
-import tv.own.owntv.core.epg.EpgMatcher
 import tv.own.owntv.core.epg.EpgShift
 import tv.own.owntv.core.epg.EpgAutoMatcher
 import tv.own.owntv.core.epg.GuideCandidate
@@ -61,7 +57,6 @@ import tv.own.owntv.core.repository.ActiveProfileSources
 import tv.own.owntv.core.repository.EpgRepository
 import tv.own.owntv.core.repository.activeProfileSources
 import tv.own.owntv.core.settings.SettingsRepository
-import tv.own.owntv.mobile.ui.screens.live.LiveCategory
 import tv.own.owntv.mobile.ui.screens.live.LiveTuner
 import java.util.Calendar
 
@@ -127,6 +122,7 @@ class GuideViewModel(
     private val tuner: LiveTuner,
     private val recordings: tv.own.owntv.core.recording.RecordingManager,
     private val xtream: tv.own.owntv.core.parser.XtreamClient,
+    private val reminders: tv.own.owntv.core.reminder.ReminderManager,
 ) : ViewModel() {
 
     /** The one candidate set the picker and auto-match read — filtered by no source. */
@@ -176,63 +172,8 @@ class GuideViewModel(
         .map { it.toSet() }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptySet())
 
-    /** All channels, favourites, then the profile's folders — the Guide filters the same lists Live
-     *  does, minus History and Catch-up, which are about what was watched rather than what is on. */
-    val categories: StateFlow<List<LiveCategory>> = combine(
-        liveCategories,
-        custom,
-        sortMode,
-        ctx.flatMapLatest { profileDao.observeById(it.profileId) },
-    ) { cats, cust, sort, profile ->
-        val folders = cats.railCategories(
-            cust,
-            kids = profile?.isKids == true,
-            alphaRest = sort == SettingsRepository.SortMode.ALPHA,
-        )
-        buildList {
-            add(LiveCategory(LiveKey.All, builtIn = LiveCategory.BuiltIn.ALL))
-            add(LiveCategory(LiveKey.Favorites, builtIn = LiveCategory.BuiltIn.FAVORITES))
-            folders.forEach { e ->
-                add(
-                    LiveCategory(
-                        key = e.categoryId?.let { LiveKey.Folder(it) } ?: LiveKey.Custom(e.customId!!),
-                        title = e.displayName,
-                    ),
-                )
-            }
-        }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
-
-    /** Hide and reorder a category from the strip, through the same editor Settings → Customize uses. */
-    private val categoryEditor = CategoryRailEditor(customize, categoryDao, profileDao)
-
-    /** Hide the long-pressed category. It comes back from Settings → Customize. */
-    fun hideCategory(key: LiveKey) {
-        viewModelScope.launch {
-            val c = ctx.value
-            if (c.profileId < 0) return@launch
-            categoryEditor.hide(c.profileId, MediaType.LIVE, key)
-            // The strip is about to lose this chip; leaving it selected would show a folder that is
-            // no longer there.
-            if (selected.value == key) select(LiveKey.All)
-        }
-    }
-
-    /** Move the long-pressed category one step through the strip, and keep it there. */
-    fun moveCategory(key: LiveKey, kind: MoveKind) {
-        viewModelScope.launch {
-            val c = ctx.value
-            if (c.profileId < 0) return@launch
-            categoryEditor.move(
-                profileId = c.profileId,
-                sourceIds = c.liveSourceIds,
-                type = MediaType.LIVE,
-                alphaRest = sortMode.value == SettingsRepository.SortMode.ALPHA,
-                key = key,
-                kind = kind,
-            )
-        }
-    }
+    // The category list, its counts and its hold menu are Live TV's ("Same list as Live TV"),
+    // read by the screen from a LiveViewModel; only which one the guide shows is kept here.
 
     private val _selected = MutableStateFlow<LiveKey>(LiveKey.All)
     val selected: StateFlow<LiveKey> = _selected
@@ -264,14 +205,36 @@ class GuideViewModel(
         synchronized(rowCache) { rowCache.clear() }
     }
 
+    private val _liveList = MutableStateFlow(false)
+
     /**
-     * The window on screen. Today starts at the last half hour rather than at midnight — a guide
-     * that opens on this morning's programmes is a guide the user has to scroll before it is useful.
+     * Live TV's Guide view draws Live TV's own channels: the guide's order and its two filters
+     * (Catch-up / Favorites, Channels without guide) are the TV Guide's choices, not Live TV's.
+     */
+    fun useLiveList() { _liveList.value = true }
+
+    private val _nowRequests = MutableStateFlow(0)
+
+    /** Bumped by a Now tool the grid does not own (Live TV's Guide view): back to today, scrolled to now. */
+    val nowRequests: StateFlow<Int> = _nowRequests
+
+    fun requestNow() {
+        selectDay(0)
+        _nowRequests.value++
+    }
+
+    /**
+     * The window on screen. Today starts at the half hour an hour back rather than at midnight — a
+     * guide that opens on this morning's programmes is a guide the user has to scroll before it is
+     * useful, and the hour is what lets the now-line sit in the middle. It ends at the coming midnight.
      */
     val window: StateFlow<GuideWindow> = _day
         .map { offset ->
             val cal = Calendar.getInstance()
             if (offset == 0) {
+                // An hour back, so the now-line can sit in the middle of the grid with the current
+                // programme's title in view.
+                cal.add(Calendar.HOUR_OF_DAY, -1)
                 cal.set(Calendar.MINUTE, if (cal.get(Calendar.MINUTE) < 30) 0 else 30)
                 cal.set(Calendar.SECOND, 0)
                 cal.set(Calendar.MILLISECOND, 0)
@@ -283,24 +246,29 @@ class GuideViewModel(
                 cal.set(Calendar.MILLISECOND, 0)
             }
             val start = cal.timeInMillis
-            cal.add(Calendar.DAY_OF_YEAR, 1)
-            cal.set(Calendar.HOUR_OF_DAY, 0)
-            cal.set(Calendar.MINUTE, 0)
-            GuideWindow(start, cal.timeInMillis)
+            // From the day itself, not from [start]: just after midnight today's start is yesterday.
+            val end = Calendar.getInstance().apply {
+                add(Calendar.DAY_OF_YEAR, offset + 1)
+                set(Calendar.HOUR_OF_DAY, 0)
+                set(Calendar.MINUTE, 0)
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+            }.timeInMillis
+            GuideWindow(start, end)
         }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, GuideWindow(0, 0))
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), GuideWindow(0, 0))
 
     /** Grid, on-now list or one channel's schedule. Null until the user picks: the screen then
      *  decides from its own width, which is the only thing that knows whether a grid fits. */
     val viewMode: StateFlow<SettingsRepository.GuideView?> = settings.guideView
-        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     fun setViewMode(view: SettingsRepository.GuideView) {
         viewModelScope.launch { settings.setGuideView(view) }
     }
 
     val densityPct: StateFlow<Int> = settings.guideDensityPct
-        .stateIn(viewModelScope, SharingStarted.Eagerly, 100)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 100)
 
     fun setDensityPct(pct: Int) {
         viewModelScope.launch { settings.setGuideDensityPct(pct) }
@@ -330,10 +298,41 @@ class GuideViewModel(
             } else {
                 sort
             }
-        }.stateIn(viewModelScope, SharingStarted.Eagerly, SettingsRepository.GuideSort.LIVE_TV)
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SettingsRepository.GuideSort.LIVE_TV)
 
     fun setSortGuide(sort: SettingsRepository.GuideSort) {
         viewModelScope.launch { settings.setSortGuide(sort) }
+    }
+
+    /** SHOW · Channels without guide — core's setting, the television's meaning. */
+    val showEmpty: StateFlow<Boolean> = settings.guideShowEmpty
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
+
+    fun setShowEmpty(show: Boolean) {
+        viewModelScope.launch { settings.setGuideShowEmpty(show) }
+    }
+
+    /** SHOW · Video preview: Off draws the channel's logo in the top block instead of playing it. */
+    val showPreview: StateFlow<Boolean> = settings.guidePreview
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), true)
+
+    fun setShowPreview(show: Boolean) {
+        viewModelScope.launch { settings.setGuidePreview(show) }
+    }
+
+    /**
+     * What counts as "a channel with a guide" for the Channels without guide switch: a stored guide, or a
+     * playlist that answers the provider's short guide — the grid draws those rows from it ([row]), so
+     * hiding them would hide programmes the guide can show. Null until read.
+     */
+    private data class GuideHaves(val epgKeys: Set<String>, val shortEpgSources: Set<Long>)
+
+    private val _haves = MutableStateFlow<GuideHaves?>(null)
+
+    private fun ChannelEntity.hasGuide(cust: SectionCustomizations, haves: GuideHaves): Boolean {
+        if (sourceId in haves.shortEpgSources && remoteId != null) return true
+        val key = (cust.epgMatchResolver.epgIdFor(this) ?: epgChannelId)?.trim()?.lowercase()
+        return key != null && key in haves.epgKeys
     }
 
     private data class Args(
@@ -344,6 +343,8 @@ class GuideViewModel(
         val query: String,
         val sort: SettingsRepository.GuideSort = SettingsRepository.GuideSort.LIVE_TV,
         val favorites: Set<Long> = emptySet(),
+        /** Null while every channel is shown (Channels without guide on, or not read yet). */
+        val haves: GuideHaves? = null,
     )
 
     /** The rows of the guide: the profile's channels, in its own order, filtered by chip and search. */
@@ -355,7 +356,13 @@ class GuideViewModel(
             .combine(sortGuide) { args, sort -> args.copy(sort = sort) }
             .combine(favoriteIds) { args, favorites -> args.copy(favorites = favorites) }
             .combine(orderedContexts) { args, _ -> args }
-            .flatMapLatest { (key, c, cust, hidden, q, sort, favorites) ->
+            .combine(combine(showEmpty, _haves) { show, haves -> haves.takeUnless { show } }) { args, haves ->
+                args.copy(haves = haves)
+            }
+            .combine(_liveList) { args, live ->
+                if (live) args.copy(sort = SettingsRepository.GuideSort.LIVE_TV, haves = null) else args
+            }
+            .flatMapLatest { (key, c, cust, hidden, q, sort, favorites, haves) ->
                 if (c.profileId < 0) {
                     flowOf(PagingData.empty())
                 } else {
@@ -363,11 +370,14 @@ class GuideViewModel(
                     // reports every one of them as an item before a single page has loaded, and the
                     // row a not-yet-loaded channel draws is nothing at all. A list of items with no
                     // height never fills its viewport, so it composes the whole lineup looking for
-                    // something to show and takes the heap with it.
+                    // something to show and takes the heap with it. maxSize drops distant pages so
+                    // the guide cannot pin the lineup in memory; initialLoadSize fills the viewport.
                     Pager(
                         PagingConfig(
                             pageSize = PAGE_SIZE,
                             prefetchDistance = PAGE_SIZE / 2,
+                            initialLoadSize = PAGE_SIZE * 2,
+                            maxSize = 300,
                             enablePlaceholders = false,
                         ),
                     ) {
@@ -384,6 +394,7 @@ class GuideViewModel(
                         )
                     }.flow.map { paging ->
                         paging.applyCustomizations(key, cust, hidden).applyGuideSort(sort, favorites)
+                            .let { p -> if (haves == null) p else p.filter { it.hasGuide(cust, haves) } }
                     }
                 }
             }
@@ -420,8 +431,7 @@ class GuideViewModel(
     ): PagingData<ChannelEntity> {
         if (cust.hiddenItems.isEmpty() && cust.itemNames.isEmpty() && hidden.isEmpty() && cust.movedFromOrigin.isEmpty()) return this
         return filter { ch ->
-            CustomizeKeys.channel(ch) !in cust.hiddenItems &&
-                (ch.categoryId == null || ch.categoryId !in hidden) &&
+            tv.own.owntv.core.live.isChannelVisible(ch, cust, hidden, key) &&
                 (cust.movedFromOrigin[CustomizeKeys.channel(ch)]?.let { origin ->
                     key !is LiveKey.Folder || origin != folderContextKeys.value[key.id]
                 } ?: true)
@@ -470,9 +480,15 @@ class GuideViewModel(
                 globalShiftMinutes = epgOffset.value,
                 atMs = System.currentTimeMillis(),
                 lookAheadMs = ON_NOW_LOOK_AHEAD_MS,
+                // The grid's rows fall back to the provider's short guide; without the same
+                // fallback here every such channel said "No guide." beside a grid full of programmes.
+                providerFallback = true,
             )
             // Channels with no guide are recorded as empty, or every scroll re-asks for them.
-            _onNow.value = _onNow.value + missing.associate { it.id to (found[it.id] ?: GuideSlot(null, null)) }
+            // Capped like rowCache above: a revisit after eviction simply re-reads through the
+            // `missing` check, so memory follows the screen, not the catalogue.
+            _onNow.value = (_onNow.value + missing.associate { it.id to (found[it.id] ?: GuideSlot(null, null)) })
+                .toList().takeLast(MAX_ON_NOW).toMap()
         }
     }
 
@@ -488,7 +504,7 @@ class GuideViewModel(
         return programme.startMs >= now - days * DAY_MS
     }
 
-    // --- Recording, from the guide (Plan D, Feature A). The television's own logic, phone-shaped. ---
+    // --- Recording, from the guide. The television's own logic, phone-shaped. ---
 
     /** This profile's recordings, so a programme sheet knows whether it is already spoken for. */
     val recordingRows: StateFlow<List<tv.own.owntv.core.database.entity.RecordingEntity>> =
@@ -553,7 +569,7 @@ class GuideViewModel(
     fun cancelRecording(recording: tv.own.owntv.core.database.entity.RecordingEntity) =
         recordings.cancel(recording)
 
-    /** The standing "record every showing" rule covering this programme, or null (D7). */
+    /** The standing "record every showing" rule covering this programme, or null. */
     suspend fun seriesRuleFor(
         channel: ChannelEntity,
         programme: EpgProgrammeEntity,
@@ -575,7 +591,7 @@ class GuideViewModel(
         viewModelScope.launch { recordings.removeSeriesRule(rule) }
     }
 
-    /** The title of a recording this one would contend with, shown before the user commits (D10). */
+    /** The title of a recording this one would contend with, shown before the user commits. */
     suspend fun clashFor(channel: ChannelEntity, programme: EpgProgrammeEntity): String? {
         val window = recordings.windowFor(programme.startMs, programme.stopMs)
         val existing = recordingFor(channel, programme)
@@ -598,6 +614,52 @@ class GuideViewModel(
             if (channel.id in favoriteIds.value) userDataWriter.removeFavorite(pid, MediaType.LIVE, channel.id)
             else favoriteDao.add(FavoriteEntity(profileId = pid, mediaType = MediaType.LIVE, itemId = channel.id))
         }
+    }
+
+    /**
+     * One programme with its details (genres, year, rating, length) and synopsis — the lists read
+     * summaries without them. A provider row ([GuideReader.row]'s fallback) has no stored row and
+     * carries its own description.
+     */
+    suspend fun fullProgramme(programme: EpgProgrammeEntity): EpgProgrammeEntity =
+        if (programme.id <= 0) programme
+        else withContext(Dispatchers.IO) { runCatching { epgDao.programmeById(programme.id) }.getOrNull() } ?: programme
+
+    // --- Programme reminders: core keeps them and wakes the app; the shell draws the prompt. ---
+
+    val reminderRows: StateFlow<List<tv.own.owntv.core.database.entity.ReminderEntity>> =
+        settings.activeProfileId
+            .flatMapLatest { pid -> if (pid < 0) flowOf(emptyList()) else reminders.observe(pid) }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    /** How long before the start a reminder comes — the "5 min before" beside Remind me. */
+    val reminderLead: StateFlow<Int> = settings.reminderLeadMinutes
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), tv.own.owntv.core.reminder.ReminderSchedule.DEFAULT_LEAD_MINUTES)
+
+    fun reminderFor(
+        channel: ChannelEntity,
+        programme: EpgProgrammeEntity,
+    ): tv.own.owntv.core.database.entity.ReminderEntity? =
+        reminderRows.value.firstOrNull { it.channelId == channel.id && it.startMs == programme.startMs }
+
+    /** Remind me, or cancel the reminder already set — the television's toggle. */
+    fun toggleReminder(channel: ChannelEntity, programme: EpgProgrammeEntity) {
+        viewModelScope.launch {
+            reminderFor(channel, programme)?.let { reminders.dismiss(it.id); return@launch }
+            val pid = settings.activeProfileId.first().takeIf { it >= 0 } ?: return@launch
+            reminders.add(
+                pid, channel.id, channel.name, channel.epgChannelId, programme.title,
+                programme.startMs, programme.stopMs, reminderLead.value,
+            )
+        }
+    }
+
+    /** "Play catch-up in…" steps through Always ask · OwnTV player · External player — Settings › Catch-up's value. */
+    val catchupPlayer: StateFlow<SettingsRepository.CatchupPlayer> = settings.catchupPlayer
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SettingsRepository.CatchupPlayer.INTERNAL)
+
+    fun setCatchupPlayer(mode: SettingsRepository.CatchupPlayer) {
+        viewModelScope.launch { settings.setCatchupPlayer(mode) }
     }
 
     // ---- What the guide holds, and matching channels to it ----
@@ -651,9 +713,15 @@ class GuideViewModel(
             // One row is enough to answer it, and one row is all that is read.
             mismatchedIds = programmes > 0 && channelDao.channelsWithGuide(ids, "", 1).isEmpty(),
         )
+        _haves.value = GuideHaves(
+            epgKeys = if (programmes > 0) epgDao.guideProgrammeChannelIds(Int.MAX_VALUE).mapTo(HashSet()) { it.lowercase() } else emptySet(),
+            shortEpgSources = sourceDao.getAllOnce()
+                .filter { it.type == tv.own.owntv.core.model.SourceType.XTREAM || it.type == tv.own.owntv.core.model.SourceType.STALKER }
+                .mapTo(HashSet()) { it.id },
+        )
         // The phone loads guide rows one at a time (see [row]) — core's own guide_row line covers
         // those. What is only measurable here is the cold-open stats pass and how much the row cache
-        // is actually holding, which is what Phase 6's per-row work on the television is compared to.
+        // is actually holding, which is what the television's per-row reads are compared to.
         tv.own.owntv.core.CorePerf.log {
             "guide_stats programmes=$programmes guideChannels=$guideChannels " +
                 "sources=${ids.size} cachedRows=${synchronized(rowCache) { rowCache.size }} " +
@@ -892,6 +960,8 @@ class GuideViewModel(
         // that scrolling back never re-reads, and small enough that the guide's memory does not grow
         // with the catalogue.
         const val MAX_CACHED_ROWS = 240
+        // "On now" slots, one small object per answered channel. Capped — see loadOnNow.
+        const val MAX_ON_NOW = 500
         const val SEARCH_DEBOUNCE_MS = 300L
         // A sync writes the guide in batches, so every batch is reported. This must be longer than
         // the gap between two batch writes, or it coalesces nothing and the guide redraws per batch.

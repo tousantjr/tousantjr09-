@@ -9,9 +9,9 @@ import tv.own.owntv.core.theme.AppFontFamily
 import tv.own.owntv.mobile.R
 
 /**
- * The six font families the user can pick from, on the phone.
+ * The font families the user can pick from, on the phone.
  *
- * The choice is stored in core and shared with the TV app, so all six have to exist here too —
+ * The choice is stored in core and shared with the TV app, so every one has to exist here too —
  * a user who picked Poppins on the TV and restores that backup gets Poppins here. Lora ships in
  * core (its companion QR screen uses it); the rest are this app's own `res/font`, copied from the
  * TV app's, because a font binary is a per-app resource rather than shared code.
@@ -58,6 +58,15 @@ private val DancingScriptFamily = FontFamily(
  * happened: two entries in the font picker, one typeface. A file in the app cannot be aliased away.
  * It is the same JetBrains Mono the TV app already carries for its settings value column.
  */
+// The default since core made it one (the TV's Stage design): every weight from one variable file.
+private val PlusJakartaSansFamily = FontFamily(
+    variableFont(R.font.plus_jakarta_sans_variable, FontWeight.Normal),
+    variableFont(R.font.plus_jakarta_sans_variable, FontWeight.Medium),
+    variableFont(R.font.plus_jakarta_sans_variable, FontWeight.SemiBold),
+    variableFont(R.font.plus_jakarta_sans_variable, FontWeight.Bold),
+    variableFont(R.font.plus_jakarta_sans_variable, FontWeight.ExtraBold),
+)
+
 private val JetBrainsMonoFamily = FontFamily(
     variableFont(R.font.jetbrains_mono_variable, FontWeight.Normal),
     variableFont(R.font.jetbrains_mono_variable, FontWeight.Medium),
@@ -90,6 +99,7 @@ val AppFontFamily.subtitleFontResource: Int
         AppFontFamily.PLAYFAIR_DISPLAY -> R.font.playfair_display_variable
         AppFontFamily.DANCING_SCRIPT -> R.font.dancing_script_variable
         AppFontFamily.POPPINS -> R.font.poppins_regular
+        AppFontFamily.PLUS_JAKARTA_SANS -> R.font.plus_jakarta_sans_variable
         AppFontFamily.SYSTEM_SANS,
         AppFontFamily.MONOSPACE,
         -> 0
@@ -102,4 +112,5 @@ fun AppFontFamily.asComposeFamily(): FontFamily = when (this) {
     AppFontFamily.PLAYFAIR_DISPLAY -> PlayfairDisplayFamily
     AppFontFamily.DANCING_SCRIPT -> DancingScriptFamily
     AppFontFamily.POPPINS -> PoppinsFamily
+    AppFontFamily.PLUS_JAKARTA_SANS -> PlusJakartaSansFamily
 }

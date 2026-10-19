@@ -30,7 +30,7 @@
 > OwnTV's own community channels. The upstream description follows.
 
 OwnTV Mobile is the phone and tablet member of the OwnTV family: a native Android IPTV **player**
-built with Kotlin and Jetpack Compose (Material 3), sharing its **entire engine** with
+built with Kotlin and Jetpack Compose, sharing its **entire engine** with
 [OwnTV for Android TV](https://github.com/ahXN00/OwnTV) through the
 [OwnTV core library](https://github.com/ahXN00/OwnTV_Core). Two interfaces, one database, one sync,
 one playback stack — a **dual playback engine** of **libmpv (FFmpeg)** for films and series and
@@ -83,6 +83,8 @@ This is an independent MPTV build; please don't bring issues to OwnTV's own comm
 
 ### 🧭 Browse
 
+- **The Stage design** — the same look as the OwnTV television app: frosted glass, a full-picture
+  hero, Dark and Light, and a background of your own picture if you like.
 - **Home** with your own rows in your own order, a hero card for what you were watching, and
   continue-watching rows for films and shows.
 - **Live TV, Movies and Series** with categories, sorting, grid or list, and **pinch to resize** the
@@ -94,7 +96,8 @@ This is an independent MPTV build; please don't bring issues to OwnTV's own comm
   start over — or stops asking, if you prefer.
 - **Search** across channels, films and shows in one field, grouped by kind, loading more as you
   scroll.
-- **Bottom bar on a phone, navigation rail on a tablet**, and two-pane layouts where there is room.
+- **Bottom bar on a phone, a floating rail on a tablet or held sideways**, with the list and the
+  preview side by side where there is room.
 
 ### 📥 Sources & EPG
 
@@ -120,8 +123,9 @@ This is an independent MPTV build; please don't bring issues to OwnTV's own comm
   parts of your data travel.
 - **Local sync** over your own Wi-Fi — pair by QR or on the network, see exactly what will change
   before it changes, and send, receive or merge.
-- **Settings in ten pages** with a search box, reorderable quick toggles, and **Customize** for
-  renaming, hiding, reordering and regrouping everything in your library.
+- **Settings in twelve groups** with a search box that finds any setting by name, **Quick** for the
+  rows you pin, and **Customize** for renaming, hiding, reordering and regrouping everything in your
+  library.
 - **26 languages**, right-to-left layouts included.
 
 ---
@@ -166,7 +170,8 @@ app/                     the phone & tablet UI: navigation, screens, player chro
   src/main/java/tv/own/owntv/mobile/
     ui/screens/          home · live · library · guide · search · downloads ·
                          recordings · multiview · settings
-    ui/components/       the shared surface language (buttons, rows, sheets, glass)
+    ui/stage/            the Stage parts every screen is built from (buttons, rows, fields, glass)
+    ui/components/       the sheet host, icons, logos and the shared menus and pickers
     di/                  Koin modules
 tools/i18n/              the locale catalogue and the consumer-side string checks
 extras/                  logos, credits artwork, and the TV parity checklist
@@ -286,6 +291,11 @@ Which of the two starts a stream is yours to set, separately for Live TV and for
 [Coil](https://coil-kt.github.io/coil/) ·
 [ZXing](https://github.com/zxing/zxing) — and the wider Kotlin / AndroidX open-source ecosystem.
 Thank you to all their maintainers. See each project for its own license.
+
+### 🎨 Brand
+
+The lowercase **owntv** wordmark was designed for OwnTV by [@m3th0d93](https://github.com/m3th0d93)
+in [issue #227](https://github.com/ahXN00/OwnTV/issues/227).
 
 ## ⚖️ Legal
 

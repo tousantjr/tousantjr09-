@@ -1,5 +1,6 @@
 package tv.own.owntv.mobile.ui.screens.downloads
 
+import tv.own.owntv.core.storage.missingFiles
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -8,14 +9,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
@@ -26,13 +25,13 @@ import kotlinx.coroutines.launch
 import tv.own.owntv.core.content.AdultCategoryClassifier
 import tv.own.owntv.core.customize.CustomizationStore
 import tv.own.owntv.core.customize.CustomizeKeys
-import tv.own.owntv.core.customize.SectionCustomizations
 import tv.own.owntv.core.database.dao.CategoryDao
 import tv.own.owntv.core.database.dao.DownloadDao
 import tv.own.owntv.core.database.dao.MovieDao
 import tv.own.owntv.core.database.dao.ProfileDao
 import tv.own.owntv.core.database.dao.SeriesDao
 import tv.own.owntv.core.database.entity.DownloadEntity
+import tv.own.owntv.core.download.DownloadActivityTracker
 import tv.own.owntv.core.download.DownloadManager
 import tv.own.owntv.core.download.DownloadStorageInfo
 import tv.own.owntv.core.model.DownloadStatus
@@ -41,8 +40,8 @@ import tv.own.owntv.core.settings.SettingsRepository
 import tv.own.owntv.core.storage.MediaRoot
 import tv.own.owntv.core.storage.MediaTarget
 import tv.own.owntv.core.storage.StorageAccess
+import tv.own.owntv.core.trending.ProviderVariantParser
 import tv.own.owntv.mobile.ui.screens.library.VodTuner
-import java.io.File
 
 /**
  * What has been saved for offline watching, and how the queue is getting on.
@@ -64,6 +63,7 @@ class DownloadsViewModel(
     private val settings: SettingsRepository,
     private val downloadManager: DownloadManager,
     private val vodTuner: VodTuner,
+    tracker: DownloadActivityTracker,
 ) : ViewModel() {
 
     /**
@@ -86,31 +86,50 @@ class DownloadsViewModel(
                     ) {
                         list
                     } else {
-                        list.filterNot { isHidden(it, custMovie, custSeries, profile?.isKids == true) }
+                        // One bulk read per table instead of one query per row: every emission
+                        // re-ran the whole chain. Episodes have no bulk lookup in core, so those
+                        // stay per-row; movies and series are prefetched (empty lists guarded —
+                        // Room rejects `IN ()`).
+                        val movieIds = list
+                            .filter { it.mediaType == MediaType.MOVIE }
+                            .map { it.itemId }.distinct()
+                        val movies = if (movieIds.isEmpty()) emptyMap()
+                        else movieDao.getByIds(movieIds).associateBy { it.id }
+                        val episodes = list
+                            .filter { it.mediaType == MediaType.EPISODE }
+                            .associate { it.itemId to seriesDao.getEpisodeById(it.itemId) }
+                        val seriesIds = episodes.values.filterNotNull()
+                            .map { it.seriesId }.distinct()
+                        val series = if (seriesIds.isEmpty()) emptyMap()
+                        else seriesDao.getSeriesByIds(seriesIds).associateBy { it.id }
+                        val isKids = profile?.isKids == true
+                        list.filterNot { d ->
+                            when (d.mediaType) {
+                                MediaType.MOVIE -> movies[d.itemId]?.let { movie ->
+                                    CustomizeKeys.movie(movie) in custMovie.hiddenItems ||
+                                        (isKids && AdultCategoryClassifier.isAdult(movie.categoryId?.let { categoryDao.getById(it)?.name }))
+                                } ?: isKids
+                                MediaType.EPISODE -> episodes[d.itemId]
+                                    ?.let { series[it.seriesId] }
+                                    ?.let { s ->
+                                        CustomizeKeys.series(s) in custSeries.hiddenItems ||
+                                            (isKids && AdultCategoryClassifier.isAdult(s.categoryId?.let { categoryDao.getById(it)?.name }))
+                                    } ?: isKids
+                                else -> false
+                            }
+                        }
                     }
                 }
             }
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
-    private suspend fun isHidden(
-        d: DownloadEntity,
-        custMovie: SectionCustomizations,
-        custSeries: SectionCustomizations,
-        isKidsProfile: Boolean,
-    ): Boolean = when (d.mediaType) {
-        MediaType.MOVIE -> movieDao.getById(d.itemId)?.let { movie ->
-            CustomizeKeys.movie(movie) in custMovie.hiddenItems ||
-                (isKidsProfile && AdultCategoryClassifier.isAdult(movie.categoryId?.let { categoryDao.getById(it)?.name }))
-        } ?: isKidsProfile
-        MediaType.EPISODE -> seriesDao.getEpisodeById(d.itemId)
-            ?.let { ep -> seriesDao.getSeriesById(ep.seriesId) }
-            ?.let { series ->
-                CustomizeKeys.series(series) in custSeries.hiddenItems ||
-                    (isKidsProfile && AdultCategoryClassifier.isAdult(series.categoryId?.let { categoryDao.getById(it)?.name }))
-            } ?: isKidsProfile
-        else -> false
-    }
+    /** Paths of finished items whose file is gone (drive formatted, swapped or unplugged). */
+    val missingFiles: StateFlow<Set<String>> = downloads
+        .map { list -> list// A paused or failed one has a partial file that can go missing too (a formatted stick).
+        .filter { it.status == tv.own.owntv.core.model.DownloadStatus.COMPLETED || (it.status in RESUMABLE && it.downloadedBytes > 0) }.map { it.filePath } }
+        .missingFiles(context)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptySet())
 
     /**
      * Free and total space on whichever volume the downloads are being written to.
@@ -124,26 +143,46 @@ class DownloadsViewModel(
             .mapLatest { downloadManager.storageInfo() }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
+    /** The one transfer running now, with its speed — the running row's "12.4 MB/s · 3 min left". */
+    val active: StateFlow<DownloadActivityTracker.ActiveDownload?> = tracker.active
+
     /**
-     * How fast the queue is moving, in megabits per second, from the growth of the running rows.
-     * Zero whenever nothing is running, and after a pause, so a stale figure never lingers.
+     * What a row shows besides the stored title: the show's name for an episode, 16:9 art, and the parts of
+     * "2026 · 1 h 38 min · FHD" / "Season 1 · Episode 3" — the TV's lookup. Once per download (the list
+     * re-emits on every progress tick), and absent for a title its playlist no longer has.
      */
-    val speedMbps: StateFlow<Double> = flow {
-        var lastBytes = -1L
-        var lastAt = 0L
-        while (true) {
-            val running = downloads.value.filter { it.status == DownloadStatus.RUNNING }
-            val bytes = running.sumOf { it.downloadedBytes }
-            val now = System.currentTimeMillis()
-            emit(
-                if (running.isEmpty() || lastBytes < 0 || now <= lastAt) 0.0
-                else (bytes - lastBytes).coerceAtLeast(0L) * 8.0 / (now - lastAt) / 1_000.0,
+    val details: StateFlow<Map<Long, DownloadDetails>> = run {
+        val cache = HashMap<Long, DownloadDetails?>()
+        downloads.mapLatest { list ->
+            list.mapNotNull { d ->
+                val found = if (cache.containsKey(d.id)) cache[d.id] else lookUp(d).also { cache[d.id] = it }
+                found?.let { d.id to it }
+            }.toMap()
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
+    }
+
+    private suspend fun lookUp(d: DownloadEntity): DownloadDetails? = when (d.mediaType) {
+        MediaType.MOVIE -> movieDao.getById(d.itemId)?.let { m ->
+            DownloadDetails(
+                title = m.name,
+                artUrl = m.backdropUrl ?: m.posterUrl,
+                year = m.year ?: m.parsedYear,
+                runtimeSecs = m.durationSecs,
+                quality = ProviderVariantParser.displaySignals(m.name).quality.label,
             )
-            lastBytes = if (running.isEmpty()) -1L else bytes
-            lastAt = now
-            delay(SPEED_SAMPLE_MS)
         }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0.0)
+        MediaType.EPISODE -> seriesDao.getEpisodeById(d.itemId)?.let { ep ->
+            val show = seriesDao.getSeriesById(ep.seriesId)
+            DownloadDetails(
+                title = show?.name ?: d.title,
+                artUrl = show?.backdropUrl ?: show?.posterUrl ?: d.posterUrl,
+                runtimeSecs = ep.durationSecs,
+                season = ep.seasonNumber,
+                episode = ep.episodeNumber,
+            )
+        }
+        else -> null
+    }
 
     /**
      * The volumes downloads can go to without asking for anything: this app's own folder on internal
@@ -216,6 +255,14 @@ class DownloadsViewModel(
      * choices this screen has, and a user who opens them is asking one question: where these go and
      * what they cost.
      */
+    /** What playing does to a running download on a one-stream playlist (the options sheet's row). */
+    val downloadWatchChoice: StateFlow<SettingsRepository.DownloadWatchChoice> = settings.downloadWatchChoice
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SettingsRepository.DownloadWatchChoice.ASK)
+
+    fun setDownloadWatchChoice(choice: SettingsRepository.DownloadWatchChoice) {
+        viewModelScope.launch { settings.setDownloadWatchChoice(choice) }
+    }
+
     val wifiOnly: StateFlow<Boolean> = settings.downloadsWifiOnly
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
 
@@ -286,7 +333,18 @@ class DownloadsViewModel(
     fun resume(download: DownloadEntity) = downloadManager.resume(download)
     fun delete(download: DownloadEntity) = downloadManager.delete(download)
 
-    private companion object {
-        const val SPEED_SAMPLE_MS = 1_000L
-    }
 }
+
+/** See [DownloadsViewModel.details]. */
+data class DownloadDetails(
+    val title: String,
+    val artUrl: String?,
+    val year: Int? = null,
+    val runtimeSecs: Int? = null,
+    val quality: String? = null,
+    val season: Int? = null,
+    val episode: Int? = null,
+)
+
+/** Stopped downloads that keep a partial file on the drive. */
+private val RESUMABLE = setOf(tv.own.owntv.core.model.DownloadStatus.PAUSED, tv.own.owntv.core.model.DownloadStatus.FAILED)

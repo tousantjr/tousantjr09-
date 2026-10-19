@@ -3,7 +3,6 @@ package tv.own.owntv.mobile.ui.screens.settings
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,9 +26,7 @@ import tv.own.owntv.core.customize.CustomizationStore
 import tv.own.owntv.core.customize.SectionCustomizations
 import tv.own.owntv.core.database.dao.CategoryDao
 import tv.own.owntv.core.database.dao.ChannelDao
-import tv.own.owntv.core.database.dao.HistoryDao
 import tv.own.owntv.core.database.dao.ProfileDao
-import tv.own.owntv.core.database.dao.ProgressDao
 import tv.own.owntv.core.database.dao.SourceDao
 import tv.own.owntv.core.database.dao.TrendingDao
 import tv.own.owntv.core.database.entity.CategoryEntity
@@ -58,7 +55,6 @@ import tv.own.owntv.core.stalker.StalkerAuthManager
 import tv.own.owntv.core.stalker.StalkerClient
 import tv.own.owntv.core.stalker.stalkerCredentials
 import tv.own.owntv.core.stalker.stalkerExpiryOf
-import tv.own.owntv.core.storage.StorageAccess
 import tv.own.owntv.core.sync.ImportFinalizer
 import tv.own.owntv.core.sync.SyncContentTypes
 import tv.own.owntv.core.sync.SyncCounts
@@ -163,7 +159,7 @@ class SettingsViewModel(
 
     /** The playlist the rest of the app is filtered to, or -1 when every playlist is shown. */
     val defaultSourceId: StateFlow<Long> = settings.defaultSourceId
-        .stateIn(viewModelScope, SharingStarted.Eagerly, -1L)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), -1L)
 
     fun setDefaultSource(id: Long) {
         viewModelScope.launch { settings.setDefaultSource(id) }
@@ -434,18 +430,6 @@ class SettingsViewModel(
             if (pid < 0) flowOf(SectionCustomizations()) else customize.observe(pid, type)
         }
 
-    /** Run one of [CustomizationStore]'s edits against whoever is watching. */
-    fun customizeEdit(type: MediaType, block: suspend CustomizationStore.(Long, MediaType) -> Unit) {
-        viewModelScope.launch {
-            val pid = settings.activeProfileId.first()
-            if (pid >= 0) customize.block(pid, type)
-        }
-    }
-
-    /** The volumes a download can be written to without asking for a file permission. */
-    suspend fun downloadVolumes(): List<StorageAccess.StorageRoot> =
-        withContext(Dispatchers.IO) { StorageAccess.appRoots(context) }
-
     // --- Per-item playback choices the player remembered, and the rows that forget them ---
 
     /**
@@ -470,15 +454,15 @@ class SettingsViewModel(
 
     fun clearVodEnginePins() { viewModelScope.launch { vodEngineStore.clearAll() } }
 
-    /** N15 — how many channels are pinned to one engine (either direction), for the live reset row. */
+    /** How many channels are pinned to one engine (either direction), for the live reset row. */
     val livePinCount: StateFlow<Int> =
         combine(forceMpvStore.urls, forceMpvStore.exoUrls) { mpv, exo -> mpv.size + exo.size }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
 
-    /** N15 — every channel follows the Live TV player setting again; films' pins are kept. */
+    /** Every channel follows the Live TV player setting again; films' pins are kept. */
     fun clearLivePins() { viewModelScope.launch { forceMpvStore.clearAll() } }
 
-    /** N15 — forget the stream lessons of this session and the stored catch-up decode list. */
+    /** Forget the stream lessons of this session and the stored catch-up decode list. */
     fun forgetStreamFixes() { viewModelScope.launch { tv.own.owntv.player.LiveStreamQuirks.forgetLearned(archiveDecodeStore) } }
 
     fun clearSavedZoom() { viewModelScope.launch { playbackPrefs.clearZoom() } }

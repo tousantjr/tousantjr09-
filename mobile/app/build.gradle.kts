@@ -293,8 +293,8 @@ val verifyI18nLiterals = tasks.register<VerifyI18nLiterals>("verifyI18nLiterals"
     description = "Fails the build on user-visible text left hardcoded in Kotlin."
     // :app is the only module in this repo. Core's own Kotlin is gated by the identical task in the
     // core repo, so a literal cannot escape by moving between the two. A new module here needs a
-    // line added HERE as well as in check_hardcoded_strings.py's SRC_ROOTS — Plan 1 Phase 9 found
-    // an undeclared input silently skipping the gate whenever only that module changed.
+    // line added HERE as well as in check_hardcoded_strings.py's SRC_ROOTS — an undeclared input
+    // silently skips the gate whenever only that module changed.
     kotlinSources.from(fileTree("src/main/java") { include("**/*.kt") })
     toolInputs.from(
         rootProject.file("tools/i18n/check_hardcoded_strings.py"),
@@ -333,7 +333,8 @@ dependencies {
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
-    implementation(libs.androidx.compose.ui.tooling.preview)
+    // Preview annotations only: @Preview appears nowhere in main, so this stays out of release.
+    debugImplementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.compose.material3)
     // Window size classes — this app has to lay out for a phone and a tablet from one build.
@@ -386,7 +387,6 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
-    debugImplementation(libs.androidx.compose.ui.test.manifest)
 
     // Records the profile this module then packages. Recording needs a real device, so this is
     // never exercised by CI; see baselineprofile/BaselineProfileGenerator.kt.

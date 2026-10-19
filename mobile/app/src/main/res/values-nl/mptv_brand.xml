@@ -20,20 +20,33 @@
     <string name="local_sync_browser_body">Dit adres is bedoeld voor de MPTV-app op je andere apparaat. Open daar Lokaal synchroniseren en kies dit apparaat uit de lijst.</string>
     <string name="local_sync_browser_title">MPTV lokaal synchroniseren</string>
     <string name="local_sync_error_unreachable">Dit apparaat was niet bereikbaar. Open daarop MPTV → Instellingen → Gegevens → Lokaal synchroniseren en zet Synchronisatiemodus aan. Beide apparaten moeten op hetzelfde wifinetwerk zitten.</string>
-    <string name="multiview_unknown_connections">MPTV kon niet achterhalen hoeveel streams deze afspeellijst toestaat. Als een tegel mislukt, is dat de reden.</string>
+    <string name="player_trailer_blocked_title">Deze trailer kan niet in MPTV worden afgespeeld</string>
     <string name="recording_failed_drm">Dit kanaal is DRM-beveiligd en kan daarom wel worden bekeken, maar niet opgenomen. De beveiliging komt van je provider, niet van MPTV.</string>
     <string name="recovery_title">MPTV kon de database niet openen</string>
-    <string name="settings_about_license">© 2026 MPTV · GPLv3-licentie</string>
+    <string name="settings_app_icon_sheet_mobile">Hoe MPTV op je startscherm verschijnt. De app start één keer opnieuw.</string>
     <string name="settings_app_icon_summary">Kleur van het MPTV-pictogram en -logo</string>
     <string name="settings_app_startup_description">Wat MPTV opent wanneer de app start</string>
     <string name="settings_auto_frame_rate_warning_description">Dit apparaat draait op Android <xliff:g id="android_version">%1$s</xliff:g>. Onder Android 12 kan de tv MPTV niet vertellen naar welke verversingsfrequenties hij soepel kan overschakelen, dus het wijzigen van de frequentie kan het scherm een seconde of twee zwart maken — soms meerdere keren tijdens een programma.\n\nWe raden aan om Automatische framesnelheid hier uit te laten staan. Als je tv probleemloos overschakelt, zet je hem aan en kijk je: je kunt hem op elk moment weer uitzetten.</string>
     <string name="settings_auto_frame_rate_warning_description_mobile">Dit apparaat draait op Android <xliff:g id="android_version">%1$s</xliff:g>. Onder Android 12 kan het apparaat MPTV niet vertellen naar welke verversingsfrequenties het soepel kan overschakelen, dus het wijzigen van de frequentie kan het scherm een seconde of twee zwart maken — soms meerdere keren tijdens een programma.\n\nWe raden aan om Automatische framesnelheid hier uit te laten staan. Als je scherm probleemloos overschakelt, zet je hem aan en kijk je: je kunt hem op elk moment weer uitzetten.</string>
     <string name="settings_catchup_player_internal">MPTV-speler</string>
     <string name="settings_dns_toggle_description">Alle domeinnamen die MPTV opzoekt via een aangepaste DNS-server laten omzetten.</string>
-    <string name="settings_glass_master_description">Doorschijnende, gematteerde panelen over een achtergrondfoto of over de eigen achtergrond van de app.</string>
+    <string name="settings_help_app_icon">Het MPTV-pictogram op het startscherm van je tv. Het kan even duren voordat de launcher de wijziging toont.</string>
+    <string name="settings_help_bg_background">Stage toont de eigen zachte kleuren van MPTV. Afbeelding toont een eigen afbeelding achter elk scherm. Effen is een vlakke donkere vulling.</string>
+    <string name="settings_help_brand_accent">Het MPTV-logo in het menu, Over en de installatie toont de afspeeldriehoek in je accentkleur. Het pictogram op het startscherm houdt zijn eigen kleuren.</string>
+    <string name="settings_help_check_updates">Zoekt nu op GitHub naar een nieuwere MPTV en biedt aan die te installeren. Je afspeellijsten, favorieten en instellingen blijven zoals ze zijn.</string>
+    <string name="settings_help_fonts">Het lettertype in heel MPTV en hoe groot tekst is. Pop-ups gebruiken hetzelfde lettertype.</string>
+    <plurals name="settings_help_language">
+        <item quantity="one">De taal van alle menu’s en meldingen in MPTV. <xliff:g id="count">%1$d</xliff:g> taal; volgt de taal van de tv tot je er een kiest.</item>
+        <item quantity="other">De taal van alle menu’s en meldingen in MPTV. <xliff:g id="count">%1$d</xliff:g> talen; volgt de taal van de tv tot je er een kiest.</item>
+    </plurals>
+    <string name="settings_help_startup">Wat MPTV toont bij het starten: Start, het laatst bekeken kanaal, je favorieten of een kanaal naar keuze.</string>
+    <string name="settings_help_theme">MPTV is ontworpen voor donker. Systeem volgt de instelling van de tv, als die er is; licht past bij een lichte kamer.</string>
+    <string name="settings_help_update_startup">Zoekt bij elke start van MPTV naar een nieuwe versie en meldt het als die er is. Er wordt niets geïnstalleerd zonder te vragen.</string>
     <string name="settings_language_contribution_description">Scan de QR-code of open de link om elke beschikbare taal te kiezen en bij te dragen aan alle zes MPTV-vertaalcomponenten.</string>
     <string name="settings_language_contribution_qr_description">QR-code voor het overzicht van het MPTV-vertaalproject.</string>
     <string name="settings_language_help_translate">Help MPTV in jouw taal te vertalen</string>
+    <string name="settings_language_pick_help"><xliff:g id="language">%1$s</xliff:g> gebruiken in MPTV, ongeacht de taal van de tv.</string>
+    <string name="settings_language_system_help">MPTV volgt de taal van de tv (nu <xliff:g id="language">%1$s</xliff:g>). Kies hieronder een taal om die alleen in MPTV te gebruiken.</string>
     <string name="settings_live_tune_timeout_description">Als een livekanaal binnen deze tijd geen beeld heeft laten zien, stopt MPTV met proberen en laat het je weten, in plaats van een zwart scherm te tonen terwijl het alle spelers een voor een afgaat. ‘Nooit’ blijft proberen, wat op een kanaal dat je provider heeft verwijderd ruim een minuut kan duren. Wachttijden waar je provider zelf om vraagt, tellen niet mee.</string>
     <string name="settings_metadata_clear_advanced_message">Je TMDB-API-sleutel en het adres van je eigen server worden van dit apparaat verwijderd, en MPTV keert terug naar de ingebouwde gedeelde dienst met het dagelijkse deel.</string>
     <string name="settings_metadata_fair_share">De ingebouwde metadatadienst wordt gedeeld door iedereen die MPTV gebruikt, dus elk apparaat krijgt elke dag zijn eigen deel. Als je jouw deel opmaakt, pauzeren posters en beschrijvingen tot het weer wordt aangevuld — de informatie uit je eigen afspeellijst blijft gewoon werken. Je eigen TMDB-API-sleutel of server toevoegen heft de limiet op: het is gratis en een persoonlijke sleutel heeft praktisch geen limiet.</string>
@@ -41,13 +54,20 @@
     <string name="settings_open_subtitles_access_priority">Laat beide leeg om de gedeelde Worker van MPTV te gebruiken. Een eigen Worker-URL heeft voorrang op een directe API-sleutel. Accountsessies blijven profielspecifiek.</string>
     <string name="settings_proxy_description">Stuur al het verkeer en afspelen van MPTV via een HTTP-proxy.</string>
     <string name="settings_recording_timers_inexact">Dit apparaat staat MPTV geen exacte wekkers toe, dus een opname kan een paar minuten later beginnen. Opnames starten eerder om dat te compenseren.</string>
-    <string name="settings_restore_remote_description">Scan op een telefoon, tablet of computer die met dezelfde Wi-Fi is verbonden de QR-code (of open de URL), voer deze PIN in, kies uw MPTV-back-upbestand en tik op Naar tv verzenden. Vervolgens kiest u hier wat u wilt herstellen.</string>
+    <string name="settings_restore_remote_description">Scan op een apparaat met een browser op hetzelfde wifi-netwerk — telefoon, computer of een andere tv — de QR-code (of open de URL), voer deze pincode in, kies je MPTV-back-upbestand en verstuur het. Daarna kies je hier wat je terugzet.</string>
     <string name="settings_sources_probe_unknown">MPTV kon niet achterhalen hoeveel kanalen deze provider toestaat.</string>
     <string name="settings_sources_probe_warning">Veel providers zeggen nooit hoeveel kanalen je tegelijk mag kijken, dus MPTV zoekt het uit door er een paar te openen en te kijken welke blijven werken. Alles wat nu speelt, stopt en dit kan tot twee minuten duren.</string>
     <string name="settings_surround_forced_description">Surround — stuur Dolby/DTS naar een echte 5.1/7.1-receiver. Als het stil wordt of hapert, valt MPTV alsnog terug op stereo en meldt je dat.</string>
     <string name="setup_byo_source_description">MPTV is een speler — voeg je eigen Xtream-, M3U- of Stalker-bron toe.</string>
     <string name="setup_disclaimer">MPTV is uitsluitend een mediaspeler. De app bevat geen zenders, afspeellijsten of content. Je bent zelf verantwoordelijk voor het toevoegen van je eigen legaal toegankelijke Xtream-, M3U- of Stalker-bronnen.</string>
+    <string name="setup_line_app_icon">Hoe MPTV op het startscherm van de tv verschijnt</string>
+    <string name="setup_line_app_icon_mobile">Hoe MPTV op je startscherm verschijnt</string>
     <string name="setup_set_up_owntv">MPTV configureren</string>
     <string name="setup_sync_device_description">Kopieer alles van je andere MPTV-apparaat via wifi</string>
+    <string name="setup_welcome_title">Welkom bij MPTV</string>
+    <string name="sports_alerts_footnote">Als MPTV gesloten is, komen meldingen meestal binnen een minuut. Ligt de telefoon lang stil met het scherm uit, dan kan Android ze tot ongeveer 15 minuten tegenhouden. De live-scorekaart wordt niet tegengehouden.</string>
+    <string name="sports_alerts_when_closed">Meldingen als MPTV gesloten is</string>
+    <string name="sports_no_playlist_body">Uitslagen, standen en meldingen werken zonder. Met een afspeellijst vindt MPTV elke zender die deze wedstrijd uitzendt.</string>
+    <string name="sports_sport_buttons_description">Mijn sporten: alleen wat je koos. Alle sporten: elke competitie die MPTV kent, wat langer laden kost.</string>
     <string name="update_ready">MPTV v<xliff:g id="available">%1$s</xliff:g> staat klaar (je hebt v<xliff:g id="current">%2$s</xliff:g>).</string>
 </resources>

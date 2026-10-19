@@ -1,7 +1,7 @@
 package tv.own.owntv.mobile.ui.screens.settings
 
+import androidx.compose.ui.text.style.TextOverflow
 import tv.own.owntv.mobile.ui.components.MobileIcons
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -9,16 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -26,7 +17,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -42,7 +32,6 @@ import tv.own.owntv.core.setup.detailLines
 import tv.own.owntv.core.setup.headline
 import tv.own.owntv.core.settings.PlaylistAutoRefresh
 import tv.own.owntv.core.settings.PlaylistRefresh
-import tv.own.owntv.core.sync.SyncContentTypes
 import tv.own.owntv.core.sync.SyncCounts
 import tv.own.owntv.core.sync.SyncProgressCounts
 import tv.own.owntv.core.sync.SyncScopeChoice
@@ -51,27 +40,34 @@ import tv.own.owntv.core.sync.displayText
 import tv.own.owntv.core.sync.resyncProgressPercent
 import tv.own.owntv.core.sync.work.CatalogSyncState
 import tv.own.owntv.mobile.R
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.safeDrawingPadding
+import tv.own.owntv.core.ui.stage.PlaylistMark
+import tv.own.owntv.mobile.ui.shell.displayName
+import tv.own.owntv.mobile.ui.stage.LocalStagePalette
+import tv.own.owntv.mobile.ui.stage.StageButton
+import tv.own.owntv.mobile.ui.stage.StageMenuItem
+import tv.own.owntv.mobile.ui.stage.StagePill
+import tv.own.owntv.mobile.ui.stage.StagePlaylistMark
+import tv.own.owntv.mobile.ui.stage.StageSettingRow
+import tv.own.owntv.mobile.ui.stage.StageSheetHeader
+import tv.own.owntv.mobile.ui.stage.StageSwitch
+import tv.own.owntv.mobile.ui.stage.stageAccent
+import tv.own.owntv.mobile.ui.stage.stageBackground
+import tv.own.owntv.mobile.ui.stage.stageText
 import tv.own.owntv.mobile.ui.components.MobileBottomSheet
-import tv.own.owntv.mobile.ui.components.MobileListRow
-import tv.own.owntv.mobile.ui.components.SettingRow
 import tv.own.owntv.mobile.ui.setup.AddSourceForm
 import tv.own.owntv.mobile.ui.setup.SourceFormValues
 import tv.own.owntv.mobile.ui.setup.SourceKind
 import tv.own.owntv.mobile.ui.setup.labelRes
-import tv.own.owntv.mobile.ui.theme.MobileDimens
-import tv.own.owntv.mobile.ui.theme.glassDialogWindow
 
 /**
- * The playlists, one row each, with everything the television's Manage sources screen can do: which
- * one the app is filtered to, when the account runs out, how often it refreshes itself, and what a
- * running import has fetched so far.
- *
- * The television lays five buttons out along each row because a remote can reach them. A thumb
- * cannot, so a row opens the sheet instead and the sheet holds the actions.
+ * Settings › Sources & guide › Playlists: "+ Add source", then one row per playlist — its mark, its
+ * name, the type with what it holds, when it synced and when it runs out — and on the right OK, Default, or the
+ * import running. Addresses are never shown in the list. A tap opens its actions.
  */
 @Composable
 fun SettingsPlaylistsPage(
-    onAddSource: () -> Unit,
     modifier: Modifier = Modifier,
     vm: SettingsViewModel = koinViewModel(),
 ) {
@@ -81,6 +77,7 @@ fun SettingsPlaylistsPage(
     val deleting by vm.deletingSourceIds.collectAsStateWithLifecycle()
     val test by vm.sourceTest.collectAsStateWithLifecycle()
     val playlistRefresh = vm.settings.playlistAutoRefresh.pref(emptyMap())
+    val nav = LocalSettingsNav.current
 
     var menuSource by remember { mutableStateOf<SourceEntity?>(null) }
     var editSource by remember { mutableStateOf<SourceEntity?>(null) }
@@ -89,77 +86,63 @@ fun SettingsPlaylistsPage(
     // Set while the "this will stop playback and take a while" confirmation is on screen.
     var confirmRetest by remember { mutableStateOf<SourceEntity?>(null) }
 
-    SettingsPage(modifier) {
-        settingsNote(R.string.settings_sources_description)
-        if (sources.isEmpty()) {
-            settingsNote(R.string.settings_sources_empty)
+    SettingsCrumb(pluralStringResource(R.plurals.settings_sources_count, sources.size, sources.size), SettingsGroup.SOURCES)
+    SettingsStagePage(modifier) {
+        item(key = "add") {
+            Box(Modifier.padding(start = 8.dp, end = 8.dp, bottom = 8.dp)) {
+                StageButton(onClick = { nav(SettingsLeaf.ADD_SOURCE.route) }, text = stringResource(R.string.settings_sources_add), icon = MobileIcons.Add, small = true)
+            }
         }
-        settingsGroup(key = "add-source") {
-            sources.forEach { source ->
+        if (sources.isEmpty()) item(key = "empty") { PageNote(stringResource(R.string.settings_sources_empty)) }
+        sources.forEachIndexed { index, source ->
+            item(key = source.id) {
                 PlaylistRow(
                     source = source,
-                    refresh = playlistRefresh[source.id] ?: PlaylistRefresh(),
+                    index = index,
                     isDefault = source.id == defaultId,
                     expiry = expiry[source.id],
                     isDeleting = source.id in deleting,
                     counts = vm.contentCounts(source.id).collectAsStateWithLifecycle(null).value,
-                    syncState = vm.syncState(source.id)
-                        .collectAsStateWithLifecycle(CatalogSyncState.Idle).value,
+                    syncState = vm.syncState(source.id).collectAsStateWithLifecycle(CatalogSyncState.Idle).value,
                     onClick = { if (source.id !in deleting) menuSource = source },
                 )
             }
-            MobileListRow(
-                title = stringResource(R.string.settings_sources_add),
-                leading = { Icon(MobileIcons.Add, contentDescription = null) },
-                onClick = onAddSource,
-            )
         }
     }
 
+    // The playlist's header, then Re-sync · Re-sync and remove · Edit · Test · Auto refresh · Default · Delete.
     menuSource?.let { source ->
         val syncing = vm.syncState(source.id).collectAsStateWithLifecycle(CatalogSyncState.Idle).value.isActive
-        MobileBottomSheet(onDismissRequest = { menuSource = null }, title = source.name) {
-            SettingRow(
-                title = stringResource(R.string.setup_default_playlist),
-                subtitle = stringResource(R.string.setup_default_playlist_description),
-                checked = source.id == defaultId,
-                onCheckedChange = { on -> vm.setDefaultSource(if (on) source.id else -1L) },
-            )
-            MobileListRow(
-                title = stringResource(R.string.settings_sources_edit),
-                onClick = { editSource = source; menuSource = null },
-            )
-            // "Info", not "Test": the expensive measurement now lives behind Re-test inside the
-            // sheet, and this answers the question it always really answered — is it alive?
-            MobileListRow(
-                title = stringResource(R.string.settings_sources_info),
-                onClick = { vm.testSource(source); menuSource = null },
+        val counts = vm.contentCounts(source.id).collectAsStateWithLifecycle(null).value
+        val close = { menuSource = null }
+        MobileBottomSheet(onDismissRequest = close) {
+            StageSheetHeader(
+                source.displayName(),
+                subtitle = typeLine(source, counts?.breakdownText(LocalContext.current.resources)),
+                leading = { StagePlaylistMark(PlaylistMark.of(source.displayName(), sources.indexOf(source))) },
             )
             if (syncing) {
-                MobileListRow(
-                    title = stringResource(R.string.settings_sources_cancel),
-                    onClick = { vm.cancelResync(source); menuSource = null },
-                )
+                StageMenuItem(stringResource(R.string.settings_sources_cancel), onClick = { vm.cancelResync(source); close() }, icon = MobileIcons.Close)
             } else {
-                MobileListRow(
-                    title = stringResource(R.string.settings_sources_resync_now_full),
-                    subtitle = stringResource(R.string.settings_sources_resync_description),
-                    onClick = { vm.resync(source); menuSource = null },
-                )
-                MobileListRow(
-                    title = stringResource(R.string.settings_sources_resync_remove_full),
-                    onClick = { vm.resync(source, removeMissing = true); menuSource = null },
-                )
+                StageMenuItem(stringResource(R.string.settings_sources_resync_now_full), onClick = { vm.resync(source); close() }, icon = MobileIcons.Refresh)
+                StageMenuItem(stringResource(R.string.settings_sources_resync_remove_full), onClick = { vm.resync(source, removeMissing = true); close() }, icon = MobileIcons.Refresh)
             }
-            MobileListRow(
-                title = stringResource(R.string.setup_auto_refresh),
-                subtitle = playlistRefreshLabel(playlistRefresh[source.id] ?: PlaylistRefresh()),
-                onClick = { refreshFor = source; menuSource = null },
+            StageMenuItem(stringResource(R.string.settings_sources_edit), onClick = { editSource = source; close() }, icon = MobileIcons.Edit)
+            // "Info", not "Test": the expensive measurement lives behind Re-test inside the sheet.
+            StageMenuItem(stringResource(R.string.settings_sources_info), onClick = { vm.testSource(source); close() }, icon = MobileIcons.Info)
+            StageMenuItem(
+                stringResource(R.string.setup_auto_refresh),
+                onClick = { refreshFor = source; close() },
+                icon = MobileIcons.Schedule,
+                value = playlistRefreshLabel(playlistRefresh[source.id] ?: PlaylistRefresh()),
             )
-            MobileListRow(
-                title = stringResource(R.string.settings_sources_delete),
-                onClick = { confirmDelete = source; menuSource = null },
-            )
+            StageSettingRow(
+                title = stringResource(R.string.setup_default_playlist),
+                icon = MobileIcons.StarBorder,
+                minHeight = 48.dp,
+                onClick = { vm.setDefaultSource(if (source.id == defaultId) -1L else source.id) },
+            ) { StageSwitch(source.id == defaultId) }
+            StageMenuItem(stringResource(R.string.settings_sources_delete), onClick = { confirmDelete = source; close() }, icon = MobileIcons.Delete, danger = true)
         }
     }
 
@@ -194,120 +177,65 @@ fun SettingsPlaylistsPage(
 
     refreshFor?.let { source ->
         val current = playlistRefresh[source.id] ?: PlaylistRefresh()
-        MobileBottomSheet(
-            onDismissRequest = { refreshFor = null },
+        StageChoiceSheet(
+            eyebrow = source.displayName(),
             title = stringResource(R.string.setup_auto_refresh_title),
-        ) {
-            Text(
-                text = stringResource(R.string.setup_auto_refresh_description),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = MobileDimens.ScreenPaddingH),
-            )
-            PlaylistAutoRefresh.entries.forEach { mode ->
-                MobileListRow(
-                    title = stringResource(mode.labelRes()),
-                    trailing = { RadioButton(selected = mode == current.mode, onClick = null) },
-                    onClick = {
-                        vm.edit { setPlaylistAutoRefresh(source.id, current.copy(mode = mode)) }
-                        refreshFor = null
-                    },
-                )
-            }
-        }
+            text = stringResource(R.string.setup_auto_refresh_description),
+            choices = PlaylistAutoRefresh.entries.map { SettingsChoice(it, stringResource(it.labelRes())) },
+            selected = current.mode,
+            onSelect = { mode -> vm.edit { setPlaylistAutoRefresh(source.id, current.copy(mode = mode)) } },
+            onDismiss = { refreshFor = null },
+        )
     }
 
     confirmDelete?.let { source ->
-        AlertDialog(
-            modifier = Modifier.glassDialogWindow(),
-            onDismissRequest = { confirmDelete = null },
-            title = { Text(stringResource(R.string.settings_sources_delete_title, source.name)) },
-            text = { Text(stringResource(R.string.settings_sources_delete_message)) },
-            confirmButton = {
-                TextButton(onClick = { vm.deleteSource(source); confirmDelete = null }) {
-                    Text(stringResource(R.string.common_delete))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { confirmDelete = null }) {
-                    Text(stringResource(R.string.common_cancel))
-                }
-            },
+        StageConfirmSheet(
+            title = stringResource(R.string.settings_sources_delete_title, source.displayName()),
+            text = stringResource(R.string.settings_sources_delete_message),
+            confirm = stringResource(R.string.common_delete),
+            confirmIcon = MobileIcons.Delete,
+            danger = true,
+            onConfirm = { vm.deleteSource(source) },
+            onDismiss = { confirmDelete = null },
         )
     }
 
     test?.let { state ->
-        MobileBottomSheet(
-            onDismissRequest = vm::dismissSourceTest,
-            title = stringResource(R.string.settings_sources_test_title),
-        ) {
-            Column(
-                modifier = Modifier.padding(
-                    horizontal = MobileDimens.ScreenPaddingH,
-                    vertical = MobileDimens.GapSmall,
-                ),
-                verticalArrangement = Arrangement.spacedBy(MobileDimens.GapSmall),
-            ) {
-                Text(state.sourceName, style = MaterialTheme.typography.titleSmall)
+        val palette = LocalStagePalette.current
+        MobileBottomSheet(onDismissRequest = vm::dismissSourceTest) {
+            StageSheetHeader(state.sourceName, eyebrow = stringResource(R.string.settings_sources_test_title))
+            Column(Modifier.padding(horizontal = 8.dp, vertical = 4.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 when (state) {
-                    is SettingsViewModel.SourceTestState.Running -> Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(MobileDimens.GapSmall),
-                    ) {
-                        CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
-                        Text(stringResource(R.string.setup_testing))
-                    }
-                    // The measurement is slow by nature, so it says which stream it is on rather
-                    // than spinning silently for two minutes and looking like a hang.
-                    is SettingsViewModel.SourceTestState.Measuring -> Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(MobileDimens.GapSmall),
-                    ) {
-                        CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
-                        Text(
-                            stringResource(
-                                R.string.settings_sources_probe_running,
-                                state.progress.stream,
-                                state.progress.maxStreams,
-                            ),
-                        )
-                    }
+                    is SettingsViewModel.SourceTestState.Running ->
+                        Text(stringResource(R.string.setup_testing), style = stageText(12.5f, 500), color = palette.muted)
+                    // The measurement is slow by nature, so it says which stream it is on.
+                    is SettingsViewModel.SourceTestState.Measuring -> Text(
+                        stringResource(R.string.settings_sources_probe_running, state.progress.stream, state.progress.maxStreams),
+                        style = stageText(12.5f, 500), color = palette.muted,
+                    )
                     is SettingsViewModel.SourceTestState.Done -> TestReport(state.result, state.limit)
                 }
-                // While measuring the only honest action is one that abandons it; afterwards, the
-                // one that repeats it.
-                if (state is SettingsViewModel.SourceTestState.Measuring) {
-                    TextButton(onClick = vm::skipConnectionMeasurement) {
-                        Text(stringResource(R.string.settings_sources_probe_skip))
-                    }
-                } else if (state is SettingsViewModel.SourceTestState.Done) {
-                    sources.firstOrNull { it.name == state.sourceName }?.let { src ->
-                        TextButton(onClick = { confirmRetest = src }) {
-                            Text(stringResource(R.string.settings_sources_retest))
-                        }
-                    }
+            }
+            // While measuring the only honest action abandons it; afterwards, the one that repeats it.
+            if (state is SettingsViewModel.SourceTestState.Measuring) {
+                StageMenuItem(stringResource(R.string.settings_sources_probe_skip), onClick = vm::skipConnectionMeasurement, icon = MobileIcons.Close)
+            } else if (state is SettingsViewModel.SourceTestState.Done) {
+                sources.firstOrNull { it.name == state.sourceName }?.let { src ->
+                    StageMenuItem(stringResource(R.string.settings_sources_retest), onClick = { confirmRetest = src }, icon = MobileIcons.Refresh)
                 }
             }
+            StageMenuItem(stringResource(R.string.common_done), onClick = vm::dismissSourceTest, icon = MobileIcons.Check)
         }
     }
 
-    // Measuring opens real streams, so the user is told plainly that playback stops and that it is
-    // slow, and gets to say no.
+    // Measuring opens real streams, so the user is told that playback stops and that it is slow.
     confirmRetest?.let { src ->
-        AlertDialog(
-            onDismissRequest = { confirmRetest = null },
-            title = { Text(stringResource(R.string.settings_sources_probe_title)) },
-            text = { Text(stringResource(R.string.settings_sources_probe_warning)) },
-            confirmButton = {
-                TextButton(onClick = { confirmRetest = null; vm.retestSource(src) }) {
-                    Text(stringResource(R.string.settings_sources_retest))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { confirmRetest = null }) {
-                    Text(stringResource(R.string.common_cancel))
-                }
-            },
+        StageConfirmSheet(
+            title = stringResource(R.string.settings_sources_probe_title),
+            text = stringResource(R.string.settings_sources_probe_warning),
+            confirm = stringResource(R.string.settings_sources_retest),
+            onConfirm = { vm.retestSource(src) },
+            onDismiss = { confirmRetest = null },
         )
     }
 }
@@ -316,28 +244,33 @@ fun SettingsPlaylistsPage(
 @Composable
 private fun TestReport(result: SourceTestResult, limit: tv.own.owntv.core.live.ConnectionLimit?) {
     val res = LocalContext.current.resources
-    Text(
-        text = result.headline(res),
-        style = MaterialTheme.typography.bodyLarge,
-        color = MaterialTheme.colorScheme.onSurface,
+    val palette = LocalStagePalette.current
+    Text(result.headline(res), style = stageText(14.5f, 700), color = palette.text)
+    result.detailLines(res, limit).forEach { line -> Text(line, style = stageText(12.5f, 500), color = palette.muted) }
+}
+
+/** "Xtream · 55K channels · 179K movies · 48K series" — the type and what it holds, never its address. */
+@Composable
+private fun typeLine(source: SourceEntity, counts: String?): String {
+    val type = stringResource(
+        when (source.type) {
+            SourceType.XTREAM -> R.string.setup_xtream
+            SourceType.STALKER -> R.string.setup_stalker_mac
+            SourceType.M3U -> R.string.setup_m3u
+            SourceType.LOCAL_BACKUP -> R.string.settings_sources_backup
+        },
     )
-    result.detailLines(res, limit).forEach { line ->
-        Text(
-            text = line,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-    }
+    return listOfNotNull(type, counts?.takeIf { it.isNotBlank() }).joinToString(stringResource(R.string.content_epg_bits_separator))
 }
 
 /**
- * One playlist: its name with the badges the television shows beside it, and a details line that
- * turns into live counts while an import is running.
+ * One playlist (`.srow` with its mark): name, then the type and counts (the live counts while an import runs),
+ * then when it synced and when it runs out; OK, Default (accent), Deleting or the import's progress on the right.
  */
 @Composable
 private fun PlaylistRow(
     source: SourceEntity,
-    refresh: PlaylistRefresh,
+    index: Int,
     isDefault: Boolean,
     expiry: String?,
     isDeleting: Boolean,
@@ -346,87 +279,57 @@ private fun PlaylistRow(
     onClick: () -> Unit,
 ) {
     val res = LocalContext.current.resources
+    val palette = LocalStagePalette.current
     val active = syncState as? CatalogSyncState.Syncing
     val activeCounts = active?.progressCounts(source.type, counts)
-    val visibleCounts =
-        if (active == null) counts?.breakdownText(res) else activeCounts?.displayText(res)
-    // One fact per line. Squeezed onto one, the channel and film counts — the reason to look at this
-    // screen at all — fall off the right-hand edge behind the URL.
-    val details = buildList {
-        add(stringResource(source.type.labelRes(), source.url))
-        if (!visibleCounts.isNullOrBlank()) add(visibleCounts)
-        else if (active != null) add(stringResource(R.string.settings_sources_preparing_detail))
-        if (!expiry.isNullOrBlank()) add(stringResource(R.string.settings_sources_expiry, expiry))
-        if (refresh.mode != PlaylistAutoRefresh.OFF) {
-            add(stringResource(R.string.settings_sources_auto_refresh, playlistRefreshLabel(refresh)))
-        }
-    }
-    MobileListRow(
-        title = source.name,
-        subtitle = details.joinToString("\n"),
-        subtitleMaxLines = details.size,
-        trailing = {
-            val badge = when {
-                isDeleting -> stringResource(R.string.settings_sources_deleting)
-                active != null -> resyncProgressPercent(active.baseItemCount, active.totalProcessed)
-                    ?.let { stringResource(R.string.sync_progress_percent, it) }
-                    ?: stringResource(R.string.sync_progress_syncing)
-                isDefault -> stringResource(R.string.settings_sources_default)
-                else -> null
-            }
-            if (badge != null) {
-                Text(
-                    text = badge,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(6.dp))
-                        .background(MaterialTheme.colorScheme.primaryContainer)
-                        .padding(horizontal = 8.dp, vertical = 2.dp),
-                )
-            }
-        },
+    val visibleCounts = if (active == null) counts?.breakdownText(res) else activeCounts?.displayText(res)
+    val sep = stringResource(R.string.content_epg_bits_separator)
+    val second = listOfNotNull(
+        source.lastSyncAt?.let { stringResource(R.string.settings_synced_at, syncedWhen(it)) },
+        expiry?.takeIf { it.isNotBlank() }?.let { stringResource(R.string.settings_sources_expiry, it) },
+    ).joinToString(sep)
+    val first = if (active != null && visibleCounts.isNullOrBlank()) stringResource(R.string.settings_sources_preparing_detail) else typeLine(source, visibleCounts)
+    StageSettingRow(
+        title = source.displayName(),
+        subtitle = listOf(first, second).filter { it.isNotBlank() }.joinToString("\n"),
+        leading = { StagePlaylistMark(PlaylistMark.of(source.displayName(), index)) },
         onClick = onClick,
         onLongClick = onClick,
-    )
+    ) {
+        val (text, color) = when {
+            isDeleting -> stringResource(R.string.settings_sources_deleting) to palette.danger
+            active != null -> (resyncProgressPercent(active.baseItemCount, active.totalProcessed)
+                ?.let { stringResource(R.string.sync_progress_percent, it) } ?: stringResource(R.string.sync_progress_syncing)) to stageAccent.accent
+            isDefault -> stringResource(R.string.settings_sources_status_default) to stageAccent.accent
+            else -> stringResource(R.string.common_ok) to palette.muted
+        }
+        Text(text, style = stageText(12.5f, 700), color = color, maxLines = 1, overflow = TextOverflow.Ellipsis)
+    }
 }
 
-/** The setup form again, full screen, with the playlist's own answers already in it. */
+/** The add form again, full screen on the Stage page, with the playlist's own answers already in it. */
 @Composable
 private fun EditPlaylistDialog(
     source: SourceEntity,
     onDismiss: () -> Unit,
     onSave: (SourceFormValues) -> Unit,
 ) {
-    Dialog(
-        onDismissRequest = onDismiss,
-        properties = DialogProperties(usePlatformDefaultWidth = false),
-    ) {
-        Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
-            Column(Modifier.fillMaxSize()) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = MobileDimens.ScreenPaddingH),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        text = source.name,
-                        style = MaterialTheme.typography.titleLarge,
-                        modifier = Modifier.weight(1f),
-                    )
-                    IconButton(onClick = onDismiss) {
-                        Icon(MobileIcons.Close, contentDescription = stringResource(R.string.settings_close))
-                    }
+    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        Column(Modifier.fillMaxSize().stageBackground().safeDrawingPadding()) {
+            Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp, top = 12.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text(stringResource(R.string.settings_sources_edit), style = stageText(13f, 500), color = LocalStagePalette.current.muted)
+                    Text(source.displayName(), style = stageText(28f, 800), color = LocalStagePalette.current.text, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
-                AddSourceForm(
-                    onStartXtream = { _, _, _, _, _, _, _, _, _, _, _ -> },
-                    onStartM3u = { _, _, _, _, _ -> },
-                    onStartStalker = { _, _, _, _, _, _, _, _, _, _, _, _, _ -> },
-                    initial = source.toFormValues(),
-                    onSave = onSave,
-                )
+                StagePill(onClick = onDismiss, icon = MobileIcons.Close, contentDescription = stringResource(R.string.settings_close))
             }
+            AddSourceForm(
+                onStartXtream = { _, _, _, _, _, _, _, _, _, _, _ -> },
+                onStartM3u = { _, _, _, _, _ -> },
+                onStartStalker = { _, _, _, _, _, _, _, _, _, _, _, _, _ -> },
+                initial = source.toFormValues(),
+                onSave = onSave,
+            )
         }
     }
 }
