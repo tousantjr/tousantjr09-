@@ -84,6 +84,9 @@ jobs:
 
           echo "Pin $PIN is core's newest release, the branch agrees, and locales.json matches."
 
+      - name: MPTV brand overrides must be current for the new pin
+        run: tools/brand/verify_mptv_brand.sh
+
   # Nothing was checking the unit tests or lint before, so both could rot silently while the APK
   # kept building. This job is the gate: if it is red, no APK is produced and no release is cut.
   check:
@@ -93,6 +96,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+
+      # Catches drift from ANY path that can change the core pin — not just the automated
+      # "Pin core x.y.z" PRs verify-pin covers, but also a manual pin edit or a merge like the
+      # upstream v5.1.0/v5.2.0 sync, which bumped the pin without re-running the generator and left
+      # several new "OwnTV"-named strings (Sports alerts, new Settings help text, ...) unrebranded
+      # until caught by hand. Runs before the JDK/SDK setup below so it fails fast.
+      - name: MPTV brand overrides must be current for the pinned core version
+        run: tools/brand/verify_mptv_brand.sh
 
       - name: Set up JDK 21
         uses: actions/setup-java@v6
