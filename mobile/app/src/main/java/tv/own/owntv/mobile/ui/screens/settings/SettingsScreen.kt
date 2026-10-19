@@ -225,6 +225,12 @@ private val LEAF_ROWS: List<Pair<SettingsLeaf, Int>> = listOf(
     SettingsLeaf.SUBTITLE_APPEARANCE to R.string.settings_subtitle_background_transparency,
     SettingsLeaf.PROXY to R.string.settings_use_proxy,
     SettingsLeaf.DNS to R.string.settings_dns_use_custom,
+    SettingsLeaf.DIAGNOSTICS to R.string.diagnostics_run_checks,
+    SettingsLeaf.DIAGNOSTICS to R.string.diagnostics_connection_title,
+    SettingsLeaf.DIAGNOSTICS to R.string.diagnostics_streaming_heading,
+    SettingsLeaf.DIAGNOSTICS to R.string.diagnostics_epg_title,
+    SettingsLeaf.DIAGNOSTICS to R.string.diagnostics_storage_title,
+    SettingsLeaf.DIAGNOSTICS to R.string.diagnostics_speed_test_title,
 )
 
 /** Quick: the pinned rows, in the pinned order, each drawn as it is on its own page. */

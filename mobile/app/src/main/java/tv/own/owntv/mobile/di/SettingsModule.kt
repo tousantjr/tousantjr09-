@@ -4,6 +4,7 @@ import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 import tv.own.owntv.mobile.ui.screens.settings.DeleteSubtitlesViewModel
+import tv.own.owntv.mobile.ui.screens.settings.DiagnosticsViewModel
 import tv.own.owntv.mobile.ui.screens.settings.EpgSourcesViewModel
 import tv.own.owntv.mobile.ui.screens.settings.OpenSubtitlesViewModel
 import tv.own.owntv.mobile.ui.screens.settings.SettingsViewModel
@@ -88,4 +89,17 @@ val settingsModule = module {
     }
     viewModel { OpenSubtitlesViewModel(settings = get(), accounts = get()) }
     viewModel { DeleteSubtitlesViewModel(controller = get()) }
+    viewModel {
+        DiagnosticsViewModel(
+            settings = get(),
+            sourceRepository = get(),
+            sourceTester = get(),
+            connectivity = get(),
+            httpClient = get(),
+            epgDao = get(),
+            epgSourceStore = get(),
+            epgRepository = get(),
+            downloadManager = get(),
+        )
+    }
 }

@@ -15,4 +15,40 @@
     <string name="setup_server_preset_desc">Switch to another known server from your provider if this one stops responding.</string>
     <string name="setup_server_preset_bp_v2" translatable="false">bp-v2.net</string>
     <string name="setup_server_preset_fixhdelite" translatable="false">fixhdelite.xyz</string>
+
+    <!-- Settings → App → Network → Diagnostics: read-only health checks (connection, playlist, TV
+         guide, storage) plus a download speed test, mirroring the TV app's own Diagnostics screen. -->
+    <string name="diagnostics_title">Diagnostics</string>
+    <string name="diagnostics_root_desc">Check your connection, playlist, TV guide and storage</string>
+
+    <string name="diagnostics_run_checks">Run checks</string>
+    <string name="diagnostics_running">Running checks…</string>
+    <string name="diagnostics_run_checks_help">Checks your internet connection, playlist account, TV guide freshness and free storage. Nothing is changed — these are read-only.</string>
+    <string name="diagnostics_last_checked">Last checked %1$s</string>
+
+    <string name="diagnostics_status_ok">OK</string>
+    <string name="diagnostics_status_warning">Warning</string>
+    <string name="diagnostics_status_problem">Problem</string>
+
+    <string name="diagnostics_connection_title">Connection</string>
+    <string name="diagnostics_connection_ok">Connected to the internet</string>
+    <string name="diagnostics_connection_problem">No internet connection — check your network</string>
+
+    <string name="diagnostics_streaming_heading">Streaming service &amp; playlist</string>
+    <string name="diagnostics_no_sources">No playlist configured yet</string>
+
+    <string name="diagnostics_epg_title">TV guide</string>
+    <string name="diagnostics_epg_no_source">No TV guide configured for this profile</string>
+    <string name="diagnostics_epg_no_data">No guide data downloaded yet — sync in EPG Sources</string>
+    <string name="diagnostics_epg_fresh">Guide data from %1$s</string>
+    <string name="diagnostics_epg_stale">Guide data is getting old — from %1$s. Sync in EPG Sources to refresh</string>
+    <string name="diagnostics_epg_very_stale">Guide data is very old — from %1$s. Open EPG Sources and sync</string>
+    <string name="diagnostics_epg_unknown_age">Guide data is present, but its last sync time is unknown</string>
+
+    <string name="diagnostics_storage_title">Device storage</string>
+
+    <string name="diagnostics_speed_test_title">Internet speed test</string>
+    <string name="diagnostics_speed_test_desc">Downloads a small file from a public test server to measure your speed</string>
+    <string name="diagnostics_speed_test_result">%1$s Mbps download</string>
+    <string name="diagnostics_speed_test_failed">Speed test failed — check your connection</string>
 </resources>

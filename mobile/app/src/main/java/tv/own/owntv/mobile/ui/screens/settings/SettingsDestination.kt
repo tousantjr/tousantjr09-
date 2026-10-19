@@ -35,6 +35,7 @@ fun SettingsLeafPage(leaf: SettingsLeaf, onSetup: (SetupEntry) -> Unit) {
         SettingsLeaf.LANGUAGE -> SettingsLanguagePage()
         SettingsLeaf.PROXY -> SettingsProxyPage()
         SettingsLeaf.DNS -> SettingsDnsPage()
+        SettingsLeaf.DIAGNOSTICS -> DiagnosticsPage()
         SettingsLeaf.SPORTS -> tv.own.owntv.mobile.ui.screens.sports.SportsSettingsPage()
         SettingsLeaf.SPORTS_LEAGUES -> tv.own.owntv.mobile.ui.screens.sports.SportsLeaguesPage()
         SettingsLeaf.SPORTS_TEAMS -> tv.own.owntv.mobile.ui.screens.sports.SportsTeamsPage()
