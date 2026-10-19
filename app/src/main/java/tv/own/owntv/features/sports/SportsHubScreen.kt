@@ -108,6 +108,7 @@ fun SportsHubScreen(
     onOpenMatch: (Match) -> Unit,
     onPlayChannel: (ChannelEntity, List<ChannelEntity>) -> Unit,
     onOpenUpcoming: () -> Unit,
+    onOpenBoxing: () -> Unit,
     onChildFocused: () -> Unit,
     onEntryHook: (((() -> Boolean)?) -> Unit)?,
     contentStart: Dp,
@@ -212,6 +213,9 @@ fun SportsHubScreen(
                     // Beyond today/tomorrow: the next 7 days per followed league, fetched on its own
                     // (core's Demand/Feed model has no "day N" — see SportsUpcomingViewModel).
                     item { SportsChip(stringResource(R.string.sports_upcoming_title), false, icon = OwnTVIcon.CALENDAR) { onOpenUpcoming() } }
+                    // Boxing isn't ESPN-per-Sport like the rest of this row (no core Sport.BOXING case,
+                    // no Demand/Feed board) — its own small schedule screen, same door as Upcoming.
+                    item { SportsChip(stringResource(R.string.boxing_title), false, icon = OwnTVIcon.SPORTS) { onOpenBoxing() } }
                 }
             }
 

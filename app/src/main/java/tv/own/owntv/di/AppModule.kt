@@ -4,6 +4,8 @@ import tv.own.owntv.features.sports.SportsPlayback
 import tv.own.owntv.features.sports.SportsSettingsViewModel
 import tv.own.owntv.features.sports.SportsUpcomingViewModel
 import tv.own.owntv.features.sports.SportsViewModel
+import tv.own.owntv.features.sports.boxing.BoxingSource
+import tv.own.owntv.features.sports.boxing.BoxingUpcomingViewModel
 import org.koin.core.module.dsl.viewModel
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
@@ -115,6 +117,11 @@ val appModule = module {
     // Sports hub → Upcoming: its own small view model, outside core's Demand/Feed system (see
     // SportsUpcomingViewModel) — the already-bound SportsSource (EspnSportsSource) is reused as is.
     viewModelOf(::SportsUpcomingViewModel)
+    // Sports hub → Boxing: core's Sport enum has no BOXING case, so this does not reuse SportsSource/
+    // SportsRepository at all — BoxingSource is its own tiny OkHttp client riding the app's shared one
+    // (see BoxingSource/BoxingUpcomingViewModel for the full reasoning).
+    singleOf(::BoxingSource)
+    viewModelOf(::BoxingUpcomingViewModel)
     viewModelOf(::SeriesViewModel)
     viewModelOf(::SearchViewModel)
     viewModelOf(::ProfilesViewModel)

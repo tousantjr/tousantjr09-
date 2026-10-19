@@ -14,6 +14,8 @@ import org.koin.compose.koinInject
 import tv.own.owntv.core.database.entity.ChannelEntity
 import tv.own.owntv.core.sports.model.Match
 import tv.own.owntv.features.live.LiveViewModel
+import tv.own.owntv.features.sports.boxing.BoxingScreen
+import tv.own.owntv.features.sports.boxing.BoxingUpcomingViewModel
 
 /**
  * The Sports section: the hub, and the match page opened from it (Back returns to the hub) — or from the
@@ -32,11 +34,14 @@ fun SportsScreen(
     vm: SportsViewModel = koinViewModel(),
     liveVm: LiveViewModel = koinViewModel(),
     upcomingVm: SportsUpcomingViewModel = koinViewModel(),
+    boxingVm: BoxingUpcomingViewModel = koinViewModel(),
 ) {
     var match by remember { mutableStateOf<Match?>(null) }
     var filters by remember { mutableStateOf(false) }
     // Upcoming (the hub's 7-day view), over the hub (Back returns to the hub).
     var upcoming by remember { mutableStateOf(false) }
+    // Boxing (its own 7-day schedule, outside core's Sport/Demand model), over the hub.
+    var boxing by remember { mutableStateOf(false) }
     // The league page, over the hub or a match (Back returns to whichever it came from).
     var league by remember { mutableStateOf<String?>(null) }
     val openLeague: (String?) -> Unit = { k -> league = k; vm.openLeague(k) }
@@ -76,12 +81,22 @@ fun SportsScreen(
             modifier = modifier,
             active = active,
         )
+    } else if (current == null && boxing) {
+        BoxingScreen(
+            vm = boxingVm,
+            onPlayChannel = onPlayChannel,
+            onBack = { boxing = false },
+            contentStart = contentStart,
+            modifier = modifier,
+            active = active,
+        )
     } else if (current == null) {
         SportsHubScreen(
             vm = vm,
             onOpenMatch = open,
             onPlayChannel = onPlayChannel,
             onOpenUpcoming = { upcoming = true },
+            onOpenBoxing = { boxing = true },
             onChildFocused = onChildFocused,
             onEntryHook = onEntryHook,
             contentStart = contentStart,

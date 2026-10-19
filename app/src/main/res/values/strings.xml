@@ -74,4 +74,18 @@
     <string name="sports_upcoming_title">Upcoming</string>
     <string name="sports_upcoming_empty">No upcoming matches in the next 7 days for what you follow</string>
     <string name="sports_upcoming_partial_failure">Some leagues couldn\'t load</string>
+
+    <!-- Sports hub → Boxing: a 7-day PPV/fight schedule from ESPN's boxing scoreboard. Unlike every
+         other Sports view this is NOT core's Demand/Feed board (core's Sport enum has no BOXING case)
+         — it is a separate, boxing-only fetch, cache and UI; see BoxingUpcomingViewModel/BoxingSource.
+         "Today"/"Tomorrow", "Remind me" and the reminder tag are :core's own (content_epg_today,
+         content_epg_tomorrow, content_remind_me, sports_reminder_set) and are reused, not redefined. -->
+    <string name="boxing_title">Boxing</string>
+    <string name="boxing_schedule_credit">Schedule: ESPN</string>
+    <string name="boxing_empty">No boxing events found in the next 7 days</string>
+    <string name="boxing_partial_failure">Couldn\'t load part of the boxing schedule</string>
+    <string name="boxing_paused">Boxing schedule paused — trying again in a few minutes</string>
+    <string name="boxing_find_channels">Find channels</string>
+    <string name="boxing_searching_channels">Searching your channels…</string>
+    <string name="boxing_no_channels_found">No matching channels found in your playlist</string>
 </resources>
