@@ -42,6 +42,7 @@ import tv.own.owntv.mobile.ui.screens.sports.SportsMatchScreen
 import tv.own.owntv.mobile.ui.screens.sports.SportsPlayback
 import tv.own.owntv.mobile.ui.screens.sports.SportsScreen
 import tv.own.owntv.mobile.ui.screens.sports.SportsUpcomingScreen
+import tv.own.owntv.mobile.ui.screens.sports.boxing.BoxingScreen
 import tv.own.owntv.mobile.ui.screens.settings.SettingsGroup
 import tv.own.owntv.mobile.ui.screens.settings.SettingsGroupScreen
 import tv.own.owntv.mobile.ui.screens.settings.LocalSettingsNav
@@ -150,6 +151,7 @@ fun MobileNavHost(
                         onPlayChannel = playChannel,
                         onChooseSports = { navController.navigate(SettingsLeaf.SPORTS_LEAGUES.route) },
                         onOpenUpcoming = { navController.navigate(SPORTS_UPCOMING) },
+                        onOpenBoxing = { navController.navigate(SPORTS_BOXING) },
                     )
                     MobileDestination.MOVIES, MobileDestination.SERIES, MobileDestination.LIBRARY ->
                         LibraryScreen(
@@ -209,6 +211,9 @@ fun MobileNavHost(
                 onOpenMatch = { navController.navigate(sportsMatchRoute(it.key)) },
                 onChooseSports = { navController.navigate(SettingsLeaf.SPORTS_LEAGUES.route) },
             )
+        }
+        page(SPORTS_BOXING) {
+            BoxingScreen(onPlayChannel = playChannel)
         }
         page(
             route = SEARCH_ROUTE_PATTERN,
@@ -340,6 +345,9 @@ private const val SPORTS_MATCH_PATTERN = "$SPORTS_MATCH/{$ARG_KEY}"
 
 /** Sports hub → Upcoming: the 7-day view, outside core's Demand/Feed board (see SportsUpcomingViewModel). */
 const val SPORTS_UPCOMING = "sports/upcoming"
+
+/** Sports hub → Boxing: its own 7-day schedule, outside core's Sport/Demand model entirely (see BoxingUpcomingViewModel). */
+const val SPORTS_BOXING = "sports/boxing"
 
 /** A match's page; its key carries slashes ("soccer/ger.1/…"), so it is encoded. */
 fun sportsMatchRoute(key: String): String = "$SPORTS_MATCH/${Uri.encode(key)}"

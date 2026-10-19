@@ -86,6 +86,7 @@ fun SportsScreen(
     onPlayChannel: (Long) -> Unit,
     onChooseSports: () -> Unit,
     onOpenUpcoming: () -> Unit,
+    onOpenBoxing: () -> Unit,
     vm: SportsViewModel = koinViewModel(),
 ) {
     val state by vm.hub.collectAsStateWithLifecycle()
@@ -139,9 +140,12 @@ fun SportsScreen(
         // Beyond today/tomorrow: the next 7 days per followed league, fetched on its own (core's
         // Demand/Feed model has no "day N" — see SportsUpcomingViewModel). Shown regardless of what
         // is followed — Upcoming's own empty state is what points a new user at Settings → Sports.
+        // Boxing sits next to it for the same reason: core's Sport enum has no BOXING case, so it is
+        // its own small schedule screen rather than a chip inside the followed-leagues row below.
         item(key = "upcoming") {
             Row(Modifier.padding(horizontal = 14.dp, vertical = 10.dp), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
                 StageTool(onClick = onOpenUpcoming, label = stringResource(R.string.sports_upcoming_title), icon = MobileIcons.CalendarMonth)
+                StageTool(onClick = onOpenBoxing, label = stringResource(R.string.boxing_title), icon = MobileIcons.Sports)
             }
         }
         if (config.followedLeagues().isNotEmpty()) {
