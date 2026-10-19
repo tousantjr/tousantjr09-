@@ -139,6 +139,7 @@ class HomeViewModel(
     private val trendingDao: TrendingDao,
     private val favoriteDao: tv.own.owntv.core.database.dao.FavoriteDao,
     private val userDataWriter: tv.own.owntv.core.backup.UserDataWriter,
+    private val homeContentFilter: HomeContentFilterSettings,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
@@ -387,13 +388,21 @@ class HomeViewModel(
     private suspend fun loadHomeData(profileId: Long) {
         val previous = _uiState.value
         val data = feed.load(profileId)
+        // :core's own HomeFeedReader already hides an adult category for a KIDS profile (a hard
+        // block); this filters Home's Trending rail the same way for EVERY profile, behind a Settings
+        // toggle that defaults on (HomeContentFilterSettings) — additive, never a replacement for it.
+        val trendingItems = if (homeContentFilter.hideAdultCategories.first()) {
+            filterAdultTrending(data.trendingItems)
+        } else {
+            data.trendingItems
+        }
         _uiState.value = HomeUiState(
-            trendingItems = data.trendingItems,
+            trendingItems = trendingItems,
             activeTrendingIndex = previous.activeTrendingIndex
-                .coerceIn(0, (data.trendingItems.size - 1).coerceAtLeast(0)),
+                .coerceIn(0, (trendingItems.size - 1).coerceAtLeast(0)),
             trendingPreferredLanguage = data.trendingPreferredLanguage,
             trendingSeasonCounts = data.trendingSeasonCounts,
-            trendingExtras = previous.trendingExtras.filterKeys { key -> data.trendingItems.any { it.stableKey == key } },
+            trendingExtras = previous.trendingExtras.filterKeys { key -> trendingItems.any { it.stableKey == key } },
             heroItems = data.heroItems,
             activeHeroIndex = 0,
             continueMovies = data.continueMovies,
@@ -412,6 +421,27 @@ class HomeViewModel(
         _uiState.value.trendingItems.getOrNull(_uiState.value.activeTrendingIndex)?.let(::resolveTrendingExtras)
         // Keep watching shows every card as a still, so each needs its artwork up front, not on focus.
         _uiState.value.heroItems.indices.forEach { resolveHeroMetadata(it) }
+    }
+
+    /**
+     * Kotlin-side filter over an already-resolved rail, applied after [HomeFeedReader]'s own query —
+     * not a SQL join. Trending interleaves at most [tv.own.owntv.core.trending.TrendingMatcher.MAX_TOTAL]
+     * movies+series (ten), so this is a handful of [CategoryDao.getById] point lookups, the same DAO
+     * `:core` itself reads from in [tv.own.owntv.core.content.AdultCategoryClassifier.hiddenCategoryIds]
+     * — there is no bulk "categories by id" query to join against for a list this small.
+     */
+    private suspend fun filterAdultTrending(items: List<TrendingHomeItem>): List<TrendingHomeItem> {
+        if (items.isEmpty()) return items
+        fun categoryIdOf(item: TrendingHomeItem): Long? = when (item) {
+            is TrendingHomeItem.Movie -> item.movie.categoryId
+            is TrendingHomeItem.Series -> item.series.categoryId
+        }
+        val categoryNames = items.mapNotNull(::categoryIdOf).distinct()
+            .associateWith { id -> categoryDao.getById(id)?.name }
+        return items.filterNot { item ->
+            val name = categoryIdOf(item)?.let(categoryNames::get)
+            tv.own.owntv.core.content.AdultCategoryClassifier.isAdult(name)
+        }
     }
 
     private fun resolveHeroMetadata(index: Int) {

@@ -38,7 +38,17 @@ class HomeSettingsViewModel(
     private val trendingDao: TrendingDao,
     private val trendingActivity: TrendingActivityTracker,
     private val syncScheduler: CatalogSyncScheduler,
+    private val homeContentFilter: tv.own.owntv.features.home.HomeContentFilterSettings,
 ) : ViewModel() {
+
+    /** "Hide adult categories from Home" (Trending): app-level, every profile, default on. */
+    val hideAdultCategoriesHome: StateFlow<Boolean> = homeContentFilter.hideAdultCategories
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), true)
+
+    fun setHideAdultCategoriesHome(hidden: Boolean) {
+        viewModelScope.launch { homeContentFilter.setHideAdultCategories(hidden) }
+    }
+
     val config: StateFlow<HomeConfig> = settings.activeProfileId
         .flatMapLatest { pid -> if (pid < 0) flowOf(HomeConfig()) else settings.homeConfig(pid) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeConfig())

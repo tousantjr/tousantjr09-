@@ -51,6 +51,7 @@ fun HomeSettingsScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
     val heroPreviewEnabled by vm.heroPreviewEnabled.collectAsStateWithLifecycle()
     val androidTvHomeEnabled by settingsVm.androidTvHomeEnabled.collectAsStateWithLifecycle()
     val tvHomeRefresh by settingsVm.tvHomeRefresh.collectAsStateWithLifecycle()
+    val hideAdultCategoriesHome by vm.hideAdultCategoriesHome.collectAsStateWithLifecycle()
     val trendingEnabled = HomeRow.TRENDING !in config.hidden
     val trendingStatus = trendingStatusText(hidden = !trendingEnabled, availability = trendingAvailability)
 
@@ -66,7 +67,7 @@ fun HomeSettingsScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
     val ok = stringResource(R.string.common_ok)
     val back = stringResource(R.string.common_back)
     val layout = stringResource(R.string.settings_group_layout)
-    val rowCount = (if (trendingEnabled) 2 else 1) + config.settingsRows.size
+    val rowCount = (if (trendingEnabled) 2 else 1) + config.settingsRows.size + 1
     StageFullPage(
         parents = listOf(layout),
         title = stringResource(R.string.settings_home_screen),
@@ -107,6 +108,18 @@ fun HomeSettingsScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
                 help = settingHelp(null, styleTitle, stringResource(R.string.home_row_trending_description), styleValue, choices = styleValue.options, pinnable = false),
             )
         }
+
+        val hideAdultTitle = stringResource(R.string.settings_home_hide_adult_categories)
+        val hideAdultDesc = stringResource(R.string.settings_home_hide_adult_categories_description)
+        val hideAdultValue = SettingValue.Switch(hideAdultCategoriesHome)
+        StageSettingRow(
+            icon = OwnTVIcon.EYE_OFF,
+            title = hideAdultTitle,
+            desc = hideAdultDesc,
+            value = hideAdultValue,
+            onClick = { vm.setHideAdultCategoriesHome(!hideAdultCategoriesHome) },
+            help = settingHelp(null, hideAdultTitle, hideAdultDesc, hideAdultValue, pinnable = false),
+        )
 
         StageSettingsHeading(stringResource(R.string.settings_sections), config.settingsRows.size)
         val hiddenNote = stringResource(R.string.settings_hidden_sections)
