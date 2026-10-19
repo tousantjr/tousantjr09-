@@ -13,6 +13,13 @@
     <!-- Extra one-tap DoH preset label on the DNS settings screen, shown as-is (domain name). -->
     <string name="dns_preset_bp_v2" translatable="false">bp-v2.net</string>
 
+    <!-- Quick-switch between known provider login servers on the (editing-only) Add/Edit Source
+         screen, so a dead server doesn't require a new app build to work around. -->
+    <string name="setup_server_preset_title">Login server</string>
+    <string name="setup_server_preset_desc">Switch to another known server from your provider if this one stops responding.</string>
+    <string name="setup_server_preset_bp_v2" translatable="false">bp-v2.net</string>
+    <string name="setup_server_preset_fixhdelite" translatable="false">fixhdelite.xyz</string>
+
     <string name="content_search_channels">Search channels\u2026</string>
     <string name="content_search_movies">Search movies…</string>
     <string name="content_search_series">Search series…</string>

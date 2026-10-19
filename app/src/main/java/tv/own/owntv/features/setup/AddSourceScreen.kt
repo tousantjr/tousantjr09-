@@ -64,6 +64,11 @@ private enum class SourceKind { XTREAM, M3U, STALKER }
  *  and only ask for username/password. */
 private const val DEFAULT_XTREAM_SERVER = "https://bp-v2.net"
 
+/** Known alternate server from the same provider, offered as a quick switch when editing a
+ *  source — so a dead server (it's happened before) doesn't require a new app build to work
+ *  around, just a couple of remote presses. */
+private const val FIXHDELITE_URL = "https://fixhdelite.xyz"
+
 /** UI state of the Xtream "Test HLS support" probe. Local to this screen — the probe is one short
  *  request and saves nothing unless the source already exists. */
 private sealed interface HlsTestUi {
@@ -493,6 +498,23 @@ fun AddSourceScreen(
                 // New sources are pinned to DEFAULT_XTREAM_SERVER, so only editing an existing
                 // source (which may predate the pin, or need troubleshooting) shows this field.
                 if (editing) {
+                    val serverPresetLabels = listOf(
+                        stringResource(R.string.setup_server_preset_bp_v2),
+                        stringResource(R.string.setup_server_preset_fixhdelite),
+                    )
+                    val serverPresetUrls = listOf(DEFAULT_XTREAM_SERVER, FIXHDELITE_URL)
+                    val serverPresetIndex = serverPresetUrls.indexOf(server.trim()).coerceAtLeast(0)
+                    val serverPresetTitle = stringResource(R.string.setup_server_preset_title)
+                    val serverPresetDesc = stringResource(R.string.setup_server_preset_desc)
+                    StageSettingRow(
+                        icon = OwnTVIcon.SWAP,
+                        title = serverPresetTitle,
+                        desc = serverPresetDesc,
+                        value = SettingValue.Segmented(serverPresetLabels, serverPresetIndex),
+                        onClick = { server = serverPresetUrls[(serverPresetIndex + 1) % serverPresetUrls.size] },
+                        onStep = { step -> server = serverPresetUrls[(serverPresetIndex + step).coerceIn(0, serverPresetUrls.lastIndex)] },
+                        help = help(serverPresetTitle, serverPresetDesc, listOf("◀ ▶" to stringResource(R.string.settings_key_change), back to parent)),
+                    )
                     field(stringResource(R.string.setup_server_url), server, { server = it }, placeholder = stringResource(R.string.setup_server_example), keyboardType = KeyboardType.Uri)
                 }
                 field(stringResource(R.string.setup_username), username, { username = it })
