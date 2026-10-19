@@ -30,7 +30,8 @@ import tv.own.owntv.ui.theme.stageText
 /** This screen's rows as Settings search finds them. */
 internal val DIAGNOSTICS_SEARCH_ROWS: List<Int> = listOf(
     R.string.diagnostics_run_checks, R.string.diagnostics_connection_title,
-    R.string.diagnostics_epg_title, R.string.diagnostics_storage_title, R.string.diagnostics_speed_test_title,
+    R.string.diagnostics_streaming_heading, R.string.diagnostics_epg_title,
+    R.string.diagnostics_storage_title, R.string.diagnostics_speed_test_title,
 )
 
 /**
