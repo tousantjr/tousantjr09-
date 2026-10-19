@@ -31,9 +31,12 @@ fun SportsScreen(
     active: Boolean = true,
     vm: SportsViewModel = koinViewModel(),
     liveVm: LiveViewModel = koinViewModel(),
+    upcomingVm: SportsUpcomingViewModel = koinViewModel(),
 ) {
     var match by remember { mutableStateOf<Match?>(null) }
     var filters by remember { mutableStateOf(false) }
+    // Upcoming (the hub's 7-day view), over the hub (Back returns to the hub).
+    var upcoming by remember { mutableStateOf(false) }
     // The league page, over the hub or a match (Back returns to whichever it came from).
     var league by remember { mutableStateOf<String?>(null) }
     val openLeague: (String?) -> Unit = { k -> league = k; vm.openLeague(k) }
@@ -64,11 +67,21 @@ fun SportsScreen(
             contentStart = contentStart,
             modifier = modifier,
         )
+    } else if (current == null && upcoming) {
+        SportsUpcomingScreen(
+            vm = upcomingVm,
+            onOpenMatch = open,
+            onBack = { upcoming = false },
+            contentStart = contentStart,
+            modifier = modifier,
+            active = active,
+        )
     } else if (current == null) {
         SportsHubScreen(
             vm = vm,
             onOpenMatch = open,
             onPlayChannel = onPlayChannel,
+            onOpenUpcoming = { upcoming = true },
             onChildFocused = onChildFocused,
             onEntryHook = onEntryHook,
             contentStart = contentStart,

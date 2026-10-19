@@ -107,6 +107,7 @@ fun SportsHubScreen(
     vm: SportsViewModel,
     onOpenMatch: (Match) -> Unit,
     onPlayChannel: (ChannelEntity, List<ChannelEntity>) -> Unit,
+    onOpenUpcoming: () -> Unit,
     onChildFocused: () -> Unit,
     onEntryHook: (((() -> Boolean)?) -> Unit)?,
     contentStart: Dp,
@@ -208,6 +209,9 @@ fun SportsHubScreen(
                     }
                     // ⟳: build the whole board again; its progress shows in the bottom status pill.
                     item { SportsChip("", false, icon = OwnTVIcon.REFRESH) { vm.rebuild() } }
+                    // Beyond today/tomorrow: the next 7 days per followed league, fetched on its own
+                    // (core's Demand/Feed model has no "day N" — see SportsUpcomingViewModel).
+                    item { SportsChip(stringResource(R.string.sports_upcoming_title), false, icon = OwnTVIcon.CALENDAR) { onOpenUpcoming() } }
                 }
             }
 
@@ -355,7 +359,7 @@ private fun HubSubtitle(today: List<Match>) {
 
 /** The hub with nothing followed (new users follow nothing): what to do, where, and why to choose with care. */
 @Composable
-private fun NothingFollowedNote(modifier: Modifier) {
+internal fun NothingFollowedNote(modifier: Modifier) {
     Column(modifier, verticalArrangement = Arrangement.spacedBy(12.mpx)) {
         Text(stringResource(R.string.sports_empty_nothing_followed), style = stageText(30, 800), color = StageColors.Text, maxLines = 2, overflow = TextOverflow.Ellipsis)
         Text(stringResource(R.string.sports_empty_choose_in), style = stageText(22, 600), color = StageColors.Body, maxLines = 2, overflow = TextOverflow.Ellipsis)

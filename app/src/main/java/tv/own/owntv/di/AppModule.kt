@@ -2,6 +2,7 @@ package tv.own.owntv.di
 
 import tv.own.owntv.features.sports.SportsPlayback
 import tv.own.owntv.features.sports.SportsSettingsViewModel
+import tv.own.owntv.features.sports.SportsUpcomingViewModel
 import tv.own.owntv.features.sports.SportsViewModel
 import org.koin.core.module.dsl.viewModel
 import org.koin.core.module.dsl.singleOf
@@ -111,6 +112,9 @@ val appModule = module {
     viewModelOf(::MovieViewModel)
     viewModelOf(::SportsViewModel)
     viewModelOf(::SportsSettingsViewModel)
+    // Sports hub → Upcoming: its own small view model, outside core's Demand/Feed system (see
+    // SportsUpcomingViewModel) — the already-bound SportsSource (EspnSportsSource) is reused as is.
+    viewModelOf(::SportsUpcomingViewModel)
     viewModelOf(::SeriesViewModel)
     viewModelOf(::SearchViewModel)
     viewModelOf(::ProfilesViewModel)

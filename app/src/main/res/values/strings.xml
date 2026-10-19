@@ -65,4 +65,13 @@
          from (and on top of) the existing kids-profile category hiding. -->
     <string name="settings_home_hide_adult_categories">Hide adult categories from Home</string>
     <string name="settings_home_hide_adult_categories_description">Keep categories matching adult content out of Trending on Home, for every profile</string>
+
+    <!-- Sports hub → Upcoming: the next 7 days per followed league (today/tomorrow come from :core's
+         own board already; this view calls EspnSportsSource directly for the days beyond that — see
+         SportsUpcomingViewModel). "Today"/"Tomorrow" and the paused/retry wording are :core's own
+         (content_epg_today, content_epg_tomorrow, sports_paused, common_retry) and are reused, not
+         redefined, so this view never drifts from the rest of Sports or the guide. -->
+    <string name="sports_upcoming_title">Upcoming</string>
+    <string name="sports_upcoming_empty">No upcoming matches in the next 7 days for what you follow</string>
+    <string name="sports_upcoming_partial_failure">Some leagues couldn\'t load</string>
 </resources>
