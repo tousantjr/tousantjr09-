@@ -557,16 +557,9 @@ fun MobileShell(
                         )
                     }
                     // Low over the page, under the mini player: a sync running while the user browses is
-                    // news, but it is never what they came to the screen for.
-                    if (fullscreen) {
-                        // Top, clear of the player's own controls at the bottom, and recordings only.
-                        SyncStatusPill(
-                            Modifier
-                                .align(Alignment.TopCenter)
-                                .statusBarsPadding(),
-                            recordingsOnly = true,
-                        )
-                    } else {
+                    // news, but it is never what they came to the screen for. Hidden outright over the
+                    // player — nothing it shows is worth interrupting the picture for.
+                    if (!fullscreen) {
                         SyncStatusPill(
                             Modifier
                                 .align(Alignment.BottomCenter)

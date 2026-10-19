@@ -376,8 +376,6 @@ fun PlayerScreen(
     var otherChannels by remember { mutableStateOf(false) }
     // Closing the sheet forgets which category was open, so the next press starts at the categories.
     LaunchedEffect(sheet) { if (sheet != PlayerSheet.CHANNELS) playerCategory = null }
-    val recordWatchingEnabled by settings.recordWhatImWatching.collectAsStateWithLifecycle(initialValue = false)
-    val playerRecording by tuner.playerRecording.collectAsStateWithLifecycle()
     var brightness by remember { mutableFloatStateOf(0.5f) }
     var hud by remember { mutableStateOf<GestureFeedback?>(null) }
     // Which *showing* this is, counted up on every one. Two forward double taps at the same seek step
@@ -801,13 +799,6 @@ fun PlayerScreen(
             gestureScrubMs = scrubFraction?.takeIf { duration > 0 }?.let { (it * duration).toLong() },
             // Report is offered only while Info is open, the television's rule on both apps.
             infoOpen = sheet == PlayerSheet.INFO,
-            // Live channels only, and only once the setting is on. Null hides the button.
-            onRecordThis = if (recordWatchingEnabled && isLive && channel != null) {
-                { tuner.togglePlayerRecording() }
-            } else {
-                null
-            },
-            recordingThis = playerRecording != null,
             matchLine = matchSession?.takeIf { sportsConfig.scoreInInfoBar }?.let { session ->
                 { tv.own.owntv.mobile.ui.screens.sports.MatchScoreLine(sportsPlayback, session.match, sportsConfig.spoilerFree) }
             },

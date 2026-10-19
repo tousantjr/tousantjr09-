@@ -7,7 +7,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -21,7 +20,6 @@ import tv.own.owntv.core.live.MIN_MULTIVIEW_TILES
 import tv.own.owntv.core.player.EnginePreference
 import tv.own.owntv.core.player.SurroundMode
 import tv.own.owntv.core.player.TrackLanguages
-import tv.own.owntv.core.recording.RecordingSchedule
 import tv.own.owntv.core.settings.LiveBuffer
 import tv.own.owntv.core.settings.LiveLatency
 import tv.own.owntv.core.settings.SeekSteps
@@ -29,14 +27,13 @@ import tv.own.owntv.core.settings.SettingsRepository
 import tv.own.owntv.core.timeshift.TimeshiftRules
 import tv.own.owntv.mobile.R
 import tv.own.owntv.mobile.ui.components.MobileIcons
-import tv.own.owntv.mobile.ui.screens.recordings.RecordingsViewModel
 import tv.own.owntv.mobile.ui.stage.StagePlaylistMark
 import tv.own.owntv.player.LiveLadder
 import tv.own.owntv.player.ZoomMode
 
 /*
  * The five groups that were the Video player level: Player, Picture, Sound & subtitles, Live TV,
- * Watching & recording. The stored values are core's, under the TV's keys, so a backup means the same thing on
+ * Watching. The stored values are core's, under the TV's keys, so a backup means the same thing on
  * both apps and a pin made on one is the same row on the other.
  */
 
@@ -455,7 +452,7 @@ private fun List<Int>.stepIndex(current: Int, delta: Int): Int {
 private fun prerollLabel(secs: Int): String =
     if (secs <= 0) stringResource(R.string.common_off) else stringResource(R.string.settings_video_seconds, secs)
 
-// ----------------------------------------------------------------------------------- Watching & recording
+// ----------------------------------------------------------------------------------- Watching
 
 @Composable
 internal fun watchingSections(vm: SettingsViewModel): List<SettingSection> {
@@ -472,24 +469,6 @@ internal fun watchingSections(vm: SettingsViewModel): List<SettingSection> {
     val mini = s.miniPlayerStyle.pref(SettingsRepository.MiniPlayerStyle.FLOATING)
         .takeIf { it != SettingsRepository.MiniPlayerStyle.OFF } ?: SettingsRepository.MiniPlayerStyle.DOCKED
     val pipSize = s.pipSize.pref(SettingsRepository.PipSize.MEDIUM)
-    val preRoll = s.recordingPreRollMinutes.pref(RecordingSchedule.DEFAULT_PRE_ROLL_MINUTES)
-    val postRoll = s.recordingPostRollMinutes.pref(RecordingSchedule.DEFAULT_POST_ROLL_MINUTES)
-    val recordWatching = s.recordWhatImWatching.pref(false)
-    val recordingsVm: RecordingsViewModel = koinViewModel()
-
-    // The player's record button costs the one spare connection, so turning it on says so first.
-    var warnRecordWatching by remember { mutableStateOf(false) }
-    if (warnRecordWatching) {
-        StageConfirmSheet(
-            title = stringResource(R.string.settings_record_watching_warning_title),
-            text = stringResource(R.string.settings_record_watching_warning_description),
-            confirm = stringResource(R.string.settings_record_watching_turn_on),
-            cancel = stringResource(R.string.settings_record_watching_keep_off),
-            onConfirm = { vm.edit { setRecordWhatImWatching(true) } },
-            onDismiss = { warnRecordWatching = false },
-        )
-    }
-    val minutes = @Composable { m: Int -> pluralStringResource(R.plurals.recording_minutes, m, m) }
     return listOf(
         SettingSection(
             stringResource(R.string.settings_vp_cat_controls_resume),
@@ -566,42 +545,8 @@ internal fun watchingSections(vm: SettingsViewModel): List<SettingSection> {
                 quickSwitch(vm, "audio_per_channel", MobileIcons.VolumeUp, R.string.settings_audio_per_channel, R.string.settings_line_audio_per_channel_mobile),
             ),
         ),
-        SettingSection(
-            stringResource(R.string.recording_settings_group),
-            note = stringResource(R.string.settings_recording_timers_inexact).takeUnless { recordingsVm.timersAreExact },
-            items = listOf(
-                switchItem(
-                    "rec_reserve", MobileIcons.Record, stringResource(R.string.settings_recording_reserve),
-                    stringResource(R.string.settings_line_rec_reserve),
-                    s.recordingReserveConnection.pref(true),
-                ) { vm.edit { setRecordingReserveConnection(it) } },
-                switchItem(
-                    "rec_mobile_data", MobileIcons.Translate, stringResource(R.string.settings_recording_mobile_data),
-                    stringResource(R.string.settings_line_rec_mobile_data_mobile), s.recordingOverMobileData.pref(true),
-                ) { vm.edit { setRecordingOverMobileData(it) } },
-                switchItem(
-                    "rec_watching", MobileIcons.Record, stringResource(R.string.settings_record_watching),
-                    stringResource(R.string.settings_line_rec_watching_mobile), recordWatching,
-                ) { on -> if (on) warnRecordWatching = true else vm.edit { setRecordWhatImWatching(false) } },
-                choiceItem(
-                    "rec_pre_roll", MobileIcons.Schedule, g, stringResource(R.string.settings_recording_pre_roll),
-                    stringResource(R.string.settings_line_rec_pre_roll_mobile), stringResource(R.string.settings_recording_pre_roll_description),
-                    ROLL_CHOICES.map { SettingsChoice(it, minutes(it)) }, preRoll, RecordingSchedule.DEFAULT_PRE_ROLL_MINUTES,
-                    { m -> vm.edit { setRecordingPreRollMinutes(m) } },
-                ),
-                choiceItem(
-                    "rec_post_roll", MobileIcons.Schedule, g, stringResource(R.string.settings_recording_post_roll),
-                    stringResource(R.string.settings_line_rec_post_roll_mobile), stringResource(R.string.settings_recording_post_roll_description),
-                    ROLL_CHOICES.map { SettingsChoice(it, minutes(it)) }, postRoll, RecordingSchedule.DEFAULT_POST_ROLL_MINUTES,
-                    { m -> vm.edit { setRecordingPostRollMinutes(m) } },
-                ),
-            ),
-        ),
     )
 }
-
-/** The paddings worth offering, all inside core's own 0..30 clamp. */
-private val ROLL_CHOICES = listOf(0, 1, 2, 3, 5, 10, 15, 30)
 
 // ---------------------------------------------------------------------------- Per-playlist pages
 

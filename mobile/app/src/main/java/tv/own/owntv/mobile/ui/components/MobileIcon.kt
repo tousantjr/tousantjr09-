@@ -77,7 +77,7 @@ object MobileIcons {
     val Sort: ImageVector by lazy { stage(StageGlyph.SORT) }
     val Bell: ImageVector by lazy { stage(StageGlyph.BELL) }
     val Now: ImageVector by lazy { stage(StageGlyph.NOW) }
-    /** Record (`rec`), Multiview (`mv`) and Move (`move`) in the channel menu. */
+    /** The Watching & recording settings group card. */
     val Record: ImageVector by lazy { stage(StageGlyph.REC) }
     val Warning: ImageVector by lazy { stage(StageGlyph.WARNING) }
     val Multiview: ImageVector by lazy { stage(StageGlyph.MULTIVIEW) }

@@ -67,18 +67,16 @@ import tv.own.owntv.mobile.ui.stage.stageAccent
 import tv.own.owntv.mobile.ui.stage.stageText
 import java.util.Date
 
-/** What a cell shows beside its title: the bell of a reminder, the red dot of a recording. */
+/** What a cell shows beside its title: the bell of a reminder. */
 internal data class GuideMarks(
     /** (channel id, programme start) pairs with a reminder set. */
     val reminders: Set<Pair<Long, Long>> = emptySet(),
-    /** … and with a recording running or scheduled. */
-    val recordings: Set<Pair<Long, Long>> = emptySet(),
 )
 
 /**
  * The grid: a 70 dp channel column (logo + number), then the programmes as rounded cells
  * with their times — the one on now a shade lighter, past ones at half strength, the picked one filled
- * with the accent; a bell for a reminder, a red dot for a recording, ↺ on a catch-up cell that has
+ * with the accent; a bell for a reminder, ↺ on a catch-up cell that has
  * started, and a dim "No program at this time." where the feed leaves a gap. The ruler and the accent
  * now-line with its time chip sit over it. Two hours fill the width at 100 % (Size scales it).
  *
@@ -283,7 +281,6 @@ private fun GuideGridRow(
                         nowMs = nowMs,
                         catchup = channel.catchup && p.startMs <= nowMs,
                         reminder = (channel.id to p.startMs) in marks.reminders,
-                        recording = (channel.id to p.startMs) in marks.recordings,
                         picked = picked == channel.id to p.startMs,
                         onTap = { onTap(channel, p) },
                         onHold = { onHold(channel, p) },
@@ -306,7 +303,6 @@ private fun ProgrammeCell(
     nowMs: Long,
     catchup: Boolean,
     reminder: Boolean,
-    recording: Boolean,
     picked: Boolean,
     onTap: () -> Unit,
     onHold: () -> Unit,
@@ -346,7 +342,6 @@ private fun ProgrammeCell(
                 )
             }
             Row(Modifier.padding(top = 1.dp), horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
-                if (recording) Text("●", style = stageText(10f, 700), color = RecordRed, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 if (catchup) StageIcon(MobileIcons.Catchup, 11.dp, small)
                 Text(
                     stringResource(R.string.content_live_time_range_plain, times.format(Date(programme.startMs)), times.format(Date(programme.stopMs))),
@@ -485,4 +480,3 @@ private val ROW_GAP = 4.dp
 private val CELL_INSET = 2.dp
 /** The least of a cell its text keeps when it slides along a half-hidden cell. */
 private val STICKY_MIN_ROOM = 60.dp
-private val RecordRed = Color(0xFFFF5B5B)

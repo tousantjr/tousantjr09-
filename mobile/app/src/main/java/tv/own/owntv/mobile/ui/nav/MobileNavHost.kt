@@ -142,7 +142,6 @@ fun MobileNavHost(
                     )
                     MobileDestination.DOWNLOADS -> DownloadsScreen(
                         onPlayerOpened = { navController.navigate(PLAYER_ROUTE) },
-                        onOpenGuide = { navController.navigateToTab(MobileDestination.GUIDE) },
                     )
                     MobileDestination.SPORTS -> SportsScreen(
                         scrollToTop = scrollToTop,

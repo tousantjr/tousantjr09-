@@ -32,7 +32,6 @@ import tv.own.owntv.mobile.ui.stage.LocalStagePalette
 import tv.own.owntv.mobile.ui.stage.stageAccent
 import tv.own.owntv.mobile.ui.stage.stageGlass
 import tv.own.owntv.mobile.ui.stage.stageText
-import tv.own.owntv.core.recording.RecordingActivityTracker
 import tv.own.owntv.core.network.ConnectivityObserver
 import tv.own.owntv.core.sports.RebuildState
 import tv.own.owntv.core.sports.SportsActivityTracker
@@ -62,27 +61,18 @@ import tv.own.owntv.mobile.ui.theme.MobileDimens
 @Composable
 fun SyncStatusPill(
     modifier: Modifier = Modifier,
-    /**
-     * Show recordings and nothing else. Over the player the pill used to be hidden outright, so a
-     * running recording was invisible for as long as the user was watching — which is most of the
-     * time it is running. A catalogue sync over the picture is noise; a recording is the one line
-     * that is time-critical and unrecoverable, so it is the one that earns the space.
-     */
-    recordingsOnly: Boolean = false,
     onOpenDownloads: () -> Unit = {},
 ) {
     val catalogTracker: SyncActivityTracker = koinInject()
     val epgTracker: EpgActivityTracker = koinInject()
     val trendingTracker: TrendingActivityTracker = koinInject()
     val downloadTracker: DownloadActivityTracker = koinInject()
-    val recordingTracker: RecordingActivityTracker = koinInject()
     val connectivity: ConnectivityObserver = koinInject()
 
     val activeCatalog by catalogTracker.active.collectAsStateWithLifecycle()
     val activeEpg by epgTracker.active.collectAsStateWithLifecycle()
     val activeTrending by trendingTracker.active.collectAsStateWithLifecycle()
     val activeDownload by downloadTracker.active.collectAsStateWithLifecycle()
-    val activeRecordings by recordingTracker.active.collectAsStateWithLifecycle()
     val lastCompleted by catalogTracker.lastCompleted.collectAsStateWithLifecycle()
     val lastTrendingCompleted by trendingTracker.lastCompleted.collectAsStateWithLifecycle()
     val sportsTracker: SportsActivityTracker = koinInject()
@@ -134,13 +124,10 @@ fun SyncStatusPill(
     // Sorted once per progress change, not once per emission per row: the trackers emit at Hz
     // rates while a sync runs, and the sort has nothing new to say between two emissions of the
     // same maps.
-    val rows = remember(activeCatalog, activeEpg, activeTrending, activeDownload, activeRecordings, recordingsOnly, sportsRebuild) {
+    val rows = remember(activeCatalog, activeEpg, activeTrending, activeDownload, sportsRebuild) {
         buildList {
-        // Recordings first, always: they are time-critical and unrecoverable, so they are never
-        // the line that gets collapsed into "+N more". Then downloads, which the user also started
-        // deliberately. The background syncs are the ones that can afford to be hidden.
-        activeRecordings.values.sortedBy { it.id }.forEach { add(SyncLine.Recording(it)) }
-        if (recordingsOnly) return@buildList
+        // Downloads first, always: the user started them deliberately. The background syncs are
+        // the ones that can afford to be hidden.
         activeDownload?.let { add(SyncLine.Download(it)) }
         activeCatalog.values.sortedBy { it.sourceId }.forEach { add(SyncLine.Catalog(it)) }
         activeTrending.values.sortedBy { it.sourceId }.forEach { add(SyncLine.Trending(it)) }
@@ -152,7 +139,7 @@ fun SyncStatusPill(
     val hidden = rows.size - shown.size
 
     AnimatedVisibility(
-        visible = shown.isNotEmpty() || currentCompleted != null || currentTrending != null || (sportsFailed && !recordingsOnly),
+        visible = shown.isNotEmpty() || currentCompleted != null || currentTrending != null || sportsFailed,
         enter = fadeIn(),
         exit = fadeOut(),
         modifier = modifier,
@@ -195,7 +182,7 @@ fun SyncStatusPill(
             if (hidden > 0) {
                 PillText(res.getQuantityString(R.plurals.sync_status_more, hidden, hidden))
             }
-            if (sportsFailed && !recordingsOnly) PillText(res.getString(R.string.sports_rebuild_failed))
+            if (sportsFailed) PillText(res.getString(R.string.sports_rebuild_failed))
             currentCompleted?.let {
                 PillText(completedLine(res, it, connectivity.isOnlineNow()))
             }
@@ -232,7 +219,6 @@ private fun PillText(text: String, detail: Boolean = false) {
 private sealed interface SyncLine {
     data class Catalog(val sync: SyncActivityTracker.ActiveSync) : SyncLine
     data class Download(val download: DownloadActivityTracker.ActiveDownload) : SyncLine
-    data class Recording(val recording: tv.own.owntv.core.recording.RecordingProgress) : SyncLine
     data class Trending(val build: TrendingActivityTracker.ActiveBuild) : SyncLine
     data class Epg(val sync: EpgActivityTracker.ActiveEpgSync) : SyncLine
     data object Sports : SyncLine
@@ -272,13 +258,6 @@ private fun SyncLine.text(res: android.content.res.Resources): String = when (th
         if (text.isBlank()) res.getString(R.string.sync_status_epg, sync.sourceName)
         else res.getString(R.string.sync_status_epg_with_counts, sync.sourceName, text)
     }
-    // No percentage: a recording ends on the clock, not on a byte count.
-    // With the size as it grows: a recording has no total to count towards, so the bytes already
-    // written are the only sign it is moving rather than stuck.
-    is SyncLine.Recording -> listOfNotNull(
-        res.getString(R.string.recording_pill_line, recording.title),
-        recording.bytes.takeIf { it > 0 }?.let { res.getString(R.string.common_size_mb, sizeMb(it)) },
-    ).joinToString(res.getString(R.string.content_epg_bits_separator))
     is SyncLine.Download -> {
         val percent = download.progress?.let { (it * 100).toInt() }
         if (percent == null) res.getString(R.string.sync_status_download, download.title)
@@ -391,10 +370,3 @@ private const val COMPLETED_MS = 5_000L
 private const val MAX_ROWS = 3
 
 private val PillShape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp)
-
-/** Megabytes to one decimal, formatted for the locale. */
-private fun sizeMb(bytes: Long): String =
-    java.text.NumberFormat.getNumberInstance().apply {
-        minimumFractionDigits = 1
-        maximumFractionDigits = 1
-    }.format(bytes / 1_048_576.0)

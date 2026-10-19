@@ -120,8 +120,6 @@ class GuideViewModel(
     private val epgSourceStore: EpgSourceStore,
     private val epgRepository: EpgRepository,
     private val tuner: LiveTuner,
-    private val recordings: tv.own.owntv.core.recording.RecordingManager,
-    private val xtream: tv.own.owntv.core.parser.XtreamClient,
     private val reminders: tv.own.owntv.core.reminder.ReminderManager,
 ) : ViewModel() {
 
@@ -502,103 +500,6 @@ class GuideViewModel(
         if (programme.startMs > now) return false
         val days = channel.catchupDays.takeIf { it > 0 } ?: tv.own.owntv.core.live.DEFAULT_CATCHUP_DAYS
         return programme.startMs >= now - days * DAY_MS
-    }
-
-    // --- Recording, from the guide. The television's own logic, phone-shaped. ---
-
-    /** This profile's recordings, so a programme sheet knows whether it is already spoken for. */
-    val recordingRows: StateFlow<List<tv.own.owntv.core.database.entity.RecordingEntity>> =
-        settings.activeProfileId
-            .flatMapLatest { pid -> if (pid < 0) flowOf(emptyList()) else recordings.observe(pid) }
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
-
-    /** The recording already covering this programme, if there is one. */
-    fun recordingFor(
-        channel: ChannelEntity,
-        programme: EpgProgrammeEntity,
-    ): tv.own.owntv.core.database.entity.RecordingEntity? = recordingRows.value.firstOrNull {
-        it.channelId == channel.id && it.programmeStartMs == programme.startMs &&
-            it.status != tv.own.owntv.core.model.RecordingStatus.CANCELLED
-    }
-
-    /** Still to come, or already aired on a channel that keeps an archive. */
-    fun canRecord(channel: ChannelEntity, programme: EpgProgrammeEntity): Boolean =
-        programme.stopMs > System.currentTimeMillis() || canCatchup(channel, programme)
-
-    /** Schedule it, or pull it from the archive when it has already been on. */
-    fun record(channel: ChannelEntity, programme: EpgProgrammeEntity) {
-        viewModelScope.launch {
-            val pid = settings.activeProfileId.first().takeIf { it >= 0 } ?: return@launch
-            val source = sourceDao.getById(channel.sourceId) ?: return@launch
-            if (programme.stopMs <= System.currentTimeMillis()) {
-                recordings.recordFromArchive(
-                    profileId = pid,
-                    channel = channel,
-                    programme = programme,
-                    source = source,
-                    timeZone = settings.resolveCatchupTimeZone(source),
-                    xtream = xtream,
-                )
-                return@launch
-            }
-            val window = recordings.windowFor(programme.startMs, programme.stopMs)
-            recordings.schedule(
-                tv.own.owntv.core.database.entity.RecordingEntity(
-                    profileId = pid,
-                    sourceId = channel.sourceId,
-                    channelId = channel.id,
-                    channelName = channel.name,
-                    channelIconUrl = channel.logoUrl,
-                    epgChannelId = channel.epgChannelId,
-                    streamUrl = channel.streamUrl,
-                    httpHeaders = channel.httpHeaders,
-                    title = programme.title,
-                    description = programme.description,
-                    programmeStartMs = programme.startMs,
-                    programmeStopMs = programme.stopMs,
-                    startMs = window.first,
-                    stopMs = window.last,
-                ),
-            )
-        }
-    }
-
-    fun stopRecording(recording: tv.own.owntv.core.database.entity.RecordingEntity) =
-        recordings.stop(recording)
-
-    fun cancelRecording(recording: tv.own.owntv.core.database.entity.RecordingEntity) =
-        recordings.cancel(recording)
-
-    /** The standing "record every showing" rule covering this programme, or null. */
-    suspend fun seriesRuleFor(
-        channel: ChannelEntity,
-        programme: EpgProgrammeEntity,
-    ): tv.own.owntv.core.database.entity.RecordingRuleEntity? {
-        val pid = settings.activeProfileId.first().takeIf { it >= 0 } ?: return null
-        return recordings.ruleFor(pid, channel.id, programme.title)
-    }
-
-    /** Record every future showing of this title on this channel. */
-    fun recordSeries(channel: ChannelEntity, programme: EpgProgrammeEntity) {
-        viewModelScope.launch {
-            val pid = settings.activeProfileId.first().takeIf { it >= 0 } ?: return@launch
-            recordings.addSeriesRule(pid, channel, programme.title)
-        }
-    }
-
-    /** Stop the standing rule, and drop the showings it had queued but not yet recorded. */
-    fun stopSeries(rule: tv.own.owntv.core.database.entity.RecordingRuleEntity) {
-        viewModelScope.launch { recordings.removeSeriesRule(rule) }
-    }
-
-    /** The title of a recording this one would contend with, shown before the user commits. */
-    suspend fun clashFor(channel: ChannelEntity, programme: EpgProgrammeEntity): String? {
-        val window = recordings.windowFor(programme.startMs, programme.stopMs)
-        val existing = recordingFor(channel, programme)
-        return recordings
-            .clashesWith(channel.sourceId, window.first, window.last, existing?.id ?: 0)
-            .firstOrNull()
-            ?.title
     }
 
     /** Watch the channel itself — the same tuner the Live screen and the mini player are showing. */

@@ -149,9 +149,6 @@ fun PlayerControls(
     gestureScrubMs: Long?,
     /** Whether the Info sheet is open — Report is offered only while it is. */
     infoOpen: Boolean = false,
-    // Live only, and only once "Record what I'm watching" is switched on. Null hides it.
-    onRecordThis: (() -> Unit)? = null,
-    recordingThis: Boolean = false,
     /** Sports Hub: the match's score under the channel name, only for a channel started from a match. */
     matchLine: (@Composable () -> Unit)? = null,
     /** Sports Hub: the other channels showing that match; null hides the button. */
@@ -250,8 +247,6 @@ fun PlayerControls(
                         onReport = onReport,
                         onToast = onToast,
                         infoOpen = infoOpen,
-                        onRecordThis = onRecordThis,
-                        recordingThis = recordingThis,
                         liveOnExo = liveOnExo,
                         onToggleLiveEngine = onToggleLiveEngine,
                         onOtherChannels = onOtherChannels,
@@ -511,10 +506,6 @@ private fun ToolBar(
      * what Info is showing, and there is nothing to report without it.
      */
     infoOpen: Boolean = false,
-    // Live only, and only once "Record what I'm watching" is switched on in Settings. Null
-    // hides the button, exactly as on the television.
-    onRecordThis: (() -> Unit)? = null,
-    recordingThis: Boolean = false,
     liveOnExo: Boolean = false,
     onToggleLiveEngine: (() -> Unit)? = null,
     onOtherChannels: (() -> Unit)? = null,
@@ -676,18 +667,10 @@ private fun ToolBar(
             PlayerControl.MULTIVIEW -> if (onMultiview != null) {
                 CtrlButton(MobileIcons.GridView, stringResource(R.string.multiview_button), onMultiview)
             }
-            // Record the channel already playing. Null until the setting is on, exactly as
-            // on the television.
-            PlayerControl.RECORD -> if (onRecordThis != null) {
-                CtrlButton(
-                    icon = MobileIcons.LiveTv,
-                    label = stringResource(
-                        if (recordingThis) R.string.recording_stop else R.string.recording_record,
-                    ),
-                    onClick = onRecordThis,
-                    active = recordingThis,
-                )
-            }
+            // Recording is not offered from the player: the feature has been removed from the
+            // app's UI entirely. `:core` still defines this control, so the branch stays to keep
+            // the `when` exhaustive.
+            PlayerControl.RECORD -> Unit
             // The full-screen way to the sleep timer; the sound-only screen and the
             // floating window already had one. Coloured while a countdown is running.
             PlayerControl.SLEEP_TIMER -> CtrlButton(

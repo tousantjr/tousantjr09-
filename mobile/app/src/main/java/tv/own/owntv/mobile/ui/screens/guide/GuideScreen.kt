@@ -69,7 +69,6 @@ import tv.own.owntv.core.database.entity.EpgProgrammeEntity
 import tv.own.owntv.core.epg.displayLogoUrl
 import tv.own.owntv.core.live.LiveKey
 import tv.own.owntv.core.live.ProviderTags
-import tv.own.owntv.core.model.RecordingStatus
 import tv.own.owntv.core.settings.SettingsRepository
 import tv.own.owntv.mobile.R
 import tv.own.owntv.mobile.ui.components.ChannelLogoImage
@@ -122,7 +121,7 @@ import java.util.Date
 
 /**
  * The TV Guide: the picked programme on top — a small live preview, its eyebrow, title, details,
- * Remind me and Record — then the tools (day · Now · category · order · search) and the grid. Or, by the
+ * and Remind me — then the tools (day · Now · category · order · search) and the grid. Or, by the
  * View choice in the order sheet, the On now list or one channel's Timeline.
  *
  * A tap on a cell picks it: the top block shows it and the preview plays its channel (Video preview on).
@@ -217,13 +216,9 @@ fun GuideScreen(
     }
 
     val reminderRows by vm.reminderRows.collectAsStateWithLifecycle()
-    val recordingRows by vm.recordingRows.collectAsStateWithLifecycle()
-    val marks = remember(reminderRows, recordingRows) {
+    val marks = remember(reminderRows) {
         GuideMarks(
             reminders = reminderRows.mapTo(HashSet()) { it.channelId to it.startMs },
-            recordings = recordingRows
-                .filter { it.status == RecordingStatus.RECORDING || it.status == RecordingStatus.SCHEDULED }
-                .mapTo(HashSet()) { it.channelId to it.programmeStartMs },
         )
     }
 
@@ -597,7 +592,7 @@ private fun GuideTools(
 /**
  * The top block: the 132 × 88 preview (radius 14) with LIVE and "259 · Family" — the channel's
  * logo when Video preview is off or it is not playing — then the eyebrow "◷ Starts in 58 min · 20:05 –
- * 21:40 · 95 min", the title (21 / 800), the details (11 muted), and Remind me (accent tint) · Record.
+ * 21:40 · 95 min", the title (21 / 800), the details (11 muted), and Remind me (accent tint).
  */
 @Composable
 private fun GuideTopBlock(
@@ -614,9 +609,7 @@ private fun GuideTopBlock(
     val accent = stageAccent
     val full by produceState(programme, programme.id, programme.startMs) { value = vm.fullProgramme(programme) }
     val reminderRows by vm.reminderRows.collectAsStateWithLifecycle()
-    val recordingRows by vm.recordingRows.collectAsStateWithLifecycle()
     val reminderSet = reminderRows.any { it.channelId == channel.id && it.startMs == programme.startMs }
-    val recording = remember(recordingRows, channel.id, programme.startMs) { vm.recordingFor(channel, programme) }
     val requestReminder = rememberReminderRequest()
     val shape = RoundedCornerShape(14.dp)
     Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -674,20 +667,6 @@ private fun GuideTopBlock(
                         onClick = { requestReminder(reminderSet) { vm.toggleReminder(channel, programme) } },
                     )
                 }
-                if (vm.canRecord(channel, programme) || recording != null) {
-                    StageButton(
-                        onClick = {
-                            when (recording?.status) {
-                                RecordingStatus.RECORDING -> vm.stopRecording(recording)
-                                RecordingStatus.SCHEDULED -> vm.cancelRecording(recording)
-                                else -> vm.record(channel, programme)
-                            }
-                        },
-                        text = stringResource(recordLabel(recording?.status, programme, nowMs)),
-                        icon = MobileIcons.Record,
-                        small = true,
-                    )
-                }
             }
         }
     }
@@ -717,13 +696,6 @@ private fun ReminderButton(set: Boolean, onClick: () -> Unit) {
             overflow = TextOverflow.Ellipsis,
         )
     }
-}
-
-/** Record, or what stops or cancels the recording already there — "Record from catch-up" once it has aired. */
-private fun recordLabel(status: RecordingStatus?, programme: EpgProgrammeEntity, nowMs: Long): Int = when (status) {
-    RecordingStatus.RECORDING -> R.string.recording_stop
-    RecordingStatus.SCHEDULED -> R.string.common_cancel
-    else -> if (programme.stopMs <= nowMs) R.string.recording_from_archive else R.string.recording_record
 }
 
 /**
@@ -860,8 +832,7 @@ private fun OnNowList(
 /**
  * The programme sheet: the title and "20:05 – 21:40 · 259 · Sky Cinema Family", the synopsis, then
  * NEW Remind me (5 min before) · WATCH Watch channel, Watch from start ("after 20:05" until it can),
- * Play catch-up in… · RECORD Record, Record every showing, Record from catch-up · CHANNEL favourite, Pick
- * EPG manually, EPG time offset — the television's menu.
+ * Play catch-up in… · CHANNEL favourite, Pick EPG manually, EPG time offset — the television's menu.
  */
 @Composable
 internal fun ProgrammeSheet(
@@ -879,17 +850,10 @@ internal fun ProgrammeSheet(
     val times = rememberGuideTimeFormat()
     val full by produceState(programme, programme.id) { value = vm.fullProgramme(programme) }
     val reminderRows by vm.reminderRows.collectAsStateWithLifecycle()
-    val recordingRows by vm.recordingRows.collectAsStateWithLifecycle()
     val lead by vm.reminderLead.collectAsStateWithLifecycle()
     val catchupPlayer by vm.catchupPlayer.collectAsStateWithLifecycle()
     val reminderSet = reminderRows.any { it.channelId == channel.id && it.startMs == programme.startMs }
-    val recording = remember(recordingRows, channel.id, programme.startMs) { vm.recordingFor(channel, programme) }
-    val seriesRule by produceState<tv.own.owntv.core.database.entity.RecordingRuleEntity?>(null, channel.id, programme.title, recordingRows) {
-        value = vm.seriesRuleFor(channel, programme)
-    }
-    val clash by produceState<String?>(null, channel.id, programme.startMs, recordingRows) { value = vm.clashFor(channel, programme) }
     val requestReminder = rememberReminderRequest()
-    val upcoming = programme.stopMs > nowMs
     val canCatchup = vm.canCatchup(channel, programme)
     val name = remember(channel.name) { ProviderTags.parse(channel.name).name }
     val sep = stringResource(R.string.content_epg_bits_separator)
@@ -954,31 +918,6 @@ internal fun ProgrammeSheet(
                             },
                         ),
                     )
-                }
-                if (vm.canRecord(channel, programme) || recording != null) {
-                    StageGroupLabel(stringResource(R.string.content_menu_group_record).uppercase(locale))
-                    StageMenuItem(
-                        stringResource(recordLabel(recording?.status, programme, nowMs)),
-                        onClick = {
-                            when (recording?.status) {
-                                RecordingStatus.RECORDING -> vm.stopRecording(recording)
-                                RecordingStatus.SCHEDULED -> vm.cancelRecording(recording)
-                                else -> vm.record(channel, programme)
-                            }
-                            onDismiss()
-                        },
-                        icon = if (programme.stopMs <= nowMs && recording == null) MobileIcons.Catchup else MobileIcons.Record,
-                        // The clash, said before committing.
-                        value = clash?.takeIf { recording == null && upcoming }?.let { stringResource(R.string.recording_clash_with, it) },
-                    )
-                    // "Every showing" only for a programme still to come — a rule is about the future.
-                    if (upcoming) {
-                        StageMenuItem(
-                            stringResource(if (seriesRule != null) R.string.recording_stop_series else R.string.recording_record_series),
-                            onClick = { seriesRule?.let { vm.stopSeries(it) } ?: vm.recordSeries(channel, programme); onDismiss() },
-                            icon = MobileIcons.Record,
-                        )
-                    }
                 }
                 StageGroupLabel(stringResource(R.string.content_menu_group_channel).uppercase(locale))
                 StageMenuItem(

@@ -40,13 +40,11 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.koin.androidx.compose.koinViewModel
 import tv.own.owntv.core.database.entity.DownloadEntity
-import tv.own.owntv.core.database.entity.RecordingEntity
 import tv.own.owntv.core.download.DownloadActivityTracker
 import tv.own.owntv.core.download.DownloadQueue
 import tv.own.owntv.core.download.DownloadReasons
 import tv.own.owntv.core.download.DownloadStorageInfo
 import tv.own.owntv.core.model.DownloadStatus
-import tv.own.owntv.core.model.RecordingStatus
 import tv.own.owntv.core.settings.SettingsRepository
 import tv.own.owntv.core.storage.MediaFolders
 import tv.own.owntv.core.storage.MediaTarget
@@ -57,8 +55,6 @@ import tv.own.owntv.mobile.ui.components.MobileBottomSheet
 import tv.own.owntv.mobile.ui.components.MobileIcons
 import tv.own.owntv.mobile.ui.screens.home.durationText
 import tv.own.owntv.mobile.ui.screens.home.formatYear
-import tv.own.owntv.mobile.ui.screens.recordings.RecordingsScreen
-import tv.own.owntv.mobile.ui.screens.recordings.RecordingsViewModel
 import tv.own.owntv.mobile.ui.shell.PageCrumb
 import tv.own.owntv.mobile.ui.shell.ProvidePageCrumb
 import tv.own.owntv.mobile.ui.stage.LocalStagePalette
@@ -82,18 +78,17 @@ import tv.own.owntv.mobile.ui.stage.stageText
 import java.text.NumberFormat
 import kotlin.math.ceil
 
-/** Movies and Series hold downloads; Recordings is live TV saved by the recorder — a file of the user's all the same. */
+/** Movies and Series hold downloads — a file of the user's, saved on this phone. */
 private enum class DownloadsTab(val labelRes: Int) {
     MOVIES(R.string.common_nav_movies),
     SERIES(R.string.common_nav_series),
-    RECORDINGS(R.string.recording_title),
 }
 
 /**
  * Downloads: the crumb is the volume and its free space, then the tabs Movies ·
- * Series · Recordings with their counts and the folder tool, the folder the open tab saves to, and the list
+ * Series with their counts and the folder tool, the folder the open tab saves to, and the list
  * grouped DOWNLOADING (queue order, the running one first) / ON THIS PHONE, each row with its picture, its
- * line, where it got to and its file's folder. The Recordings card closes the list.
+ * line, where it got to and its file's folder.
  *
  * A tap plays a finished download; a hold opens its sheet (play, save a copy, location, delete). The
  * running, paused or failed download carries its own buttons — Pause, Resume or Retry, and Delete.
@@ -101,10 +96,8 @@ private enum class DownloadsTab(val labelRes: Int) {
 @Composable
 fun DownloadsScreen(
     onPlayerOpened: () -> Unit,
-    onOpenGuide: () -> Unit,
     modifier: Modifier = Modifier,
     vm: DownloadsViewModel = koinViewModel(),
-    recVm: RecordingsViewModel = koinViewModel(),
 ) {
     val downloads by vm.downloads.collectAsStateWithLifecycle()
     val details by vm.details.collectAsStateWithLifecycle()
@@ -113,7 +106,6 @@ fun DownloadsScreen(
     val root by vm.downloadRoot.collectAsStateWithLifecycle()
     val storage by vm.storage.collectAsStateWithLifecycle()
     val playing by vm.playing.collectAsStateWithLifecycle()
-    val recordings by recVm.rows.collectAsStateWithLifecycle()
 
     val wifiOnly by vm.wifiOnly.collectAsStateWithLifecycle()
     val watchChoice by vm.downloadWatchChoice.collectAsStateWithLifecycle()
@@ -158,7 +150,6 @@ fun DownloadsScreen(
     // Which tab holds which kind is core's rule: an episode download is EPISODE, which files under Series.
     val movies = remember(downloads) { downloads.filter { MediaFolders.folderFor(it.mediaType) == MediaFolders.MOVIES } }
     val series = remember(downloads) { downloads.filter { MediaFolders.folderFor(it.mediaType) == MediaFolders.SERIES } }
-    val recorded = recordings.count { it.status == RecordingStatus.COMPLETED || it.status == RecordingStatus.RECORDING }
     val shown = if (tab == DownloadsTab.SERIES) series else movies
     // DOWNLOADING in queue order (the running one first, so "starts after" reads downwards), then ON THIS PHONE.
     val downloading = remember(shown) {
@@ -177,7 +168,7 @@ fun DownloadsScreen(
             )
         }
         DownloadTabs(
-            tabs = listOf(DownloadsTab.MOVIES to movies.size, DownloadsTab.SERIES to series.size, DownloadsTab.RECORDINGS to recorded),
+            tabs = listOf(DownloadsTab.MOVIES to movies.size, DownloadsTab.SERIES to series.size),
             selected = tab,
             onSelect = { tab = it },
             folderOpen = optionsSheet,
@@ -188,7 +179,6 @@ fun DownloadsScreen(
             val sub = when (tab) {
                 DownloadsTab.MOVIES -> MediaFolders.MOVIES
                 DownloadsTab.SERIES -> MediaFolders.SERIES
-                DownloadsTab.RECORDINGS -> MediaFolders.TV
             }
             val folder = remember(root, info.usingFallback) {
                 root.takeUnless { info.usingFallback }?.let(StorageAccess::folderLabel) ?: StorageAccess.defaultRoot(context).absolutePath
@@ -203,39 +193,34 @@ fun DownloadsScreen(
             }
         }
 
-        if (tab == DownloadsTab.RECORDINGS) {
-            RecordingsScreen(onPlayerOpened = onPlayerOpened, modifier = Modifier.fillMaxSize().padding(horizontal = 6.dp))
-        } else {
-            LazyColumn(Modifier.fillMaxSize().padding(horizontal = 6.dp)) {
-                if (downloading.isEmpty() && onPhone.isEmpty()) {
-                    item(key = "empty") {
-                        Text(
-                            stringResource(R.string.content_downloads_empty),
-                            style = stageText(13f, 500), color = palette.muted,
-                            modifier = Modifier.padding(start = 12.dp, end = 12.dp, top = 18.dp),
-                        )
-                    }
+        LazyColumn(Modifier.fillMaxSize().padding(horizontal = 6.dp)) {
+            if (downloading.isEmpty() && onPhone.isEmpty()) {
+                item(key = "empty") {
+                    Text(
+                        stringResource(R.string.content_downloads_empty),
+                        style = stageText(13f, 500), color = palette.muted,
+                        modifier = Modifier.padding(start = 12.dp, end = 12.dp, top = 18.dp),
+                    )
                 }
-                if (downloading.isNotEmpty()) {
-                    item(key = "hdr_downloading") { StageLabel(stringResource(R.string.content_downloads_group_downloading), Modifier.padding(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 6.dp)) }
-                    items(downloading, key = { it.id }) { d ->
-                        DownloadItem(d, details[d.id], active?.takeIf { it.id == d.id }, downloading, gone = d.filePath in missing, vm = vm, onMenu = { menuFor = d })
-                    }
-                }
-                if (onPhone.isNotEmpty()) {
-                    item(key = "hdr_on_phone") {
-                        StageLabel(
-                            stringResource(R.string.content_downloads_group_on_phone),
-                            Modifier.padding(start = 12.dp, end = 12.dp, top = if (downloading.isEmpty()) 8.dp else 14.dp, bottom = 6.dp),
-                        )
-                    }
-                    items(onPhone, key = { it.id }) { d ->
-                        DownloadItem(d, details[d.id], null, downloading, gone = d.filePath in missing, vm = vm, onMenu = { menuFor = d })
-                    }
-                }
-                item(key = "recordings") { RecordingsCard(recordings, recorded, onOpenGuide) }
-                item(key = "bottom") { Spacer(Modifier.height(22.dp)) }
             }
+            if (downloading.isNotEmpty()) {
+                item(key = "hdr_downloading") { StageLabel(stringResource(R.string.content_downloads_group_downloading), Modifier.padding(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 6.dp)) }
+                items(downloading, key = { it.id }) { d ->
+                    DownloadItem(d, details[d.id], active?.takeIf { it.id == d.id }, downloading, gone = d.filePath in missing, vm = vm, onMenu = { menuFor = d })
+                }
+            }
+            if (onPhone.isNotEmpty()) {
+                item(key = "hdr_on_phone") {
+                    StageLabel(
+                        stringResource(R.string.content_downloads_group_on_phone),
+                        Modifier.padding(start = 12.dp, end = 12.dp, top = if (downloading.isEmpty()) 8.dp else 14.dp, bottom = 6.dp),
+                    )
+                }
+                items(onPhone, key = { it.id }) { d ->
+                    DownloadItem(d, details[d.id], null, downloading, gone = d.filePath in missing, vm = vm, onMenu = { menuFor = d })
+                }
+            }
+            item(key = "bottom") { Spacer(Modifier.height(22.dp)) }
         }
     }
 
@@ -450,47 +435,6 @@ private fun DownloadStatusText(d: DownloadEntity, live: DownloadActivityTracker.
             )
         }
         DownloadStatus.COMPLETED -> Unit
-    }
-}
-
-/**
- * The Recordings card (`.glass`, 18 corners): ● Recordings, "Nothing recorded yet" (or how many there are),
- * how to record, Open TV Guide, and the next scheduled recording at the end of the button row.
- */
-@Composable
-private fun RecordingsCard(recordings: List<RecordingEntity>, recorded: Int, onOpenGuide: () -> Unit) {
-    val palette = LocalStagePalette.current
-    val next = remember(recordings) { recordings.filter { it.status == RecordingStatus.SCHEDULED }.minByOrNull { it.programmeStartMs } }
-    val context = LocalContext.current
-    Column(
-        Modifier
-            .padding(start = 8.dp, end = 8.dp, top = 16.dp)
-            .fillMaxWidth()
-            .stageGlass(androidx.compose.foundation.shape.RoundedCornerShape(18.dp))
-            .padding(14.dp),
-    ) {
-        // `.eyebrow` at 11: the record dot, then "Recordings" in the accent.
-        Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-            StageIcon(MobileIcons.Record, 11.dp, stageAccent.accent)
-            Text(stringResource(R.string.recording_title), style = stageText(11f, 700), color = stageAccent.accent, maxLines = 1, overflow = TextOverflow.Ellipsis)
-        }
-        Text(
-            if (recorded == 0) stringResource(R.string.recording_card_empty_title) else pluralStringResource(R.plurals.recording_card_count, recorded, recorded),
-            style = stageText(15f, 800), color = palette.text, modifier = Modifier.padding(top = 4.dp, bottom = 4.dp),
-        )
-        Text(stringResource(R.string.recording_card_body), style = stageText(11.5f, 500, lineHeight = 1.45f), color = palette.muted)
-        Row(Modifier.padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-            StageButton(onClick = onOpenGuide, text = stringResource(R.string.recording_open_guide), icon = MobileIcons.Guide, small = true)
-            next?.let {
-                val time = android.text.format.DateFormat.getTimeFormat(context).format(java.util.Date(it.programmeStartMs))
-                Text(
-                    stringResource(R.string.shell_rail_detail_next, it.title + stringResource(R.string.content_epg_bits_separator) + time),
-                    style = stageText(11f, 500), color = palette.dim, maxLines = 1, overflow = TextOverflow.Ellipsis,
-                    textAlign = androidx.compose.ui.text.style.TextAlign.End,
-                    modifier = Modifier.weight(1f),
-                )
-            }
-        }
     }
 }
 

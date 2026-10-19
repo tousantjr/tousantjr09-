@@ -48,15 +48,6 @@ import tv.own.owntv.player.OwnTVPlayer
 import tv.own.owntv.player.PlaybackSession
 import tv.own.owntv.player.PlaylistItem
 
-/**
- * The `itemId` a playing recording carries.
- *
- * A recording has no catalogue row, and [VodPlayback.itemId] is not nullable — so it gets a sentinel
- * rather than a real channel id. A real one would make the mini-player's favourite and "open detail"
- * affordances act on the channel the recording came from, which is not what is on screen.
- */
-const val RECORDING_ITEM_ID = -1L
-
 /** A film or an episode, playing. [mediaType] and [itemId] are what the resume position is written for. */
 data class VodPlayback(
     val mediaType: MediaType,
@@ -374,43 +365,6 @@ class VodTuner(
         began(pid, VodPlayback(mediaType, itemId, title, posterUrl = posterUrl))
         playingQueue = null
         setDownloadSubtitleContext(pid, mediaType, itemId, filePath)
-        return true
-    }
-
-    /**
-     * Play a finished live recording from the file on disk.
-     *
-     * Close to [playDownload] but deliberately thinner in three ways, all because a recording is not
-     * a catalogue item:
-     *
-     * - **No watch history and no resume position.** Those are keyed by `(mediaType, itemId)`, and a
-     *   recording's ids belong to the *channel* it came from. Writing them would put last night's
-     *   programme into the history as though the channel itself had been watched, and would give the
-     *   channel a resume position into a file.
-     * - **No subtitle context.** OpenSubtitles matches films and episodes; a Tuesday news bulletin is
-     *   neither, and the stream's own subtitle tracks are inside the `.ts` anyway.
-     * - **`isLive = false`**, even though what it holds is live television. The flag describes the
-     *   source, and a file on disk seeks, pauses and ends — treating it as live would take away the
-     *   scrub bar on the one recording a user most wants to skip through.
-     */
-    suspend fun playRecording(filePath: String, title: String, posterUrl: String?): Boolean {
-        val pid = currentProfileId() ?: return false
-        if (settings.externalPlayerFor(MediaType.LIVE).first()) {
-            externalPlayerLauncher.launch(filePath, title)
-            return false
-        }
-        saveProgress()
-        liveTuner.stop()
-        // A file on this phone is not reachable from a receiver, so starting one ends the cast rather
-        // than leaving the television on whatever was playing before.
-        cast.release(this)
-        player.play(url = filePath, title = title, isLive = false)
-        player.exitAudioOnly()
-        session.attach(engine)
-        PlaybackService.start(context)
-        playingProfileId = pid
-        _playing.value = VodPlayback(MediaType.LIVE, RECORDING_ITEM_ID, title, posterUrl = posterUrl)
-        playingQueue = null
         return true
     }
 
