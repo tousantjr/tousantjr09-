@@ -110,6 +110,7 @@ fun SportsMatchScreen(
     // Off while the player is full screen over this page: Back then belongs to the player, which returns here.
     androidx.activity.compose.BackHandler(enabled = active) { liveVm.stopPreview(); onBack() }
     val page by vm.matchPage.collectAsStateWithLifecycle()
+    val odds by vm.matchOdds.collectAsStateWithLifecycle()
     val state = page ?: return
     val m = state.match
     var tab by remember { mutableStateOf(MatchTab.TIMELINE) }
@@ -164,6 +165,8 @@ fun SportsMatchScreen(
                 item {
                     ScoreHeader(m, state.summary, hidden = state.config.spoilerFree && !revealed, onReveal = { revealed = true })
                 }
+                // The betting line (Settings → Sports → Betting odds), under the score; nothing while off.
+                odds?.let { line -> item { OddsBlock(line, m) } }
                 item {
                     Row(
                         Modifier.fillMaxWidth().padding(top = 21.mpx).focusRestorer().focusGroup(),

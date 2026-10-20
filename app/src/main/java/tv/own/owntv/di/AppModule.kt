@@ -129,6 +129,13 @@ val appModule = module {
     // (see BoxingSource/BoxingUpcomingViewModel for the full reasoning).
     singleOf(::BoxingSource)
     viewModelOf(::BoxingUpcomingViewModel)
+    // Settings → Sports → Betting odds: the display's own DataStore (OddsSettings — app-level, and
+    // where the user's API key lives), the two read-only sources riding the app's shared OkHttp client
+    // like BoxingSource, and the cache that keeps The Odds API's free quota intact (OddsRepository).
+    single { tv.own.owntv.features.sports.odds.OddsSettings(androidContext()) }
+    single { tv.own.owntv.features.sports.odds.EspnOddsSource(get()) }
+    single { tv.own.owntv.features.sports.odds.TheOddsApiSource(get()) }
+    single { tv.own.owntv.features.sports.odds.OddsRepository(get(), get(), get()) }
     viewModelOf(::SeriesViewModel)
     viewModelOf(::SearchViewModel)
     viewModelOf(::ProfilesViewModel)

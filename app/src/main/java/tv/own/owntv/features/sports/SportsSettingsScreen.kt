@@ -37,6 +37,10 @@ import tv.own.owntv.features.settings.StageSettingRow
 import tv.own.owntv.features.settings.StageSettingsHeading
 import tv.own.owntv.features.settings.StageSettingsNote
 import tv.own.owntv.features.settings.settingHelp
+import tv.own.owntv.features.sports.odds.Bookmaker
+import tv.own.owntv.features.sports.odds.OddsConfig
+import tv.own.owntv.features.sports.odds.OddsRepository
+import tv.own.owntv.features.sports.odds.OddsSource
 import tv.own.owntv.ui.components.OwnTVIcon
 import tv.own.owntv.ui.theme.mpx
 
@@ -122,18 +126,18 @@ private val SportsSettingsPage.titleRes: Int get() = when (this) {
 
 /** One row with its panel text, as every Settings page builds them. */
 @Composable
-private fun Row(icon: OwnTVIcon, title: String, desc: String?, value: SettingValue?, onStep: ((Int) -> Unit)? = null, onClick: () -> Unit) {
+private fun Row(icon: OwnTVIcon, title: String, desc: String?, value: SettingValue?, onStep: ((Int) -> Unit)? = null, enabled: Boolean = true, onClick: () -> Unit) {
     val choices = (value as? SettingValue.Segmented)?.options.orEmpty()
     StageSettingRow(
-        icon = icon, title = title, desc = desc, value = value, onClick = onClick, onStep = onStep,
+        icon = icon, title = title, desc = desc, value = value, onClick = onClick, onStep = onStep, enabled = enabled,
         help = settingHelp(null, title, desc, value, choices = choices, pinnable = false),
     )
 }
 
-/** Rows on the main page (the "N settings" beside its title): 5 + 6 + 3 + 2 + 4. */
-private const val MAIN_ROWS = 20
+/** Rows on the main page (the "N settings" beside its title): 5 + 6 + 3 + 2 + 5 + 4. */
+private const val MAIN_ROWS = 25
 
-/** The main page: What to show · Watching · While watching · Channels · Data. */
+/** The main page: What to show · Watching · While watching · Channels · Betting odds · Data. */
 @Composable
 private fun MainRows(vm: SportsSettingsViewModel, c: SportsConfig, shown: Boolean, open: (SportsSettingsPage) -> Unit) {
     val sep = stringResource(R.string.content_epg_bits_separator)
@@ -200,6 +204,40 @@ private fun MainRows(vm: SportsSettingsViewModel, c: SportsConfig, shown: Boolea
         vm.update { it.copy(showLikely = !it.showLikely) }
     }
 
+    // Betting odds: a read-only line beside the score, off by default. App-level (OddsSettings), not the
+    // profile's: the key is this device's, and so is the quota it spends.
+    val o by vm.oddsConfig.collectAsStateWithLifecycle()
+    val oddsStatus by vm.oddsStatus.collectAsStateWithLifecycle()
+    StageSettingsHeading(stringResource(R.string.sports_odds_title), 5)
+    Row(OwnTVIcon.TREND, stringResource(R.string.sports_odds_show), stringResource(R.string.sports_odds_show_description), SettingValue.Switch(o.enabled)) {
+        vm.setOddsEnabled(!o.enabled)
+    }
+    val sources = listOf(stringResource(R.string.sports_odds_source_espn), stringResource(R.string.sports_odds_source_odds_api))
+    val stepSource: (Int) -> Unit = { d -> vm.setOddsSource(OddsSource.entries[(o.source.ordinal + d).mod(OddsSource.entries.size)]) }
+    Row(OwnTVIcon.LAYERS, stringResource(R.string.sports_odds_source), stringResource(R.string.sports_odds_source_description),
+        SettingValue.Segmented(sources, o.source.ordinal), onStep = stepSource) { stepSource(1) }
+    val keyTitle = stringResource(R.string.sports_odds_api_key)
+    var key by remember(o.apiKey) { mutableStateOf(o.apiKey) }
+    // Saved a moment after typing stops (and on Done), not per keystroke: the store's echo must not fight the field.
+    androidx.compose.runtime.LaunchedEffect(key) {
+        if (key.trim() != o.apiKey) {
+            kotlinx.coroutines.delay(600)
+            vm.setOddsApiKey(key)
+        }
+    }
+    StageFieldRow(
+        icon = OwnTVIcon.PENCIL, label = keyTitle, value = key, onValueChange = { key = it },
+        help = settingHelp(null, keyTitle, stringResource(R.string.sports_odds_api_key_description), null, pinnable = false),
+        // With nothing typed and a key built in, the row says so — and never shows that key.
+        placeholder = stringResource(if (o.usesBuiltInKey) R.string.sports_odds_api_key_built_in else R.string.sports_odds_api_key_hint),
+        password = true, onDone = { vm.setOddsApiKey(key) },
+    )
+    val books = Bookmaker.entries
+    val stepBook: (Int) -> Unit = { d -> vm.setOddsBookmaker(books[(o.bookmaker.ordinal + d).mod(books.size)]) }
+    Row(OwnTVIcon.LIST, stringResource(R.string.sports_odds_bookmaker), stringResource(R.string.sports_odds_bookmaker_description),
+        SettingValue.Stepper(bookmakerLabel(o.bookmaker)), onStep = stepBook, enabled = o.source == OddsSource.ODDS_API) { stepBook(1) }
+    Row(OwnTVIcon.INFO, stringResource(R.string.sports_odds_status), oddsStatusText(o, oddsStatus), null) {}
+
     StageSettingsHeading(stringResource(R.string.sports_settings_data), 4)
     val modes = AutoRebuild.entries
     val stepMode: (Int) -> Unit = { d -> vm.update { s -> s.copy(autoRebuild = modes[(s.autoRebuild.ordinal + d).mod(modes.size)]) } }
@@ -216,6 +254,42 @@ private fun MainRows(vm: SportsSettingsViewModel, c: SportsConfig, shown: Boolea
     Row(OwnTVIcon.REFRESH, stringResource(R.string.sports_refresh_data_now),
         if (rebuilding) stringResource(R.string.sports_rebuilding) else last?.let { stringResource(R.string.sports_last_updated, it) }, null) { if (!rebuilding) vm.rebuild() }
     Row(OwnTVIcon.INFO, stringResource(R.string.sports_about), stringResource(R.string.sports_about_summary), SettingValue.Opens(null)) { open(SportsSettingsPage.ABOUT) }
+}
+
+/** A bookmaker as the Bookmaker row names it. */
+@Composable
+private fun bookmakerLabel(b: Bookmaker): String = stringResource(
+    when (b) {
+        Bookmaker.DRAFTKINGS -> R.string.sports_odds_bookmaker_draftkings
+        Bookmaker.FANDUEL -> R.string.sports_odds_bookmaker_fanduel
+        Bookmaker.BETMGM -> R.string.sports_odds_bookmaker_betmgm
+        Bookmaker.CAESARS -> R.string.sports_odds_bookmaker_caesars
+    },
+)
+
+/** The Status row: off, or the source and its key, the requests left, and what the last fetch came to. */
+@Composable
+private fun oddsStatusText(o: OddsConfig, status: OddsRepository.Status): String {
+    if (!o.enabled) return stringResource(R.string.common_off)
+    val remaining = o.requestsRemaining
+    val base = when {
+        o.source == OddsSource.ESPN -> stringResource(R.string.sports_odds_status_espn)
+        !o.hasKey -> return stringResource(R.string.sports_odds_status_no_key)
+        o.exhaustedDay == java.time.LocalDate.now().toString() -> return stringResource(R.string.sports_odds_status_exhausted)
+        remaining != null -> pluralStringResource(R.plurals.sports_odds_requests_left, remaining, remaining)
+        else -> stringResource(R.string.sports_odds_status_ready)
+    }
+    val last = when (status) {
+        is OddsRepository.Status.Shown -> stringResource(R.string.sports_odds_by, status.bookmaker)
+        OddsRepository.Status.NoLine -> stringResource(R.string.sports_odds_status_no_line)
+        OddsRepository.Status.NotCovered -> stringResource(R.string.sports_odds_status_not_covered)
+        OddsRepository.Status.KeyRejected -> stringResource(R.string.sports_odds_status_key_rejected)
+        OddsRepository.Status.Unreachable -> stringResource(R.string.sports_odds_status_unreachable)
+        OddsRepository.Status.Exhausted -> stringResource(R.string.sports_odds_status_exhausted)
+        is OddsRepository.Status.HttpError -> stringResource(R.string.sports_odds_status_http, status.code)
+        OddsRepository.Status.Idle, OddsRepository.Status.NoKey -> null
+    }
+    return listOfNotNull(base, last).joinToString(stringResource(R.string.content_epg_bits_separator))
 }
 
 /** "My teams", "Followed leagues", both, or Off — what Goal alerts covers on this profile. */

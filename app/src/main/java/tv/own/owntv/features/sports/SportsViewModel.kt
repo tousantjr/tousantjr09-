@@ -49,6 +49,8 @@ import tv.own.owntv.core.sports.model.Match
 import tv.own.owntv.core.sports.model.MatchSummary
 import tv.own.owntv.core.sports.model.StandingsTable
 import tv.own.owntv.core.sports.model.Sport
+import tv.own.owntv.features.sports.odds.OddsLine
+import tv.own.owntv.features.sports.odds.OddsRepository
 import java.util.Locale
 
 /** Where a match page's Find channels stands (channels are searched only when asked). */
@@ -112,6 +114,7 @@ class SportsViewModel(
     private val reminders: ReminderManager,
     private val playback: SportsPlayback,
     sourceDao: SourceDao,
+    private val odds: OddsRepository,
 ) : ViewModel() {
 
     private val config = settings.activeSportsConfig.distinctUntilChanged()
@@ -266,6 +269,24 @@ class SportsViewModel(
             )
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
+    /**
+     * The open match's betting line (Settings → Sports → Betting odds), beside [matchPage] rather than
+     * in it: null while the display is off, for a game that is over, or when the source has none.
+     * Follows the board's fresh copy of the match, so it goes away as the game ends.
+     */
+    val matchOdds: StateFlow<OddsLine?> = matchPage.map { it?.match }
+        .distinctUntilChanged { a, b -> a?.key == b?.key && a?.state == b?.state }
+        .flatMapLatest { odds.observe(it) }
+        .flowOn(Dispatchers.Default)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
+    /** Home's featured game's line, for the hero's one-line summary; the same terms as [matchOdds]. */
+    val featuredOdds: StateFlow<OddsLine?> = featuredMatch
+        .distinctUntilChanged { a, b -> a?.key == b?.key && a?.state == b?.state }
+        .flatMapLatest { odds.observe(it) }
+        .flowOn(Dispatchers.Default)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     // --- The league page -----------------------------------------------------------------------------
 

@@ -117,6 +117,61 @@
     <string name="sports_featured_minutes">%1$dm</string>
     <string name="sports_featured_no_channel">No channel found for this game yet — open it to search</string>
 
+    <!-- Settings → Sports → Betting odds (OddsSettings / OddsRepository): a read-only line beside the
+         score on the match page (OddsBlock) and one line on Home's featured game, from ESPN or The Odds
+         API. Off by default. "ESPN", "The Odds API", "DraftKings", "FanDuel", "BetMGM", "Caesars" and
+         "the-odds-api.com" are names and stay as they are in every language. -->
+    <string name="sports_odds_title">Betting odds</string>
+    <string name="sports_odds_show">Show betting odds</string>
+    <string name="sports_odds_show_description">Lines and implied win chances on the match page and Home\'s featured game. Informational only — nothing can be bet from this app</string>
+    <string name="sports_odds_source">Odds source</string>
+    <string name="sports_odds_source_description">ESPN needs no key. The Odds API needs a free key from the-odds-api.com and lets you pick the bookmaker</string>
+    <string name="sports_odds_source_espn">ESPN</string>
+    <string name="sports_odds_source_odds_api">The Odds API</string>
+    <string name="sports_odds_api_key">The Odds API key</string>
+    <string name="sports_odds_api_key_description">Your own key from the-odds-api.com. It stays on this device, is never shown again and goes nowhere but to the-odds-api.com. Leave it empty to use the key the app was built with, if it has one</string>
+    <string name="sports_odds_api_key_hint">Paste your key</string>
+    <string name="sports_odds_api_key_built_in">Built-in key</string>
+    <string name="sports_odds_bookmaker">Bookmaker</string>
+    <string name="sports_odds_bookmaker_description">Whose lines The Odds API returns. ESPN chooses its own</string>
+    <string name="sports_odds_bookmaker_draftkings">DraftKings</string>
+    <string name="sports_odds_bookmaker_fanduel">FanDuel</string>
+    <string name="sports_odds_bookmaker_betmgm">BetMGM</string>
+    <string name="sports_odds_bookmaker_caesars">Caesars</string>
+    <string name="sports_odds_status">Status</string>
+    <string name="sports_odds_status_espn">ESPN lines, no key needed</string>
+    <string name="sports_odds_status_no_key">Enter a key to use The Odds API</string>
+    <string name="sports_odds_status_ready">Ready — the first game shown uses one request</string>
+    <string name="sports_odds_status_exhausted">Request limit reached — odds resume tomorrow</string>
+    <string name="sports_odds_status_key_rejected">The key was rejected — check it at the-odds-api.com</string>
+    <string name="sports_odds_status_unreachable">Could not reach the odds service</string>
+    <string name="sports_odds_status_http">The odds service answered HTTP %1$d</string>
+    <string name="sports_odds_status_no_line">No line for the last game shown</string>
+    <string name="sports_odds_status_not_covered">The last game\'s league is not covered by The Odds API</string>
+    <plurals name="sports_odds_requests_left">
+        <item quantity="one">%1$d request left this month</item>
+        <item quantity="other">%1$d requests left this month</item>
+    </plurals>
+    <string name="sports_odds_heading">Odds</string>
+    <!-- %1$s is the bookmaker: "Lines by DraftKings". -->
+    <string name="sports_odds_by">Lines by %1$s</string>
+    <string name="sports_odds_spread">Spread</string>
+    <string name="sports_odds_total">Over/Under</string>
+    <!-- The hero's short form of the total: "O/U 47.5". -->
+    <string name="sports_odds_total_short">O/U %1$s</string>
+    <string name="sports_odds_moneyline">Moneyline</string>
+    <string name="sports_odds_win_chance">Implied win chance</string>
+    <string name="sports_odds_draw">Draw</string>
+    <!-- A side and its number: "PHI -280". -->
+    <string name="sports_odds_pair">%1$s %2$s</string>
+    <!-- A side and its chance: "PHI 61%". -->
+    <string name="sports_odds_side_percent">%1$s %2$d%%</string>
+    <!-- The chance first, for the hero: "61% PHI". -->
+    <string name="sports_odds_percent_side">%1$d%% %2$s</string>
+    <!-- A positive moneyline keeps its plus, as a book prints it: "+230". -->
+    <string name="sports_odds_positive">+%1$s</string>
+    <string name="sports_odds_disclaimer">Odds are informational only — nothing can be bet from this app</string>
+
     <!-- Settings → Layout → Home: the focused Trending title's trailer plays, muted, inside the hero
          after a short dwell (TrendingTrailerPreview). App-level, its own DataStore (HomeTrailerSettings). -->
     <string name="settings_home_play_trailers">Play trailers on Home</string>

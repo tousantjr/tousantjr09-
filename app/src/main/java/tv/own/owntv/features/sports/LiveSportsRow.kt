@@ -24,6 +24,7 @@ import tv.own.owntv.R
 import tv.own.owntv.core.sports.SportsConfig
 import tv.own.owntv.core.sports.model.Match
 import tv.own.owntv.features.home.tracked
+import tv.own.owntv.features.sports.odds.OddsLine
 import tv.own.owntv.ui.components.rememberClockTick
 import tv.own.owntv.ui.theme.StageColors
 import tv.own.owntv.ui.theme.mpx
@@ -49,6 +50,8 @@ fun LiveSportsRow(
     firstItemFocusRequester: FocusRequester?,
     track: (FocusRequester) -> Unit,
     modifier: Modifier = Modifier,
+    /** The featured game's betting line (Settings → Sports → Betting odds); null while off. */
+    featuredOdds: OddsLine? = null,
 ) {
     // Ticking, for the hero's countdown; the cards read it too.
     val now by rememberClockTick()
@@ -70,7 +73,7 @@ fun LiveSportsRow(
             if (featured != null) {
                 item(key = "featured:" + featured.key) {
                     FeaturedMatchHero(
-                        featured, config = config, now = now, reminded = reminded,
+                        featured, config = config, now = now, reminded = reminded, odds = featuredOdds,
                         onOpenMatch = { onOpenMatch(featured) },
                         onRemind = { onRemind(featured) },
                         onFocus = onFocus,

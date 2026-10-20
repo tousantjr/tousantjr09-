@@ -22,6 +22,11 @@ import tv.own.owntv.core.sports.SportsRepository
 import tv.own.owntv.core.sports.SportsSource
 import tv.own.owntv.core.sports.SportsSuggestion
 import tv.own.owntv.core.sports.model.Team
+import tv.own.owntv.features.sports.odds.Bookmaker
+import tv.own.owntv.features.sports.odds.OddsConfig
+import tv.own.owntv.features.sports.odds.OddsRepository
+import tv.own.owntv.features.sports.odds.OddsSettings
+import tv.own.owntv.features.sports.odds.OddsSource
 import java.util.Locale
 
 /**
@@ -35,10 +40,22 @@ class SportsSettingsViewModel(
     private val repository: SportsRepository,
     activity: SportsActivityTracker,
     sourceDao: SourceDao,
+    private val oddsSettings: OddsSettings,
+    odds: OddsRepository,
 ) : ViewModel() {
 
     val config: StateFlow<SportsConfig> = settings.activeSportsConfig
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SportsConfig())
+
+    /** Betting odds (app-level, not the profile's — OddsSettings) and what its last fetch came to, for the Status row. */
+    val oddsConfig: StateFlow<OddsConfig> = oddsSettings.config
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), OddsConfig())
+    val oddsStatus: StateFlow<OddsRepository.Status> = odds.status
+
+    fun setOddsEnabled(on: Boolean) = viewModelScope.launch { oddsSettings.setEnabled(on) }
+    fun setOddsSource(source: OddsSource) = viewModelScope.launch { oddsSettings.setSource(source) }
+    fun setOddsApiKey(key: String) = viewModelScope.launch { oddsSettings.setApiKey(key) }
+    fun setOddsBookmaker(bookmaker: Bookmaker) = viewModelScope.launch { oddsSettings.setBookmaker(bookmaker) }
 
     val shownInMenu: StateFlow<Boolean> = settings.navMenuHidden.map { MainSection.SPORTS.name !in it }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), true)

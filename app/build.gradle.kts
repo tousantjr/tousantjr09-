@@ -90,6 +90,17 @@ android {
             ?: ""
         buildConfigField("String", "TMDB_EDGE_KEY", "\"${edgeKey.replace("\\", "\\\\").replace("\"", "\\\"")}\"")
 
+        // The Odds API key the betting-odds display (Settings → Sports → Betting odds) can ship with, so
+        // a household need not type one on every device. NEVER in the repo; resolved exactly like the
+        // edge key: env var (how CI injects the ODDS_API_KEY secret) > Gradle property > the out-of-repo
+        // properties file > "". A blank key is a working configuration — the user can still enter their
+        // own in Settings, and a typed key always wins over this one (see OddsSettings).
+        val oddsApiKey = System.getenv("ODDS_API_KEY")
+            ?: providers.gradleProperty("owntv.oddsApiKey").orNull
+            ?: localSigningProps.getProperty("owntv.oddsApiKey")
+            ?: ""
+        buildConfigField("String", "ODDS_API_KEY", "\"${oddsApiKey.replace("\\", "\\\\").replace("\"", "\\\"")}\"")
+
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 

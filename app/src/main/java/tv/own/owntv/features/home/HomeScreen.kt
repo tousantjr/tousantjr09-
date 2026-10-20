@@ -175,6 +175,10 @@ fun HomeScreen(
     val sportsReminders = if (HomeRow.LIVE_SPORTS in state.config.visibleOrder) {
         sportsVm.reminderSet.collectAsStateWithLifecycle().value
     } else emptySet()
+    // The featured game's betting line (Settings → Sports → Betting odds; null while that is off).
+    val sportsOdds = if (HomeRow.LIVE_SPORTS in state.config.visibleOrder) {
+        sportsVm.featuredOdds.collectAsStateWithLifecycle().value
+    } else null
     // What the row has to show: its cards plus the featured game, which can be there hours before any card.
     val sportsCount = sportsCards.size + (if (sportsFeatured != null) 1 else 0)
     val noChannelForReminderMessage = stringResource(R.string.sports_featured_no_channel)
@@ -578,6 +582,7 @@ fun HomeScreen(
                             firstItemFocusRequester = firstItemFocusRequester,
                             track = track,
                             modifier = rowModifier,
+                            featuredOdds = sportsOdds,
                         )
 
                         HomeRow.RECENT_CHANNELS -> HomeLiveRow(
