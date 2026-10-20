@@ -160,6 +160,15 @@ fun PlayerScreen(
     val duration by activeEngine.duration.collectAsStateWithLifecycle()
     val error by activeEngine.error.collectAsStateWithLifecycle()
     val errorInfo by activeEngine.errorInfo.collectAsStateWithLifecycle()
+    // Asked once per failure, cleared with it: the account's connection count when every connection
+    // is in use elsewhere, which is what most panels' refusals really are.
+    val connectionLimitNotices: ConnectionLimitNotices = koinInject()
+    var connectionLimit by remember { mutableStateOf<ConnectionLimitNotice?>(null) }
+    LaunchedEffect(error, channel, film) {
+        connectionLimit = null
+        val failure = error ?: return@LaunchedEffect
+        connectionLimit = runCatching { connectionLimitNotices.explain(channel, film, failure) }.getOrNull()
+    }
     val isPlaying by activeEngine.isPlaying.collectAsStateWithLifecycle()
     // Waiting for the stream is NOT the same as not playing: a user who pressed pause is also "not
     // playing", and the spinner over a deliberately paused picture reads as a stall. The television
@@ -659,7 +668,7 @@ fun PlayerScreen(
 
         val failure = error
         if (failure != null) {
-            ErrorPanel(failure = failure, info = errorInfo, onRetry = activeEngine::retry)
+            ErrorPanel(failure = failure, info = errorInfo, limit = connectionLimit, onRetry = activeEngine::retry)
         } else if (buffering && !noPicture) {
             // On the same material as every other message over the picture, rather than a bare ring.
             PlayerToast(Modifier.align(Alignment.Center)) {
@@ -982,7 +991,7 @@ private fun skip(tuner: LiveTuner, isLive: Boolean, forward: Boolean) {
 }
 
 @Composable
-private fun ErrorPanel(failure: PlaybackFailure, info: ErrorInfo?, onRetry: () -> Unit) {
+private fun ErrorPanel(failure: PlaybackFailure, info: ErrorInfo?, limit: ConnectionLimitNotice?, onRetry: () -> Unit) {
     val res = LocalResources.current
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         PlayerToast {
@@ -993,6 +1002,17 @@ private fun ErrorPanel(failure: PlaybackFailure, info: ErrorInfo?, onRetry: () -
                 color = Color.White,
                 textAlign = TextAlign.Center,
             )
+            // The account's own numbers when that is the reason: brighter than the generic line
+            // above it, because this one says what to do.
+            limit?.let {
+                Text(
+                    text = stringResource(R.string.player_connection_limit_reached, it.active, it.max),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color(0xFFFFD166),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(top = 8.dp),
+                )
+            }
             // Plain reason, then the media it choked on, then the engine's own line. The last two are
             // what turns "it did not play" into a report somebody can act on without a cable and adb.
             info?.reason?.let {

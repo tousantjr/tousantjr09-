@@ -78,6 +78,9 @@ val playerModule = module {
     single { SubtitleController(get(), get(), get(), get()) }
     // Backs the player's "Add subtitles" sheet.
     viewModelOf(::SubtitleSearchViewModel)
+    // The player's connection-limit line under a failed stream: asks the Xtream account for its
+    // active/max connections after a failure that could be a refusal — see ConnectionLimitNotices.
+    single { tv.own.owntv.mobile.ui.player.ConnectionLimitNotices(get(), get(), get(), get()) }
     // The sleep timer stops whichever tuner is playing. Both are resolved when it fires rather than
     // when it is built, so a timer nobody set never creates them. It ends itself once the session
     // detaches (nothing playing), so a stop by hand no longer leaves it counting.

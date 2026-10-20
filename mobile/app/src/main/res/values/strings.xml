@@ -92,4 +92,9 @@
     <string name="subscription_expired_title">Your %1$s subscription has expired</string>
     <string name="subscription_expired_body">It ended on %1$s — renew with your provider to keep watching.</string>
     <string name="subscription_channel_name">Subscription</string>
+
+    <!-- Player → failure panel: the account's own connection numbers, under core's generic reason,
+         when every connection is in use elsewhere (ConnectionLimitNotices). Core already says this
+         for a panel that answers HTTP 458; most don't, so the account is asked after a failure. -->
+    <string name="player_connection_limit_reached">Connection limit reached: %1$d of %2$d in use. This account is playing on other devices — stop one of them, then press Retry.</string>
 </resources>
