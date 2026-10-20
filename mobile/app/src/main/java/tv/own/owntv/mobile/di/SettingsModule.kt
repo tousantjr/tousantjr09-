@@ -6,6 +6,7 @@ import org.koin.dsl.module
 import tv.own.owntv.mobile.ui.screens.settings.DeleteSubtitlesViewModel
 import tv.own.owntv.mobile.ui.screens.settings.DiagnosticsViewModel
 import tv.own.owntv.mobile.ui.screens.settings.EpgSourcesViewModel
+import tv.own.owntv.mobile.ui.screens.settings.MobileUpdateCheck
 import tv.own.owntv.mobile.ui.screens.settings.OpenSubtitlesViewModel
 import tv.own.owntv.mobile.ui.screens.settings.SettingsViewModel
 import tv.own.owntv.mobile.ui.screens.settings.customize.CustomizeItemsViewModel
@@ -90,8 +91,12 @@ val settingsModule = module {
     }
     viewModel { OpenSubtitlesViewModel(settings = get(), accounts = get()) }
     viewModel { DeleteSubtitlesViewModel(controller = get()) }
+    // The phone's own update check (core's UpdateManager reads the repository's latest release,
+    // which is always the TV app's — see MobileUpdateCheck).
+    single { MobileUpdateCheck(httpClient = get()) }
     viewModel {
         DiagnosticsViewModel(
+            context = androidContext(),
             settings = get(),
             sourceRepository = get(),
             sourceTester = get(),
@@ -101,6 +106,11 @@ val settingsModule = module {
             epgSourceStore = get(),
             epgRepository = get(),
             downloadManager = get(),
+            catalogSync = get(),
+            epgSync = get(),
+            importFinalizer = get(),
+            sportsRepository = get(),
+            updateCheck = get(),
         )
     }
 }

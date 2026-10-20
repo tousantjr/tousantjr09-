@@ -1,7 +1,20 @@
 package tv.own.owntv.mobile.ui.screens.settings
 
-import androidx.compose.material3.Text
+import android.app.Activity
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.content.ContextWrapper
+import android.content.Intent
+import android.net.Uri
+import android.widget.Toast
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -9,10 +22,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -21,18 +35,31 @@ import kotlinx.coroutines.withContext
 import java.text.NumberFormat
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
+import tv.own.owntv.core.brand.AppIconSwitcher
 import tv.own.owntv.core.network.HttpClient
 import tv.own.owntv.core.setup.headline
+import tv.own.owntv.mobile.BuildConfig
 import tv.own.owntv.mobile.R
+import tv.own.owntv.mobile.ui.components.MobileBottomSheet
 import tv.own.owntv.mobile.ui.components.MobileIcons
 import tv.own.owntv.mobile.ui.stage.LocalStagePalette
+import tv.own.owntv.mobile.ui.stage.StageChevron
+import tv.own.owntv.mobile.ui.stage.StageMenuItem
+import tv.own.owntv.mobile.ui.stage.StageRowValue
+import tv.own.owntv.mobile.ui.stage.StageSectionHead
 import tv.own.owntv.mobile.ui.stage.StageSettingRow
+import tv.own.owntv.mobile.ui.stage.StageSheetHeader
 import tv.own.owntv.mobile.ui.stage.stageText
+import tv.own.owntv.mobile.ui.theme.MobileDimens
 
 /**
- * Settings → App → Network → Diagnostics: the connection/playlist/guide/storage health checks, and a
- * download speed test — mobile's own screen over [DiagnosticsViewModel], which carries the same logic
- * as the TV app's own Diagnostics screen.
+ * Settings → App → Network → Diagnostics, the Diagnostic Center: "Run checks" at the top, then each
+ * check as a row with its OK/Warning/Problem word and — where there is something to do about it —
+ * the fix right under it (Re-sync this playlist, Re-sync TV guide). Below the checks, what is true
+ * without running anything: the Movies & Series engine with a one-tap switch, the app version with
+ * the phone's own update check ([MobileUpdateCheck]), the device, the quick fixes, and the report
+ * to show, copy or share — mobile's own page over [DiagnosticsViewModel], which carries the same
+ * logic as the TV app's own Diagnostics screen.
  *
  * The checks run only on "Run checks" ([DiagnosticsViewModel.runChecks]), never automatically: a
  * [tv.own.owntv.core.repository.SourceTester] run briefly costs a live connection slot on an Xtream
@@ -50,6 +77,9 @@ private sealed interface SpeedTestUi {
 @Composable
 fun DiagnosticsPage(modifier: Modifier = Modifier, vm: DiagnosticsViewModel = koinViewModel()) {
     val diagnostics by vm.diagnostics.collectAsStateWithLifecycle()
+    val update by vm.update.collectAsStateWithLifecycle()
+    val vodEngine by vm.vodEngine.collectAsStateWithLifecycle()
+    val context = LocalContext.current
     val httpClient: HttpClient = koinInject()
     val scope = rememberCoroutineScope()
     var speedTest by remember { mutableStateOf<SpeedTestUi>(SpeedTestUi.Idle) }
@@ -67,20 +97,42 @@ fun DiagnosticsPage(modifier: Modifier = Modifier, vm: DiagnosticsViewModel = ko
         }
     }
 
+    var showReport by remember { mutableStateOf(false) }
+
     val report = (diagnostics as? DiagnosticsUi.Done)?.report
     val running = diagnostics is DiagnosticsUi.Running
+    val appName = stringResource(R.string.app_name)
+    val reportTitle = stringResource(R.string.diagnostics_report_title)
+    val reportText = remember(report, appName) { report?.toText(context.resources, appName) }
+    val queued = stringResource(R.string.diagnostics_resync_queued)
+    val copied = stringResource(R.string.diagnostics_report_copied)
+    val cacheCleared = stringResource(R.string.diagnostics_cache_cleared)
+    val reportNone = stringResource(R.string.diagnostics_report_none)
+    val noShareTarget = stringResource(R.string.diagnostics_share_unavailable)
+
+    fun say(text: String) = Toast.makeText(context, text, Toast.LENGTH_SHORT).show()
+    fun copyReport() {
+        val text = reportText ?: run { say(reportNone); return }
+        copyToClipboard(context, reportTitle, text)
+        say(copied)
+    }
+    fun shareReport() {
+        val text = reportText ?: run { say(reportNone); return }
+        if (!shareText(context, reportTitle, text)) say(noShareTarget)
+    }
+
+    val lastChecked = report?.let {
+        stringResource(
+            R.string.diagnostics_last_checked,
+            android.text.format.DateUtils.getRelativeTimeSpanString(
+                it.finishedAt, System.currentTimeMillis(), android.text.format.DateUtils.MINUTE_IN_MILLIS,
+            ),
+        )
+    }
 
     SettingsStagePage(modifier) {
         item(key = "note") { PageNote(stringResource(R.string.diagnostics_run_checks_help)) }
         item(key = "run") {
-            val lastChecked = report?.let {
-                stringResource(
-                    R.string.diagnostics_last_checked,
-                    android.text.format.DateUtils.getRelativeTimeSpanString(
-                        it.finishedAt, System.currentTimeMillis(), android.text.format.DateUtils.MINUTE_IN_MILLIS,
-                    ),
-                )
-            }
             StageSettingRow(
                 icon = MobileIcons.Refresh,
                 title = stringResource(if (running) R.string.diagnostics_running else R.string.diagnostics_run_checks),
@@ -91,17 +143,21 @@ fun DiagnosticsPage(modifier: Modifier = Modifier, vm: DiagnosticsViewModel = ko
 
         if (report != null) {
             item(key = "connection") {
+                val verdict = stringResource(
+                    if (report.connection.status == DiagnosticStatus.OK) R.string.diagnostics_connection_ok
+                    else R.string.diagnostics_connection_problem,
+                )
                 StatusRow(
-                    icon = MobileIcons.Translate,
+                    icon = MobileIcons.Wifi,
                     title = stringResource(R.string.diagnostics_connection_title),
-                    desc = stringResource(
-                        if (report.connection.status == DiagnosticStatus.OK) R.string.diagnostics_connection_ok
-                        else R.string.diagnostics_connection_problem,
-                    ),
+                    desc = verdict + stringResource(R.string.content_epg_bits_separator) + stringResource(report.connection.network.labelRes()),
                     status = report.connection.status,
                 )
             }
 
+            item(key = "sources-head") {
+                StageSectionHead(stringResource(R.string.diagnostics_streaming_heading), count = report.sources.size.takeIf { it > 0 })
+            }
             if (report.sources.isEmpty()) {
                 item(key = "no-sources") {
                     StatusRow(
@@ -113,21 +169,54 @@ fun DiagnosticsPage(modifier: Modifier = Modifier, vm: DiagnosticsViewModel = ko
                 }
             } else {
                 items(report.sources, key = { "source-" + it.sourceId }) { source ->
+                    val headline = source.result.headline(LocalContext.current.resources)
                     StatusRow(
                         icon = MobileIcons.Layers,
                         title = source.sourceName,
-                        desc = source.result.headline(LocalContext.current.resources),
+                        desc = source.host?.let { headline + stringResource(R.string.content_epg_bits_separator) + it } ?: headline,
                         status = source.status,
                     )
+                    StageSettingRow(
+                        icon = MobileIcons.Sync,
+                        title = stringResource(R.string.diagnostics_resync_playlist),
+                        subtitle = playlistLine(source),
+                        onClick = { vm.resyncPlaylist(source.sourceId); say(queued) },
+                    ) { StageRowValue(stringResource(R.string.settings_sources_resync)) }
                 }
             }
 
+            item(key = "epg-head") { StageSectionHead(stringResource(R.string.diagnostics_epg_title)) }
             item(key = "epg") {
                 StatusRow(
                     icon = MobileIcons.Guide,
                     title = stringResource(R.string.diagnostics_epg_title),
-                    desc = epgDescription(report.epg),
+                    desc = epgLine(LocalContext.current.resources, report.epg),
                     status = report.epg.status,
+                )
+            }
+            item(key = "epg-resync") {
+                val canResyncGuide = report.epg.standaloneSources > 0
+                val desc = if (canResyncGuide) {
+                    pluralStringResource(R.plurals.diagnostics_epg_feeds, report.epg.standaloneSources, report.epg.standaloneSources) +
+                        stringResource(R.string.content_epg_bits_separator) +
+                        pluralStringResource(R.plurals.sync_count_epg, report.epg.programmes, NumberFormat.getIntegerInstance().format(report.epg.programmes))
+                } else {
+                    stringResource(R.string.diagnostics_epg_resync_playlist_only)
+                }
+                StageSettingRow(
+                    icon = MobileIcons.Sync,
+                    title = stringResource(R.string.diagnostics_resync_epg),
+                    subtitle = desc,
+                    onClick = if (canResyncGuide) ({ vm.resyncGuide(); say(queued) }) else null,
+                ) { if (canResyncGuide) StageRowValue(stringResource(R.string.settings_sources_resync)) }
+            }
+
+            item(key = "sports") {
+                StatusRow(
+                    icon = MobileIcons.Sports,
+                    title = stringResource(R.string.diagnostics_sports_title),
+                    desc = sportsLine(LocalContext.current.resources, report.sports),
+                    status = report.sports.status,
                 )
             }
 
@@ -160,27 +249,143 @@ fun DiagnosticsPage(modifier: Modifier = Modifier, vm: DiagnosticsViewModel = ko
                 onClick = { runSpeedTest() },
             ) {}
         }
+
+        // ---- Player, app, device: true now, no check needed -----------------------------------
+        item(key = "app-head") { StageSectionHead(stringResource(R.string.diagnostics_app_heading)) }
+        item(key = "player") {
+            val engineNow = vodEngine
+            val otherEngine = engineNow?.let { stringResource(if (it.startsOnMpv) R.string.settings_player_exoplayer else R.string.settings_player_mpv) }
+            StageSettingRow(
+                icon = MobileIcons.PlayCircle,
+                title = stringResource(R.string.diagnostics_player_title),
+                subtitle = engineNow?.let { engineLabel(it) } ?: stringResource(R.string.diagnostics_player_help),
+                onClick = { if (engineNow != null) vm.switchVodEngine() },
+            ) { otherEngine?.let { StageRowValue(stringResource(R.string.diagnostics_player_switch_to, it)) } }
+        }
+        item(key = "app") {
+            val current = BuildConfig.VERSION_NAME
+            val versionLine = stringResource(R.string.diagnostics_app_version, current, BuildConfig.VERSION_CODE)
+            val available = (update as? UpdateCheckUi.Done)?.result as? MobileUpdateCheck.Result.Available
+            val subtitle = when (val u = update) {
+                UpdateCheckUi.Idle -> versionLine
+                UpdateCheckUi.Checking -> stringResource(R.string.update_checking)
+                is UpdateCheckUi.Done -> when (val r = u.result) {
+                    is MobileUpdateCheck.Result.Available -> stringResource(R.string.update_available_version, r.version, current)
+                    MobileUpdateCheck.Result.UpToDate -> stringResource(R.string.update_latest, current)
+                    MobileUpdateCheck.Result.Failed -> stringResource(R.string.update_failed_check)
+                }
+            }
+            StageSettingRow(
+                icon = MobileIcons.Info,
+                title = stringResource(R.string.diagnostics_app_title),
+                subtitle = subtitle,
+                onClick = { if (available != null) openLink(context, available.apkUrl) else vm.checkForUpdate() },
+            ) {
+                if (available != null) {
+                    StageRowValue(stringResource(R.string.diagnostics_update_download), StageChevron.FORWARD)
+                } else {
+                    StageRowValue(stringResource(R.string.settings_check_updates))
+                }
+            }
+        }
+        item(key = "device") {
+            StageSettingRow(
+                icon = MobileIcons.Phone,
+                title = stringResource(R.string.diagnostics_device_title),
+                subtitle = stringResource(
+                    R.string.diagnostics_device_line,
+                    deviceModel(),
+                    android.os.Build.VERSION.RELEASE.orEmpty(),
+                    android.os.Build.VERSION.SDK_INT,
+                ),
+                onClick = null,
+            ) {}
+        }
+
+        // ---- Quick fixes ------------------------------------------------------------------------
+        item(key = "fixes-head") { StageSectionHead(stringResource(R.string.diagnostics_quick_fixes)) }
+        item(key = "clear-cache") {
+            StageSettingRow(
+                icon = MobileIcons.Image,
+                title = stringResource(R.string.diagnostics_clear_image_cache),
+                subtitle = stringResource(R.string.diagnostics_clear_image_cache_desc),
+                onClick = { scope.launch { vm.clearImageCache(); say(cacheCleared) } },
+            ) {}
+        }
+        item(key = "app-settings") {
+            StageSettingRow(
+                icon = MobileIcons.Settings,
+                title = stringResource(R.string.diagnostics_open_app_settings),
+                subtitle = stringResource(R.string.diagnostics_open_app_settings_desc),
+                onClick = { vm.openAppSettings() },
+            ) { StageRowValue(buildString { }, StageChevron.FORWARD) }
+        }
+        item(key = "restart") {
+            StageSettingRow(
+                icon = MobileIcons.Restore,
+                title = stringResource(R.string.diagnostics_restart_app),
+                subtitle = stringResource(R.string.diagnostics_restart_app_desc),
+                onClick = { context.findActivity()?.let { AppIconSwitcher.restartWith(it, AppIconSwitcher.applied(it)) } },
+            ) {}
+        }
+
+        // ---- Report -----------------------------------------------------------------------------
+        item(key = "report-head") { StageSectionHead(stringResource(R.string.diagnostics_report_heading)) }
+        item(key = "show-report") {
+            StageSettingRow(
+                icon = MobileIcons.FormatListBulleted,
+                title = stringResource(R.string.diagnostics_show_report),
+                subtitle = lastChecked ?: reportNone,
+                onClick = { if (reportText != null) showReport = true else say(reportNone) },
+            ) { if (reportText != null) StageRowValue(buildString { }, StageChevron.FORWARD) }
+        }
+        item(key = "copy-report") {
+            StageSettingRow(
+                icon = MobileIcons.Layers,
+                title = stringResource(R.string.diagnostics_copy_report),
+                subtitle = stringResource(R.string.diagnostics_copy_report_desc),
+                onClick = { copyReport() },
+            ) {}
+        }
+        item(key = "share-report") {
+            StageSettingRow(
+                icon = MobileIcons.Share,
+                title = stringResource(R.string.diagnostics_share_report),
+                subtitle = stringResource(R.string.diagnostics_share_report_desc),
+                onClick = { shareReport() },
+            ) {}
+        }
+    }
+
+    if (showReport && reportText != null) {
+        MobileBottomSheet(onDismissRequest = { showReport = false }, title = reportTitle) {
+            StageSheetHeader(reportTitle, subtitle = lastChecked)
+            Column(
+                Modifier
+                    .padding(horizontal = MobileDimens.ScreenPaddingH)
+                    .heightIn(max = REPORT_MAX_HEIGHT_DP.dp)
+                    .verticalScroll(rememberScrollState()),
+            ) {
+                Text(reportText, style = stageText(12f, 500), color = LocalStagePalette.current.text)
+            }
+            StageMenuItem(stringResource(R.string.diagnostics_copy_report), onClick = { copyReport() }, icon = MobileIcons.Layers)
+            StageMenuItem(stringResource(R.string.common_share), onClick = { shareReport() }, icon = MobileIcons.Share)
+            StageMenuItem(stringResource(R.string.common_done), onClick = { showReport = false }, icon = MobileIcons.Check)
+        }
     }
 }
 
+/** "<n> channels · <n> movies · <n> series", then when the playlist last synced (or that it never has). */
 @Composable
-private fun epgDescription(epg: EpgCheck): String = when {
-    !epg.configured -> stringResource(R.string.diagnostics_epg_no_source)
-    !epg.hasData -> stringResource(R.string.diagnostics_epg_no_data)
-    epg.freshestSyncAt == null -> stringResource(R.string.diagnostics_epg_unknown_age)
-    else -> {
-        val ago = android.text.format.DateUtils.getRelativeTimeSpanString(
-            epg.freshestSyncAt, System.currentTimeMillis(), android.text.format.DateUtils.MINUTE_IN_MILLIS,
-        )
+private fun playlistLine(source: SourceCheck): String {
+    val counts = playlistCounts(LocalContext.current.resources, source)
+    val synced = source.lastSyncAt?.let {
         stringResource(
-            when (epg.status) {
-                DiagnosticStatus.OK -> R.string.diagnostics_epg_fresh
-                DiagnosticStatus.WARNING -> R.string.diagnostics_epg_stale
-                DiagnosticStatus.PROBLEM -> R.string.diagnostics_epg_very_stale
-            },
-            ago,
+            R.string.settings_synced_at,
+            android.text.format.DateUtils.getRelativeTimeSpanString(it, System.currentTimeMillis(), android.text.format.DateUtils.MINUTE_IN_MILLIS),
         )
-    }
+    } ?: stringResource(R.string.diagnostics_playlist_never_synced)
+    return counts + stringResource(R.string.content_epg_bits_separator) + synced
 }
 
 /** A read-only Diagnostics row: an explanation on the left, the OK/Warning/Problem word on the right. */
@@ -195,6 +400,37 @@ private fun StatusRow(icon: androidx.compose.ui.graphics.vector.ImageVector, tit
     StageSettingRow(icon = icon, title = title, subtitle = desc, onClick = null) {
         Text(label, style = stageText(13f, 700), color = color, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
+}
+
+private fun copyToClipboard(context: Context, label: String, text: String) {
+    val clipboard = context.getSystemService(ClipboardManager::class.java) ?: return
+    runCatching { clipboard.setPrimaryClip(ClipData.newPlainText(label, text)) }
+}
+
+/** Hands the text to the system share sheet; false only when even the system's chooser could not start. */
+private fun shareText(context: Context, subject: String, text: String): Boolean {
+    val send = Intent(Intent.ACTION_SEND)
+        .setType(SHARE_MIME)
+        .putExtra(Intent.EXTRA_SUBJECT, subject)
+        .putExtra(Intent.EXTRA_TEXT, text)
+    return runCatching {
+        context.startActivity(Intent.createChooser(send, subject).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+    }.isSuccess
+}
+
+private fun openLink(context: Context, url: String) {
+    runCatching {
+        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+    }
+}
+
+private fun Context.findActivity(): Activity? {
+    var c: Context? = this
+    while (c is ContextWrapper) {
+        if (c is Activity) return c
+        c = c.baseContext
+    }
+    return null
 }
 
 /**
@@ -219,6 +455,8 @@ private suspend fun measureDownloadMbps(httpClient: HttpClient): Double = withCo
 
 private const val SPEED_TEST_URL = "https://speed.cloudflare.com/__down?bytes=5000000"
 private const val SPEED_TEST_BUFFER_BYTES = 64 * 1024
+private const val SHARE_MIME = "text/plain"
+private const val REPORT_MAX_HEIGHT_DP = 360
 
 /** One decimal place, the device's own locale — the same formatter Downloads' own storage line uses. */
 private fun decimal(value: Double): String = NumberFormat.getNumberInstance().apply {

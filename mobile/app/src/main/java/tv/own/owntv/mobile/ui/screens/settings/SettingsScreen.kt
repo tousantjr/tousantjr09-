@@ -232,6 +232,18 @@ private val LEAF_ROWS: List<Pair<SettingsLeaf, Int>> = listOf(
     SettingsLeaf.DIAGNOSTICS to R.string.diagnostics_epg_title,
     SettingsLeaf.DIAGNOSTICS to R.string.diagnostics_storage_title,
     SettingsLeaf.DIAGNOSTICS to R.string.diagnostics_speed_test_title,
+    SettingsLeaf.DIAGNOSTICS to R.string.diagnostics_resync_playlist,
+    SettingsLeaf.DIAGNOSTICS to R.string.diagnostics_resync_epg,
+    SettingsLeaf.DIAGNOSTICS to R.string.diagnostics_sports_title,
+    SettingsLeaf.DIAGNOSTICS to R.string.diagnostics_player_title,
+    SettingsLeaf.DIAGNOSTICS to R.string.diagnostics_app_title,
+    SettingsLeaf.DIAGNOSTICS to R.string.diagnostics_device_title,
+    SettingsLeaf.DIAGNOSTICS to R.string.diagnostics_clear_image_cache,
+    SettingsLeaf.DIAGNOSTICS to R.string.diagnostics_open_app_settings,
+    SettingsLeaf.DIAGNOSTICS to R.string.diagnostics_restart_app,
+    SettingsLeaf.DIAGNOSTICS to R.string.diagnostics_show_report,
+    SettingsLeaf.DIAGNOSTICS to R.string.diagnostics_copy_report,
+    SettingsLeaf.DIAGNOSTICS to R.string.diagnostics_share_report,
 )
 
 /** Quick: the pinned rows, in the pinned order, each drawn as it is on its own page. */
