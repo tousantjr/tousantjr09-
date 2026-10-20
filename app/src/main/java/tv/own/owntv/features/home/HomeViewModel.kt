@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -140,9 +141,22 @@ class HomeViewModel(
     private val favoriteDao: tv.own.owntv.core.database.dao.FavoriteDao,
     private val userDataWriter: tv.own.owntv.core.backup.UserDataWriter,
     private val homeContentFilter: HomeContentFilterSettings,
+    private val subscriptionExpiry: SubscriptionExpiry,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
+
+    /**
+     * The soonest-ending Xtream subscription among this profile's playlists, once it is within a
+     * week (or past) — Home's notice strip. [SubscriptionExpiry] caches the panel's answers, so a
+     * profile switch or a playlist edit re-reads them without another round trip.
+     */
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    val subscriptionWarning: StateFlow<ExpiryWarning?> = settings.activeProfileId
+        .flatMapLatest { pid -> if (pid < 0) flowOf(emptyList()) else sourceDao.observeForProfile(pid) }
+        .map { sources -> subscriptionExpiry.warningFor(sources) }
+        .flowOn(Dispatchers.IO)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     /**
      * Single entry point for "rebuild the Home rails". Every trigger goes through here rather than

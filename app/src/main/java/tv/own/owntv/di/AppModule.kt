@@ -67,6 +67,9 @@ val appModule = module {
     // Home's "Hide adult categories" toggle (Settings → Layout → Home): app-level, not per-profile,
     // and additive to :core's own kids-profile category hiding — see HomeContentFilterSettings.
     single { HomeContentFilterSettings(androidContext()) }
+    // Home's subscription notice: asks each Xtream playlist for its expiry and caches the answer for
+    // hours, so one instance for the process — see SubscriptionExpiry.
+    single { tv.own.owntv.features.home.SubscriptionExpiry(get()) }
     // Sports Hub: which match the playing channel came from. Lazy; nothing runs until it is asked.
     singleOf(::SportsPlayback)
     // Process-long scope for work that must outlive the screen that started it (a first-run restore).

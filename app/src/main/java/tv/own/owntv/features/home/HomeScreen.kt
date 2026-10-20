@@ -160,6 +160,7 @@ fun HomeScreen(
     sportsVm: tv.own.owntv.features.sports.SportsViewModel = org.koin.androidx.compose.koinViewModel(),
 ) {
     val state by vm.uiState.collectAsStateWithLifecycle()
+    val subscriptionWarning by vm.subscriptionWarning.collectAsStateWithLifecycle()
     // Asked for only while the row is switched on (Layout → Home rows); off costs nothing.
     val sportsCards = if (HomeRow.LIVE_SPORTS in state.config.visibleOrder) {
         sportsVm.homeRow.collectAsStateWithLifecycle().value
@@ -343,6 +344,9 @@ fun HomeScreen(
         ?.takeIf { fullBleed && state.trendingItems.size >= TrendingDao.MIN_ELIGIBLE_ITEMS }
     val posterItem = state.trendingItems.getOrNull(posterIndex)
         ?.takeIf { posterHero && state.trendingItems.size >= TrendingDao.MIN_ELIGIBLE_ITEMS }
+    // The subscription notice rides inside a row's item, above it: under the hero when one sits at the
+    // top (its backdrop is aligned to the page's top edge, so nothing may push it down), else first.
+    val noticeIndex = (if (fullBleed || posterItem != null) 1 else 0).coerceAtMost(renderRows.lastIndex)
     // ▲ from the row right under a folded hero unfolds it and lands on Play — there is nothing focusable
     // in the one-line form for focus search to find.
     val firstRowUnderHero = renderRows.getOrNull(1).takeIf { fullBleed }
@@ -374,9 +378,13 @@ fun HomeScreen(
                 contentPadding = PaddingValues(top = if (fullBleed || posterItem != null) 0.dp else NoHeroTop, bottom = 48.mpx),
                 verticalArrangement = Arrangement.spacedBy(RowGap),
             ) {
-                itemsIndexed(renderRows, key = { _, row -> row.name }) { _, row ->
+                itemsIndexed(renderRows, key = { _, row -> row.name }) { index, row ->
                     val firstItemFocusRequester = rowFocusRequester(row)
                     val rowModifier = if (row == firstRowUnderHero) unfoldOnUp else Modifier
+                    if (index == noticeIndex) subscriptionWarning?.let { warning ->
+                        SubscriptionNotice(warning, start = contentStart)
+                        Spacer(Modifier.height(RowGap))
+                    }
                     when (row) {
                         HomeRow.TRENDING -> if (state.trendingItems.size < TrendingDao.MIN_ELIGIBLE_ITEMS) {
                             // Too few titles to be a "trending" row at all, so the row is not drawn.
