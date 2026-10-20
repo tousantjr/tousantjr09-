@@ -79,4 +79,17 @@
     <string name="boxing_find_channels">Find channels</string>
     <string name="boxing_searching_channels">Searching your channels…</string>
     <string name="boxing_no_channels_found">No matching channels found in your playlist</string>
+
+    <!-- Home → subscription notice, and the once-a-day notification behind it: an Xtream playlist's
+         account ends within a week, or has ended (SubscriptionExpiry / SubscriptionCard /
+         SubscriptionExpiryWorker). %1$s is the playlist's name as the user named it; the date is
+         formatted by the app. "Dismiss" on the card's X is :core's own common_dismiss, reused. -->
+    <plurals name="subscription_expires_title">
+        <item quantity="one">Your %1$s subscription ends in %2$d day</item>
+        <item quantity="other">Your %1$s subscription ends in %2$d days</item>
+    </plurals>
+    <string name="subscription_expires_body">It expires on %1$s — renew with your provider to keep watching.</string>
+    <string name="subscription_expired_title">Your %1$s subscription has expired</string>
+    <string name="subscription_expired_body">It ended on %1$s — renew with your provider to keep watching.</string>
+    <string name="subscription_channel_name">Subscription</string>
 </resources>

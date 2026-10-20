@@ -196,6 +196,9 @@ class OwnTVMobileApp : Application(), androidx.work.Configuration.Provider {
             reminders = org.koin.core.context.GlobalContext.get().get(),
             settings = org.koin.core.context.GlobalContext.get().get(),
         )
+        // Subscription expiry: the daily check behind Home's notice, as a notification when the app is
+        // closed. Off the main thread: WorkManager's first touch opens its database.
+        appScope.launch { runCatching { tv.own.owntv.mobile.subscription.SubscriptionExpiryWorker.schedule(this@OwnTVMobileApp) } }
         // A new user starts on Stage with glass on; an existing install keeps its look.
         appScope.launch {
             runCatching {

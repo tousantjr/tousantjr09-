@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -73,12 +74,34 @@ class HomeViewModel(
     private val channelDao: ChannelDao,
     private val categoryDao: CategoryDao,
     private val homeContentFilter: HomeContentFilterSettings,
+    private val subscriptionExpiry: SubscriptionExpiry,
+    private val noticeStore: SubscriptionNoticeStore,
 ) : ViewModel() {
 
     private val profileId: StateFlow<Long> = settings.activeProfileId
         .map { stored -> if (stored >= 0) profileDao.resolveExistingProfileId(stored) ?: -1L else -1L }
         .distinctUntilChanged()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), -1L)
+
+    /**
+     * The soonest-ending Xtream subscription among this profile's playlists, once it is within a
+     * week (or past) — Home's notice card — unless it was put away today. [SubscriptionExpiry]
+     * caches the panel's answers, so a profile switch or a playlist edit re-reads them for free.
+     */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val subscriptionWarning: StateFlow<ExpiryWarning?> = combine(
+        profileId
+            .flatMapLatest { pid -> if (pid < 0) flowOf(emptyList()) else sourceDao.observeForProfile(pid) }
+            .map { sources -> subscriptionExpiry.warningFor(sources) },
+        noticeStore.dismissedDay,
+    ) { warning, dismissedDay -> warning?.takeIf { dismissedDay != SubscriptionNoticeStore.today() } }
+        .flowOn(Dispatchers.IO)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
+    /** The card's X: away until tomorrow, when the count has moved on. */
+    fun dismissSubscriptionWarning() {
+        viewModelScope.launch { noticeStore.dismissForToday() }
+    }
 
     /**
      * One conflated request to rebuild. The screen asks on every entry, because coming back from a

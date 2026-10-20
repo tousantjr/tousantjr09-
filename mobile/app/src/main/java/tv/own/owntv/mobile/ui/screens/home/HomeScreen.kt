@@ -117,6 +117,7 @@ fun HomeScreen(
     val movieProgress by vm.movieProgress.collectAsStateWithLifecycle()
     val seriesProgress by vm.seriesProgress.collectAsStateWithLifecycle()
     val resume by vm.resume.collectAsStateWithLifecycle()
+    val subscriptionWarning by vm.subscriptionWarning.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val density = LocalDensity.current
     val homeChrome = LocalHomeChrome.current
@@ -195,6 +196,9 @@ fun HomeScreen(
 
     val trending = state.trendingItems
     val trendingFirst = rows.firstOrNull() == HomeRow.TRENDING
+    // The subscription notice rides inside a row's item, above it: under the Trending hero when it
+    // leads (the backdrop and the first-item scroll maths assume the hero is item 0), else first.
+    val noticeRow = if (trendingFirst) rows.getOrNull(1) ?: rows.first() else rows.first()
     val fullBleed = trendingFirst && state.config.trendingStyle == HomeTrendingStyle.HERO
     val posterHero = trendingFirst && state.config.trendingStyle == HomeTrendingStyle.POSTERS
     var activeIndex by rememberSaveable(trending.size) { mutableIntStateOf(0) }
@@ -261,6 +265,10 @@ fun HomeScreen(
     ) {
         rows.forEach { row ->
             item(row.name) {
+                if (row == noticeRow) subscriptionWarning?.let { warning ->
+                    SubscriptionCard(warning, onDismiss = vm::dismissSubscriptionWarning)
+                    Spacer(Modifier.height(22.dp))
+                }
                 when (row) {
                     HomeRow.TRENDING -> when {
                         fullBleed -> {

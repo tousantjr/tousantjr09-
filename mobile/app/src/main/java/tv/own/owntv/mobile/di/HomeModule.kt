@@ -6,6 +6,8 @@ import org.koin.dsl.module
 import tv.own.owntv.core.home.HomeFeedReader
 import tv.own.owntv.mobile.ui.screens.home.HomeContentFilterSettings
 import tv.own.owntv.mobile.ui.screens.home.HomeViewModel
+import tv.own.owntv.mobile.ui.screens.home.SubscriptionExpiry
+import tv.own.owntv.mobile.ui.screens.home.SubscriptionNoticeStore
 
 /**
  * Home's rails come out of core, the same reader the television's Home uses, so the two apps agree
@@ -30,5 +32,9 @@ val homeModule = module {
     // Home's "Hide adult categories" toggle (Settings → Layout → Home): app-level, not per-profile,
     // and additive to :core's own kids-profile category hiding — see HomeContentFilterSettings.
     single { HomeContentFilterSettings(androidContext()) }
+    // Home's subscription notice (and the daily check behind its notification): asks each Xtream
+    // playlist for its expiry and caches the answer for hours, so one instance for the process.
+    single { SubscriptionExpiry(get()) }
+    single { SubscriptionNoticeStore(androidContext()) }
     viewModelOf(::HomeViewModel)
 }
