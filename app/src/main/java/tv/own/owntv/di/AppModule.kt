@@ -70,6 +70,9 @@ val appModule = module {
     // Home's subscription notice: asks each Xtream playlist for its expiry and caches the answer for
     // hours, so one instance for the process — see SubscriptionExpiry.
     single { tv.own.owntv.features.home.SubscriptionExpiry(get()) }
+    // The player's connection-limit line under a failed stream: asks the Xtream account for its
+    // active/max connections after a failure that could be a refusal — see ConnectionLimitNotices.
+    single { tv.own.owntv.player.ConnectionLimitNotices(get(), get()) }
     // Sports Hub: which match the playing channel came from. Lazy; nothing runs until it is asked.
     singleOf(::SportsPlayback)
     // Process-long scope for work that must outlive the screen that started it (a first-run restore).

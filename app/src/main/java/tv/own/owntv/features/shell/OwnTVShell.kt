@@ -1613,6 +1613,8 @@ fun OwnTVShell(
                 PlayerHud(
                     player = if (liveOnExo) liveVm.previewEngine else mpvEngine, // HUD drives the active engine
                     onBack = exitPlayer,
+                    // The playlist on screen (the same answer WatchSession gets), for the connection-limit line.
+                    playingSourceId = watchingSourceId,
                     onPip = dockPlayer, // PiP/dock works for live on either engine now
                     onAudioMode = toAudioMode,
                     // The channel-list overlay draws ABOVE the HUD; while it's open the HUD goes inert so

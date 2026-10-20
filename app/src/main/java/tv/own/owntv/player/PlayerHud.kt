@@ -222,6 +222,9 @@ fun PlayerHud(
     // The match page.
     // A goal toast for another followed match is up: OK switches to it instead of showing the controls.
     onToastOk: (() -> Unit)? = null,
+    // The playlist the playing item came from, so a failed stream can be explained with the account's
+    // own connection count (ConnectionLimitNotices). Null = unknown, no explanation.
+    playingSourceId: Long? = null,
     modifier: Modifier = Modifier,
 ) {
     // Nothing that ticks is read in this root scope: with the controls hidden it used to recompose
@@ -235,6 +238,16 @@ fun PlayerHud(
     val buffering by player.buffering.collectAsStateWithLifecycle()
     val error by player.error.collectAsStateWithLifecycle()
     val errorInfo by player.errorInfo.collectAsStateWithLifecycle()
+    // Asked once per failure, cleared with it: the account's connection count when every connection
+    // is in use elsewhere, which is what most panels' refusals really are.
+    val connectionLimitNotices: ConnectionLimitNotices = org.koin.compose.koinInject()
+    var connectionLimit by remember { mutableStateOf<ConnectionLimitNotice?>(null) }
+    LaunchedEffect(error, playingSourceId) {
+        connectionLimit = null
+        val failure = error ?: return@LaunchedEffect
+        val sourceId = playingSourceId ?: return@LaunchedEffect
+        connectionLimit = runCatching { connectionLimitNotices.explain(sourceId, failure) }.getOrNull()
+    }
     val providerBackOff by player.providerBackOff.collectAsStateWithLifecycle()
     val stalledSinceMs by player.stalledSinceMs.collectAsStateWithLifecycle()
     val nav by player.nav.collectAsStateWithLifecycle()
@@ -759,6 +772,18 @@ fun PlayerHud(
                 Spacer(Modifier.height(8.dp))
                 error?.let {
                     Text(it.displayText(), style = tv.own.owntv.ui.theme.stageText(25, 400), color = Color.White.copy(alpha = 0.7f), textAlign = TextAlign.Center)
+                }
+                // The account's own numbers when that is the reason: brighter than the generic line
+                // above it, because this one says what to do.
+                connectionLimit?.let { limit ->
+                    Spacer(Modifier.height(10.dp))
+                    Text(
+                        stringResource(R.string.player_connection_limit_reached, limit.active, limit.max),
+                        style = tv.own.owntv.ui.theme.stageText(25, 600),
+                        color = tv.own.owntv.ui.theme.StageColors.Warn,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth(0.8f),
+                    )
                 }
                 // Structured technical detail so a user can report the real cause without adb/logcat:
                 // plain reason → media spec (codec • resolution • decoder) → raw engine/codec line.
