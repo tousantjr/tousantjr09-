@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Fails if any module's mptv_brand.xml overrides are stale relative to its pinned :core version.
+# Fails if any module's mptv_brand.xml overrides are stale relative to its pinned :core version, or
+# if the generated MPTV brand drawables differ from what tools/brand/render_mptv_marks.py produces.
 #
 # mptv_strings.py's own docstring says to re-run it after every core pin bump, but nothing enforced
 # that — a core bump landed without it once already (see git history), silently leaving new
@@ -10,6 +11,10 @@
 # Usage: tools/brand/verify_mptv_brand.sh
 set -euo pipefail
 cd "$(dirname "$0")/../.."
+
+# The in-app logo drawables (wordmark, marks, notification icon) that override core's OwnTV ones in
+# both apps. Generated from a font the repo ships, so a plain re-run must reproduce them exactly.
+python3 tools/brand/render_mptv_marks.py --check
 
 # "<versions.toml path>:<module res dir>" pairs. Add an entry here for any future module that
 # vendors its own :core pin and needs MPTV's OwnTV -> MPTV brand overrides.
