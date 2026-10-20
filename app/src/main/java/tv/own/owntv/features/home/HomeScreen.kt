@@ -165,6 +165,16 @@ fun HomeScreen(
     val sportsCards = if (HomeRow.LIVE_SPORTS in state.config.visibleOrder) {
         sportsVm.homeRow.collectAsStateWithLifecycle().value
     } else emptyList()
+    // The row's featured game (its hero) and the profile's reminders for its Reminder tag, on the same terms.
+    val sportsFeatured = if (HomeRow.LIVE_SPORTS in state.config.visibleOrder) {
+        sportsVm.featuredMatch.collectAsStateWithLifecycle().value
+    } else null
+    val sportsReminders = if (HomeRow.LIVE_SPORTS in state.config.visibleOrder) {
+        sportsVm.reminderSet.collectAsStateWithLifecycle().value
+    } else emptySet()
+    // What the row has to show: its cards plus the featured game, which can be there hours before any card.
+    val sportsCount = sportsCards.size + (if (sportsFeatured != null) 1 else 0)
+    val noChannelForReminderMessage = stringResource(R.string.sports_featured_no_channel)
     val trendingUnavailableMessage = stringResource(R.string.home_trending_unavailable)
     val heroPreviewEngine = koinInject<HeroPreviewEngine>()
     val engineState by heroPreviewEngine.state.collectAsStateWithLifecycle()
@@ -196,10 +206,10 @@ fun HomeScreen(
     var focusedHeroIndex by remember { mutableStateOf(-1) }
     val orderedRows = state.config.visibleOrder
     val heroVisible = HomeRow.HERO in orderedRows
-    val hasNonHeroContent = orderedRows.any { it != HomeRow.HERO && rowHasData(it, state, sportsCards.size) }
+    val hasNonHeroContent = orderedRows.any { it != HomeRow.HERO && rowHasData(it, state, sportsCount) }
     val showHeroFallback = heroVisible && state.heroItems.isEmpty() && !hasNonHeroContent
-    val renderRows = orderedRows.filter { rowCanRender(it, state, showHeroFallback, sportsCards.size) }
-    val firstDataRow = renderRows.firstOrNull { it != HomeRow.HERO && rowHasData(it, state, sportsCards.size) }
+    val renderRows = orderedRows.filter { rowCanRender(it, state, showHeroFallback, sportsCount) }
+    val firstDataRow = renderRows.firstOrNull { it != HomeRow.HERO && rowHasData(it, state, sportsCount) }
     val showAllHiddenState = orderedRows.isEmpty()
     val showEmptyState = orderedRows.isNotEmpty() && renderRows.isEmpty()
     val fullBleed = renderRows.firstOrNull() == HomeRow.TRENDING &&
@@ -514,9 +524,13 @@ fun HomeScreen(
 
                         HomeRow.LIVE_SPORTS -> tv.own.owntv.features.sports.LiveSportsRow(
                             cards = sportsCards,
+                            featured = sportsFeatured,
+                            reminded = sportsFeatured?.let { tv.own.owntv.features.sports.SportsViewModel.reminderKey(it.startMs, it.title) in sportsReminders } ?: false,
                             config = sportsVm.sportsConfig.collectAsStateWithLifecycle().value,
                             start = contentStart,
                             onOpenMatch = onOpenMatch,
+                            // No channel found for the game yet: say so instead of silently setting nothing.
+                            onRemind = { m -> sportsVm.remindFeatured(m) { ok -> if (!ok) trendingToast.show(noChannelForReminderMessage) } },
                             onFocus = onNonHeroFocused,
                             firstItemFocusRequester = firstItemFocusRequester,
                             track = track,

@@ -170,6 +170,32 @@ class SportsViewModel(
         )
     }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
+    /**
+     * Home's featured game, the hero above the row's cards: the live followed match, else the next
+     * kick-off within twelve hours ([FeaturedMatch]). Same board, same demand, same delay as [homeRow].
+     */
+    val featuredMatch: StateFlow<Match?> = flow {
+        delay(HOME_ROW_DELAY_MS)
+        emitAll(combine(repository.observe(Demand.HomeRow), config) { b, c -> FeaturedMatch.pick(b, c, System.currentTimeMillis()) })
+    }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
+    /** The profile's reminder keys ([reminderKey]) alone, for the hero's Reminder tag — reading [hub] would ask for scores. */
+    val reminderSet: StateFlow<Set<String>> = reminderKeys.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptySet())
+
+    /**
+     * "Remind me" on Home's featured game. The hub's Remind me wants channels already found, and Home has
+     * no match page to have found them — so this runs the match page's own search once when nothing is
+     * known yet, then sets the best channel's reminder. [onDone] gets false when no channel turned up.
+     */
+    fun remindFeatured(match: Match, onDone: (Boolean) -> Unit = {}) = viewModelScope.launch {
+        val c = config.first()
+        val found = watchReader.found(match) { SportsMemory.rememberedFor(c, it) }
+            ?: watchReader.watchFor(listOf(match)) { SportsMemory.rememberedFor(c, it) }[match.key].orEmpty()
+        val shown = WatchList.of(found, WatchFilter.from(c, Locale.getDefault().language, liveSources.value)).shown
+        val ok = shown.isNotEmpty() && alerts.remind(settings.activeProfileIdNow(), match, shown, c.reminderLeadMinutes)
+        onDone(ok)
+    }
+
     // --- The match page ------------------------------------------------------------------------------
 
     private val openMatch = MutableStateFlow<Match?>(null)

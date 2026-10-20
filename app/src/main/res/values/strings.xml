@@ -104,4 +104,16 @@
          when every connection is in use elsewhere (ConnectionLimitNotices). Core already says this
          for a panel that answers HTTP 458; most don't, so the account is asked after a failure. -->
     <string name="player_connection_limit_reached">Connection limit reached: %1$d of %2$d in use. This account is playing on other devices — stop one of them, then press Retry.</string>
+
+    <!-- Home → Sports row → the featured game: a hero card above the row's match cards for the live
+         followed match, else the next one kicking off within 12 hours (see FeaturedMatch). "Live now",
+         "Find channels", "Remind me" and the Reminder tag are :core's own (sports_live_now,
+         sports_find_channels, content_remind_me, sports_reminder_set) and are reused, not redefined. -->
+    <string name="sports_featured_eyebrow">Tonight\'s game</string>
+    <string name="sports_featured_eyebrow_next">Next game</string>
+    <string name="sports_featured_kickoff_in">Kicks off in %1$s · %2$s</string>
+    <string name="sports_featured_starting_now">Starting now · %1$s</string>
+    <string name="sports_featured_hours_minutes">%1$dh %2$dm</string>
+    <string name="sports_featured_minutes">%1$dm</string>
+    <string name="sports_featured_no_channel">No channel found for this game yet — open it to search</string>
 </resources>
