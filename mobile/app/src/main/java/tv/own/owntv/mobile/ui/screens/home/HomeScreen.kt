@@ -178,9 +178,13 @@ fun HomeScreen(
     // Computed once per feed: hasContent walks each row's loaded items.
     // The Sports row's matches, asked for only while the row is switched on (no request otherwise).
     val sportsCards = if (HomeRow.LIVE_SPORTS in state.config.visibleOrder) sportsVm.homeRow.collectAsStateWithLifecycle().value else emptyList()
+    // The row's featured game (its hero) and the profile's reminders for its Reminder tag, on the same terms.
+    val sportsFeatured = if (HomeRow.LIVE_SPORTS in state.config.visibleOrder) sportsVm.featuredMatch.collectAsStateWithLifecycle().value else null
+    val sportsReminders = if (HomeRow.LIVE_SPORTS in state.config.visibleOrder) sportsVm.reminderSet.collectAsStateWithLifecycle().value else emptySet()
     val sportsConfig by sportsVm.sportsConfig.collectAsStateWithLifecycle()
-    val rows = remember(state, sportsCards.isEmpty()) {
-        state.config.visibleOrder.filter { if (it == HomeRow.LIVE_SPORTS) sportsCards.isNotEmpty() else state.hasContent(it) }
+    // The Sports row shows with its cards or with a featured game, which can be there hours before any card.
+    val rows = remember(state, sportsCards.isEmpty(), sportsFeatured?.key) {
+        state.config.visibleOrder.filter { if (it == HomeRow.LIVE_SPORTS) sportsCards.isNotEmpty() || sportsFeatured != null else state.hasContent(it) }
     }
 
     // The television's three states, in its order. None offers "add a playlist": a user with none is in
@@ -368,8 +372,28 @@ fun HomeScreen(
                             stringResource(R.string.sports_title), style = stageText(17f, 800), color = LocalStagePalette.current.text,
                             modifier = Modifier.padding(start = 14.dp, bottom = 8.dp),
                         )
-                        LazyRow(contentPadding = PaddingValues(horizontal = 14.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                            items(sportsCards, key = { it.key }) { m ->
+                        // The featured game's hero first (the live followed match, else the next within
+                        // twelve hours), then the cards — without it, so it is not shown twice.
+                        sportsFeatured?.let { featured ->
+                            tv.own.owntv.mobile.ui.screens.sports.FeaturedMatchHero(
+                                featured, config = sportsConfig, now = now,
+                                reminded = tv.own.owntv.mobile.ui.screens.sports.SportsViewModel.reminderKey(featured.startMs, featured.title) in sportsReminders,
+                                onOpenMatch = { onOpenMatch(featured) },
+                                // No channel found for the game yet: say so instead of silently setting nothing.
+                                onRemind = {
+                                    sportsVm.remindFeatured(featured) { ok ->
+                                        if (!ok) Toast.makeText(context, R.string.sports_featured_no_channel, Toast.LENGTH_SHORT).show()
+                                    }
+                                },
+                            )
+                        }
+                        val rest = if (sportsFeatured == null) sportsCards else sportsCards.filter { it.key != sportsFeatured.key }
+                        if (rest.isNotEmpty()) LazyRow(
+                            contentPadding = PaddingValues(horizontal = 14.dp),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            modifier = Modifier.padding(top = if (sportsFeatured != null) 10.dp else 0.dp),
+                        ) {
+                            items(rest, key = { it.key }) { m ->
                                 tv.own.owntv.mobile.ui.screens.sports.MatchCard(
                                     m, featured = false, config = sportsConfig, reminded = false,
                                     onClick = { onOpenMatch(m) }, onLongClick = { onOpenMatch(m) },

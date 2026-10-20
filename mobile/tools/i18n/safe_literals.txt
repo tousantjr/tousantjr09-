@@ -743,6 +743,9 @@
 2	log	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/customize/CustomizeItemsViewModel.kt	EPISODE not applicable to category items
 2	empty	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/customize/CustomizeSpanUi.kt	\0
 1	empty	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/customize/CustomizeViewModel.kt	\0
+1	empty	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/FeaturedMatch.kt	\0
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/FeaturedMatchHero.kt	${scoreText(m.sport, home.score)} – ${scoreText(m.sport, away.score)}
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/FeaturedMatchHero.kt	– : –
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsCards.kt	${scoreText(m.sport, home.score)} – ${scoreText(m.sport, away.score)}
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsCards.kt	–
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsCards.kt	– : –
