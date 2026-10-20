@@ -121,4 +121,61 @@
          after a short dwell (TrendingTrailerPreview). App-level, its own DataStore (HomeTrailerSettings). -->
     <string name="settings_home_play_trailers">Play trailers on Home</string>
     <string name="settings_home_play_trailers_description">Play the focused title\'s trailer, muted, in the Home hero after a moment</string>
+
+    <!-- Settings → Diagnostics, the Diagnostic Center (DiagnosticsScreen / DiagnosticsViewModel):
+         fixes under the checks (re-sync a playlist or the guide, switch the Movies & Series engine),
+         the app/device lines, quick fixes, and a report to show, copy or share. Counts reuse core's
+         own sync-status plurals (sync_count_channels/movies/series/epg, sports_hub_matches); "Re-sync",
+         "Check for updates", "Share", "Done" and "Restart now" are core's own words, reused. -->
+    <string name="diagnostics_resync_playlist">Re-sync this playlist</string>
+    <string name="diagnostics_resync_playlist_help">Fetches %1$s again from your provider — the same as Re-sync in Manage Sources. Favorites, history and resume positions are kept.</string>
+    <string name="diagnostics_playlist_never_synced">Never synced</string>
+    <string name="diagnostics_resync_epg">Re-sync TV guide</string>
+    <plurals name="diagnostics_epg_feeds">
+        <item quantity="one">%1$d guide feed</item>
+        <item quantity="other">%1$d guide feeds</item>
+    </plurals>
+    <string name="diagnostics_epg_resync_playlist_only">Your guide comes with the playlist — use Re-sync this playlist above to refresh it</string>
+    <string name="diagnostics_sports_title">Sports scores</string>
+    <plurals name="diagnostics_sports_failing">
+        <item quantity="one">%1$d score feed couldn\'t load — some scores may be missing</item>
+        <item quantity="other">%1$d score feeds couldn\'t load — some scores may be missing</item>
+    </plurals>
+    <string name="diagnostics_sports_none">No scores loaded yet — open Sports to load them</string>
+    <string name="diagnostics_app_heading">Player, app &amp; device</string>
+    <string name="diagnostics_player_title">Movies &amp; Series player</string>
+    <string name="diagnostics_player_help">Which engine movies and series start on. If a title won\'t play or stutters, switching to the other engine is the first thing to try — the same choice as in Video Player settings.</string>
+    <string name="diagnostics_player_switch_to">Switch to %1$s</string>
+    <string name="diagnostics_app_title">App version</string>
+    <string name="diagnostics_app_version">Version %1$s (build %2$d)</string>
+    <string name="diagnostics_app_help">The version you have. Check for updates looks for a newer release and installs it from here.</string>
+    <string name="diagnostics_device_title">Device</string>
+    <string name="diagnostics_device_line">%1$s · Android %2$s (API %3$d)</string>
+    <string name="diagnostics_network_wifi">Wi-Fi</string>
+    <string name="diagnostics_network_ethernet">Ethernet</string>
+    <string name="diagnostics_network_cellular">Mobile data</string>
+    <string name="diagnostics_network_other">Other network</string>
+    <string name="diagnostics_network_none">No network</string>
+    <string name="diagnostics_quick_fixes">Quick fixes</string>
+    <string name="diagnostics_clear_image_cache">Clear image cache</string>
+    <string name="diagnostics_clear_image_cache_desc">Drops cached posters and backdrops — they load again as you browse. Fixes wrong or missing artwork.</string>
+    <string name="diagnostics_cache_cleared">Image cache cleared</string>
+    <string name="diagnostics_open_app_settings">Open system app settings</string>
+    <string name="diagnostics_open_app_settings_desc">The system\'s page for this app: storage, permissions and Force stop</string>
+    <string name="diagnostics_restart_app">Restart app</string>
+    <string name="diagnostics_restart_app_desc">Closes the app fully and opens it again — the fix for most things that only stop working after a while</string>
+    <string name="diagnostics_report_heading">Report</string>
+    <string name="diagnostics_show_report">Show report</string>
+    <string name="diagnostics_show_report_desc">Everything the checks found, as text you can read, copy or share with your provider or support</string>
+    <string name="diagnostics_copy_report">Copy report</string>
+    <string name="diagnostics_copy_report_desc">Copies the report to the clipboard — no passwords or usernames are included</string>
+    <string name="diagnostics_share_report">Share report</string>
+    <string name="diagnostics_share_report_desc">Sends the report to another app — no passwords or usernames are included</string>
+    <string name="diagnostics_report_copied">Report copied</string>
+    <string name="diagnostics_report_title">Diagnostics report</string>
+    <!-- One "label: value" line of the text report; the colon and its spacing are the locale's. -->
+    <string name="diagnostics_report_pair">%1$s: %2$s</string>
+    <string name="diagnostics_report_none">Run checks first</string>
+    <string name="diagnostics_resync_queued">Re-sync started</string>
+    <string name="diagnostics_share_unavailable">Nothing on this device can receive the report — copy it instead</string>
 </resources>
