@@ -8,6 +8,9 @@ name: Android CI (Mobile)
 # Tags: the TV app releases from v* tags, the phone app from mobile-v* tags (mobile-v1.2.0 -> 1.2.0),
 # so one tag never builds both. Phone releases are published as pre-releases (never "latest") because the TV
 # app's in-app updater reads this repository's "latest" release — that must stay the TV APK.
+# Because of that, GitHub's own /releases/latest/ link can never serve the phone, so every phone release
+# also refreshes a rolling pre-release at the fixed tag `mobile-latest` (the last step) whose APK keeps a
+# fixed name — the phone's equivalent of releases/latest/download/MPTV.apk.
 #
 # Core and libmpv resolve from OwnTV's public Maven repository (see mobile/settings.gradle.kts), so
 # unlike the TV build no GPR_TOKEN is needed here.
@@ -266,3 +269,43 @@ jobs:
           # and a pre-release can never be latest.
           make_latest: false
           prerelease: true
+
+      # The phone's permanent download link. GitHub's /releases/latest/ skips pre-releases and every
+      # phone release must be one (see the step above), so without this there is no evergreen URL for
+      # the phone the way the TV app has releases/latest/download/MPTV.apk — a Downloader code made from
+      # a versioned URL goes stale on the next release. So after each mobile-v* release this recreates a
+      # pre-release at the fixed tag `mobile-latest`, pointing at this commit and carrying this release's
+      # APKs under fixed names, so
+      #   https://github.com/<owner>/<repo>/releases/download/mobile-latest/MPTV-Mobile.apk
+      # always resolves to the newest phone build. Delete-then-create is what moves the tag to the new
+      # commit (uploading over the old release would leave the tag on the old one); the seconds of 404
+      # in between are fine for a manual install link. `mobile-latest` does not match the mobile-v* tag
+      # trigger, and nothing done with GITHUB_TOKEN starts a workflow anyway, so this cannot retrigger
+      # the build.
+      - name: Refresh the rolling mobile-latest release
+        if: env.IS_TAG == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION_TAG: ${{ github.ref_name }}
+          X86_OUT: MPTV-Mobile-x86_64-v${{ steps.ver.outputs.name }}.apk
+        run: |
+          mkdir -p dist-latest
+          cp "dist/$APK_OUT" dist-latest/MPTV-Mobile.apk
+          if [ -f "dist/$X86_OUT" ]; then cp "dist/$X86_OUT" dist-latest/MPTV-Mobile-x86_64.apk; fi
+          {
+            echo "Always the newest phone release — currently **$VERSION_TAG**, with the same APKs under fixed names, so this link never changes:"
+            echo
+            echo "    https://github.com/$GITHUB_REPOSITORY/releases/download/mobile-latest/MPTV-Mobile.apk"
+            echo
+            cat dist/RELEASE_NOTES.md
+          } > dist-latest/NOTES.md
+          gh release delete mobile-latest --yes --cleanup-tag || echo "No previous mobile-latest release to remove."
+          # --cleanup-tag only runs when the release existed; make sure a stray tag is gone too, or
+          # `gh release create` would silently reuse it and keep pointing at the old commit.
+          gh api -X DELETE "repos/$GITHUB_REPOSITORY/git/refs/tags/mobile-latest" >/dev/null 2>&1 || true
+          gh release create mobile-latest dist-latest/*.apk \
+            --target "$GITHUB_SHA" \
+            --title "MPTV Mobile (latest)" \
+            --notes-file dist-latest/NOTES.md \
+            --prerelease --latest=false
+          echo "mobile-latest now points at $VERSION_TAG ($GITHUB_SHA)."

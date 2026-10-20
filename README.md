@@ -39,7 +39,8 @@ launcher, D-pad first.
 
 > ### 📱 On a phone or tablet?
 > **MPTV Mobile** lives in [`mobile/`](mobile/README.md) — the same engine with a touch interface,
-> released from `mobile-v*` tags as `MPTV-Mobile-vX.Y.Z.apk`.
+> released from `mobile-v*` tags as `MPTV-Mobile-vX.Y.Z.apk`. Permanent link to the newest phone build:
+> `https://github.com/tousantjr/tousantjr09-/releases/download/mobile-latest/MPTV-Mobile.apk`
 
 ---
 

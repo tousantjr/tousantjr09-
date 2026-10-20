@@ -194,9 +194,18 @@ this repository's [Releases page](https://github.com/tousantjr/tousantjr09-/rele
 Each release also carries an `x86_64` APK for emulators. Phone releases are cut from `mobile-v*` tags
 (e.g. `mobile-v1.0.0`); `v*` tags release the TV app.
 
+This link always points at the newest phone build — the phone's equivalent of the TV app's
+`releases/latest/download/MPTV.apk`. CI refreshes the `mobile-latest` release on every `mobile-v*`
+tag, so a Downloader code made from it (e.g. at go.aftvnews.com) never goes stale:
+
+```
+https://github.com/tousantjr/tousantjr09-/releases/download/mobile-latest/MPTV-Mobile.apk
+```
+
 There is **no in-app update check** in this build: core's updater reads a repository's single
-"latest" release, and here that is the TV app, which a phone cannot install. Download new versions
-from the Releases page by hand.
+"latest" release, and here that is the TV app, which a phone cannot install (which is also why the
+link above needs its own rolling release instead of GitHub's `latest`). Download new versions from
+the link above or the Releases page by hand.
 
 ---
 
