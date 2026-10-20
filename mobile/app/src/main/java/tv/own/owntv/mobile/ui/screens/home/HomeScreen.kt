@@ -181,6 +181,8 @@ fun HomeScreen(
     // The row's featured game (its hero) and the profile's reminders for its Reminder tag, on the same terms.
     val sportsFeatured = if (HomeRow.LIVE_SPORTS in state.config.visibleOrder) sportsVm.featuredMatch.collectAsStateWithLifecycle().value else null
     val sportsReminders = if (HomeRow.LIVE_SPORTS in state.config.visibleOrder) sportsVm.reminderSet.collectAsStateWithLifecycle().value else emptySet()
+    // The featured game's betting line (Settings → Sports → Betting odds; null while that is off).
+    val sportsOdds = if (HomeRow.LIVE_SPORTS in state.config.visibleOrder) sportsVm.featuredOdds.collectAsStateWithLifecycle().value else null
     val sportsConfig by sportsVm.sportsConfig.collectAsStateWithLifecycle()
     // The Sports row shows with its cards or with a featured game, which can be there hours before any card.
     val rows = remember(state, sportsCards.isEmpty(), sportsFeatured?.key) {
@@ -378,6 +380,7 @@ fun HomeScreen(
                             tv.own.owntv.mobile.ui.screens.sports.FeaturedMatchHero(
                                 featured, config = sportsConfig, now = now,
                                 reminded = tv.own.owntv.mobile.ui.screens.sports.SportsViewModel.reminderKey(featured.startMs, featured.title) in sportsReminders,
+                                odds = sportsOdds,
                                 onOpenMatch = { onOpenMatch(featured) },
                                 // No channel found for the game yet: say so instead of silently setting nothing.
                                 onRemind = {

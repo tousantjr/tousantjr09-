@@ -244,6 +244,10 @@ private val LEAF_ROWS: List<Pair<SettingsLeaf, Int>> = listOf(
     SettingsLeaf.DIAGNOSTICS to R.string.diagnostics_show_report,
     SettingsLeaf.DIAGNOSTICS to R.string.diagnostics_copy_report,
     SettingsLeaf.DIAGNOSTICS to R.string.diagnostics_share_report,
+    SettingsLeaf.SPORTS to R.string.sports_odds_show,
+    SettingsLeaf.SPORTS to R.string.sports_odds_source,
+    SettingsLeaf.SPORTS to R.string.sports_odds_api_key,
+    SettingsLeaf.SPORTS to R.string.sports_odds_bookmaker,
 )
 
 /** Quick: the pinned rows, in the pinned order, each drawn as it is on its own page. */

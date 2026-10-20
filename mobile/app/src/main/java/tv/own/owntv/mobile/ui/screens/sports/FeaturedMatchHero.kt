@@ -29,6 +29,7 @@ import tv.own.owntv.core.sports.model.Match
 import tv.own.owntv.core.sports.model.MatchState
 import tv.own.owntv.mobile.R
 import tv.own.owntv.mobile.ui.components.MobileIcons
+import tv.own.owntv.mobile.ui.screens.sports.odds.OddsLine
 import tv.own.owntv.mobile.ui.stage.LocalStagePalette
 import tv.own.owntv.mobile.ui.stage.StageButton
 import tv.own.owntv.mobile.ui.stage.StageButtonStyle
@@ -53,6 +54,8 @@ internal fun FeaturedMatchHero(
     onOpenMatch: () -> Unit,
     onRemind: () -> Unit,
     modifier: Modifier = Modifier,
+    /** The game's betting line (Settings → Sports → Betting odds); null while off or when there is none. */
+    odds: OddsLine? = null,
 ) {
     val palette = LocalStagePalette.current
     val accent = stageAccent.accent
@@ -83,6 +86,11 @@ internal fun FeaturedMatchHero(
         Spacer(Modifier.height(14.dp))
         Matchup(m, config.spoilerFree)
         Spacer(Modifier.height(12.dp))
+        // The line, in one row — "DraftKings · PHI -6.5 · O/U 47.5 · 61% PHI" — only when asked for in Settings.
+        if (odds != null) {
+            Text(oddsSummary(odds, m), style = stageText(11.5f, 600), color = palette.muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Spacer(Modifier.height(8.dp))
+        }
         val status = when {
             upcoming -> stringResource(R.string.sports_featured_kickoff_in, countdown(m.startMs, now), timeText(m.startMs))
             m.state == MatchState.PRE -> stringResource(R.string.sports_featured_starting_now, timeText(m.startMs))

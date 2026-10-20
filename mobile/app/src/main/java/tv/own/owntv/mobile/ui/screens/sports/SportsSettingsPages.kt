@@ -43,6 +43,10 @@ import tv.own.owntv.mobile.ui.screens.settings.LocalSettingsNav
 import tv.own.owntv.mobile.ui.screens.settings.PageNote
 import tv.own.owntv.mobile.ui.screens.settings.SettingsLeaf
 import tv.own.owntv.mobile.ui.screens.settings.SettingsPage
+import tv.own.owntv.mobile.ui.screens.sports.odds.Bookmaker
+import tv.own.owntv.mobile.ui.screens.sports.odds.OddsConfig
+import tv.own.owntv.mobile.ui.screens.sports.odds.OddsRepository
+import tv.own.owntv.mobile.ui.screens.sports.odds.OddsSource
 import tv.own.owntv.mobile.ui.stage.StageMenuItem
 import tv.own.owntv.mobile.ui.stage.StageRowValue
 import tv.own.owntv.mobile.ui.stage.StageSearchField
@@ -52,6 +56,7 @@ import tv.own.owntv.mobile.ui.stage.StageSettingRow
 import tv.own.owntv.mobile.ui.stage.StageSheetHeader
 import tv.own.owntv.mobile.ui.stage.StageStepper
 import tv.own.owntv.mobile.ui.stage.StageSwitch
+import tv.own.owntv.mobile.ui.stage.StageTextRow
 
 /** Commentary languages offered (ISO 639-1): the ones provider prefixes and names carry — the TV's list. */
 private val LANGUAGES = listOf("DE", "EN", "FR", "ES", "IT", "TR", "AR", "PT", "NL", "PL", "RU", "EL", "RO", "SV", "NO", "DA", "FI", "HU", "CS", "UR", "HI", "BN")
@@ -60,7 +65,7 @@ private val LANGUAGES = listOf("DE", "EN", "FR", "ES", "IT", "TR", "AR", "PT", "
 private val COUNTRIES = listOf("DE", "AT", "CH", "UK", "US", "FR", "BE", "ES", "IT", "TR", "AR", "PT", "BR", "NL", "PL", "IN", "PK", "SA", "AE", "QA", "CA", "AU", "IE", "SE", "NO", "DK")
 
 /** A choice list opened from the main page as a sheet. */
-private enum class CodeSheet { LANGUAGES, COUNTRIES, PLAYLISTS, REMEMBERED }
+private enum class CodeSheet { LANGUAGES, COUNTRIES, PLAYLISTS, REMEMBERED, BOOKMAKER }
 
 /** One element of a stepper's cycle, moved by [d]. */
 private fun <T> List<T>.step(current: T, d: Int): T = this[(indexOf(current).coerceAtLeast(0) + d).mod(size)]
@@ -76,6 +81,8 @@ fun SportsSettingsPage(vm: SportsSettingsViewModel = koinViewModel()) {
     val playlists by vm.playlists.collectAsStateWithLifecycle()
     val rebuilding by vm.rebuilding.collectAsStateWithLifecycle()
     val rebuiltAt by vm.rebuiltAt.collectAsStateWithLifecycle()
+    val o by vm.oddsConfig.collectAsStateWithLifecycle()
+    val oddsStatus by vm.oddsStatus.collectAsStateWithLifecycle()
     val nav = LocalSettingsNav.current
     var sheet by remember { mutableStateOf<CodeSheet?>(null) }
     val sep = stringResource(R.string.content_epg_bits_separator)
@@ -165,6 +172,42 @@ fun SportsSettingsPage(vm: SportsSettingsViewModel = koinViewModel()) {
                 }
             }
         }
+        item(key = "odds") {
+            Column {
+                // Betting odds: a read-only line beside the score, off by default. App-level (OddsSettings),
+                // not the profile's: the key is this device's, and so is the quota it spends.
+                StageSectionHead(stringResource(R.string.sports_odds_title))
+                SwitchRow(MobileIcons.Trend, stringResource(R.string.sports_odds_show), stringResource(R.string.sports_odds_show_description), o.enabled) {
+                    vm.setOddsEnabled(!o.enabled)
+                }
+                StageSettingRow(stringResource(R.string.sports_odds_source), icon = MobileIcons.Layers, subtitle = stringResource(R.string.sports_odds_source_description)) {
+                    StageSegmented(
+                        listOf(stringResource(R.string.sports_odds_source_espn), stringResource(R.string.sports_odds_source_odds_api)),
+                        o.source.ordinal,
+                        { i -> vm.setOddsSource(OddsSource.entries[i]) },
+                    )
+                }
+                // Typed once and saved from its sheet; with nothing typed and a key built in, the row says so
+                // and never shows that key.
+                StageTextRow(
+                    icon = MobileIcons.Lock, label = stringResource(R.string.sports_odds_api_key), value = o.apiKey, onSave = vm::setOddsApiKey,
+                    placeholder = stringResource(if (o.usesBuiltInKey) R.string.sports_odds_api_key_built_in else R.string.sports_odds_api_key_hint),
+                    password = true,
+                )
+                val oddsApi = o.source == OddsSource.ODDS_API
+                StageSettingRow(
+                    stringResource(R.string.sports_odds_bookmaker), icon = MobileIcons.FormatListBulleted,
+                    subtitle = stringResource(R.string.sports_odds_bookmaker_description),
+                    onClick = if (oddsApi) ({ sheet = CodeSheet.BOOKMAKER }) else null,
+                ) {
+                    StageRowValue(
+                        bookmakerLabel(o.bookmaker),
+                        if (oddsApi) tv.own.owntv.mobile.ui.stage.StageChevron.FORWARD else tv.own.owntv.mobile.ui.stage.StageChevron.NONE,
+                    )
+                }
+                StageSettingRow(stringResource(R.string.sports_odds_status), icon = MobileIcons.Info, subtitle = oddsStatusText(o, oddsStatus))
+            }
+        }
         item(key = "data") {
             Column {
                 StageSectionHead(stringResource(R.string.sports_settings_data))
@@ -208,6 +251,12 @@ fun SportsSettingsPage(vm: SportsSettingsViewModel = koinViewModel()) {
                 }
             }
         }
+        CodeSheet.BOOKMAKER -> MobileBottomSheet(onDismissRequest = { sheet = null }) {
+            StageSheetHeader(stringResource(R.string.sports_odds_bookmaker))
+            Bookmaker.entries.forEach { b ->
+                StageMenuItem(bookmakerLabel(b), { vm.setOddsBookmaker(b); sheet = null }, checked = o.bookmaker == b)
+            }
+        }
         CodeSheet.REMEMBERED -> MobileBottomSheet(onDismissRequest = { sheet = null }) {
             StageSheetHeader(stringResource(R.string.sports_remembered_channels))
             c.rememberedChannels.forEach { (key, ch) ->
@@ -226,6 +275,42 @@ fun SportsSettingsPage(vm: SportsSettingsViewModel = koinViewModel()) {
 @Composable
 private fun SwitchRow(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String, line: String?, on: Boolean, onClick: () -> Unit) {
     StageSettingRow(title, icon = icon, subtitle = line, onClick = onClick) { StageSwitch(on) }
+}
+
+/** A bookmaker as the Bookmaker row and its sheet name it. */
+@Composable
+private fun bookmakerLabel(b: Bookmaker): String = stringResource(
+    when (b) {
+        Bookmaker.DRAFTKINGS -> R.string.sports_odds_bookmaker_draftkings
+        Bookmaker.FANDUEL -> R.string.sports_odds_bookmaker_fanduel
+        Bookmaker.BETMGM -> R.string.sports_odds_bookmaker_betmgm
+        Bookmaker.CAESARS -> R.string.sports_odds_bookmaker_caesars
+    },
+)
+
+/** The Status row: off, or the source and its key, the requests left, and what the last fetch came to. */
+@Composable
+private fun oddsStatusText(o: OddsConfig, status: OddsRepository.Status): String {
+    if (!o.enabled) return stringResource(R.string.common_off)
+    val remaining = o.requestsRemaining
+    val base = when {
+        o.source == OddsSource.ESPN -> stringResource(R.string.sports_odds_status_espn)
+        !o.hasKey -> return stringResource(R.string.sports_odds_status_no_key)
+        o.exhaustedDay == java.time.LocalDate.now().toString() -> return stringResource(R.string.sports_odds_status_exhausted)
+        remaining != null -> pluralStringResource(R.plurals.sports_odds_requests_left, remaining, remaining)
+        else -> stringResource(R.string.sports_odds_status_ready)
+    }
+    val last = when (status) {
+        is OddsRepository.Status.Shown -> stringResource(R.string.sports_odds_by, status.bookmaker)
+        OddsRepository.Status.NoLine -> stringResource(R.string.sports_odds_status_no_line)
+        OddsRepository.Status.NotCovered -> stringResource(R.string.sports_odds_status_not_covered)
+        OddsRepository.Status.KeyRejected -> stringResource(R.string.sports_odds_status_key_rejected)
+        OddsRepository.Status.Unreachable -> stringResource(R.string.sports_odds_status_unreachable)
+        OddsRepository.Status.Exhausted -> stringResource(R.string.sports_odds_status_exhausted)
+        is OddsRepository.Status.HttpError -> stringResource(R.string.sports_odds_status_http, status.code)
+        OddsRepository.Status.Idle, OddsRepository.Status.NoKey -> null
+    }
+    return listOfNotNull(base, last).joinToString(stringResource(R.string.content_epg_bits_separator))
 }
 
 @Composable

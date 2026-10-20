@@ -89,6 +89,7 @@ fun SportsMatchScreen(
 ) {
     LaunchedEffect(matchKey) { vm.matchOf(matchKey)?.let(vm::open) }
     val page by vm.matchPage.collectAsStateWithLifecycle()
+    val odds by vm.matchOdds.collectAsStateWithLifecycle()
     val state = page ?: return
     val m = state.match
     var tab by rememberSaveable { mutableStateOf(MatchTab.WATCH) }
@@ -130,6 +131,9 @@ fun SportsMatchScreen(
         }
         item(key = "score") {
             ScoreBox(m, state.summary, hidden = state.config.spoilerFree && !revealed, onReveal = { revealed = true })
+            // The betting line (Settings → Sports → Betting odds), under the score; nothing while off. Inside
+            // this item, so the count of items above the channel list (rowsStart) stays as it is.
+            odds?.let { OddsBlock(it, m) }
             // The live score card: only on the phone, while the match is still to be decided.
             if (MatchAlertHost.backgroundAllowed && state.config.alerts.liveCard && (m.isLive || m.state == MatchState.PRE)) {
                 StageTool(
