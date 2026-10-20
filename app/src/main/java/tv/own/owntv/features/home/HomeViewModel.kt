@@ -142,9 +142,14 @@ class HomeViewModel(
     private val userDataWriter: tv.own.owntv.core.backup.UserDataWriter,
     private val homeContentFilter: HomeContentFilterSettings,
     private val subscriptionExpiry: SubscriptionExpiry,
+    private val homeTrailers: HomeTrailerSettings,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
+
+    /** Settings › Layout › Home › Play trailers on Home: the focused Trending title's trailer in the hero. */
+    val trailersOnHome: StateFlow<Boolean> = homeTrailers.playTrailers(settings.heroPreviewDefault)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
 
     /**
      * The soonest-ending Xtream subscription among this profile's playlists, once it is within a

@@ -116,4 +116,9 @@
     <string name="sports_featured_hours_minutes">%1$dh %2$dm</string>
     <string name="sports_featured_minutes">%1$dm</string>
     <string name="sports_featured_no_channel">No channel found for this game yet — open it to search</string>
+
+    <!-- Settings → Layout → Home: the focused Trending title's trailer plays, muted, inside the hero
+         after a short dwell (TrendingTrailerPreview). App-level, its own DataStore (HomeTrailerSettings). -->
+    <string name="settings_home_play_trailers">Play trailers on Home</string>
+    <string name="settings_home_play_trailers_description">Play the focused title\'s trailer, muted, in the Home hero after a moment</string>
 </resources>

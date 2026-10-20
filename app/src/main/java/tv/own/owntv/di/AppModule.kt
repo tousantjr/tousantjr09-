@@ -67,6 +67,9 @@ val appModule = module {
     // Home's "Hide adult categories" toggle (Settings → Layout → Home): app-level, not per-profile,
     // and additive to :core's own kids-profile category hiding — see HomeContentFilterSettings.
     single { HomeContentFilterSettings(androidContext()) }
+    // Home's "Play trailers on Home" toggle (Settings → Layout → Home): app-level, its own DataStore for
+    // the same reason — see HomeTrailerSettings.
+    single { tv.own.owntv.features.home.HomeTrailerSettings(androidContext()) }
     // Home's subscription notice: asks each Xtream playlist for its expiry and caches the answer for
     // hours, so one instance for the process — see SubscriptionExpiry.
     single { tv.own.owntv.features.home.SubscriptionExpiry(get()) }

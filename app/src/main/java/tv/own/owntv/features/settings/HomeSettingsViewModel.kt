@@ -39,6 +39,7 @@ class HomeSettingsViewModel(
     private val trendingActivity: TrendingActivityTracker,
     private val syncScheduler: CatalogSyncScheduler,
     private val homeContentFilter: tv.own.owntv.features.home.HomeContentFilterSettings,
+    private val homeTrailers: tv.own.owntv.features.home.HomeTrailerSettings,
 ) : ViewModel() {
 
     /** "Hide adult categories from Home" (Trending): app-level, every profile, default on. */
@@ -47,6 +48,14 @@ class HomeSettingsViewModel(
 
     fun setHideAdultCategoriesHome(hidden: Boolean) {
         viewModelScope.launch { homeContentFilter.setHideAdultCategories(hidden) }
+    }
+
+    /** "Play trailers on Home": the focused Trending title's trailer, muted, in the hero. Off by default on a low-RAM box. */
+    val playTrailersOnHome: StateFlow<Boolean> = homeTrailers.playTrailers(settings.heroPreviewDefault)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), settings.heroPreviewDefault)
+
+    fun setPlayTrailersOnHome(enabled: Boolean) {
+        viewModelScope.launch { homeTrailers.setPlayTrailers(enabled) }
     }
 
     val config: StateFlow<HomeConfig> = settings.activeProfileId

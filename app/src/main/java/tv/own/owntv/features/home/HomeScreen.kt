@@ -130,6 +130,9 @@ private val CompactHeroHeight = 228.mpx - RowGap
 /** Where the rows start when there is no hero: just below the top-right cluster. */
 private val NoHeroTop = 110.mpx
 
+/** How long the Trending hero must hold focus before its title's trailer starts (TrendingTrailerPreview). */
+private const val TRAILER_DWELL_MS = 2_500L
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun HomeScreen(
@@ -193,6 +196,13 @@ fun HomeScreen(
     val trendingToast = rememberInAppToast()
     var trailerVideoKey by remember { mutableStateOf<String?>(null) }
     var trailerTitle by remember { mutableStateOf<String?>(null) }
+    // The focused Trending title's trailer playing inside the hero (TrendingTrailerPreview): the key
+    // being played, the title it belongs to, and the title whose trailer ended or could not play, so it
+    // is not retried while that same title keeps focus.
+    var trailerPreviewKey by remember { mutableStateOf<String?>(null) }
+    var trailerPreviewFor by remember { mutableStateOf<String?>(null) }
+    var trailerPreviewEnded by remember { mutableStateOf<String?>(null) }
+    val trailersOnHome by vm.trailersOnHome.collectAsStateWithLifecycle()
     var detailsItem by remember { mutableStateOf<TrendingHomeItem?>(null) }
     var detailsMetadata by remember { mutableStateOf<MetadataCacheEntity?>(null) }
     var detailsTmdbWins by remember { mutableStateOf(false) }
@@ -353,6 +363,32 @@ fun HomeScreen(
     val trendingItem = state.trendingItems.getOrNull(state.activeTrendingIndex)
         ?.takeIf { fullBleed && state.trendingItems.size >= TrendingDao.MIN_ELIGIBLE_ITEMS }
     val posterItem = state.trendingItems.getOrNull(posterIndex)
+
+    // Dwell-to-trailer: the focused Trending title's trailer, muted, in the hero after 2.5 s of
+    // uninterrupted focus — the same idea as the Keep watching dwell, so a D-pad sweep through the hero
+    // never starts a WebView. Anything that takes the hero away ends it: focus into the rows, the pager
+    // moving to another title, the full-screen trailer or Details opening, the setting going off.
+    val trailerCandidate = trendingItem?.takeIf {
+        trailersOnHome && fullBleed && heroFocused.value && !inRows && trailerVideoKey == null &&
+            detailsItem == null && !it.snapshot.trailerKey.isNullOrBlank() && it.stableKey != trailerPreviewEnded
+    }
+    LaunchedEffect(trailerCandidate?.stableKey) {
+        val candidate = trailerCandidate
+        if (candidate == null) {
+            trailerPreviewKey = null
+            trailerPreviewFor = null
+            return@LaunchedEffect
+        }
+        if (trailerPreviewFor == candidate.stableKey) return@LaunchedEffect
+        // Another title has focus now: the one whose trailer ended may play again when it comes back.
+        trailerPreviewEnded = null
+        trailerPreviewKey = null
+        trailerPreviewFor = null
+        kotlinx.coroutines.delay(TRAILER_DWELL_MS)
+        vm.stopPreview()
+        trailerPreviewFor = candidate.stableKey
+        trailerPreviewKey = candidate.snapshot.trailerKey
+    }
         ?.takeIf { posterHero && state.trendingItems.size >= TrendingDao.MIN_ELIGIBLE_ITEMS }
     // The subscription notice rides inside a row's item, above it: under the hero when one sits at the
     // top (its backdrop is aligned to the page's top edge, so nothing may push it down), else first.
@@ -375,6 +411,13 @@ fun HomeScreen(
     // The Stage page itself is painted by the shell, full width, so it also runs under a docked rail.
     Box(modifier.fillMaxSize()) {
         trendingItem?.let { TrendingBackdrop(it, folded = inRows, modifier = Modifier.align(Alignment.TopEnd)) }
+        if (!inRows) trailerPreviewKey?.let { key ->
+            TrendingTrailerBackdrop(key, modifier = Modifier.align(Alignment.TopEnd)) {
+                trailerPreviewEnded = trailerPreviewFor
+                trailerPreviewKey = null
+                trailerPreviewFor = null
+            }
+        }
         posterItem?.let { TrendingBackdrop(it, folded = true, modifier = Modifier.align(Alignment.TopEnd)) }
         CompositionLocalProvider(LocalBringIntoViewSpec provides homeBringIntoViewSpec) {
             LazyColumn(
@@ -621,8 +664,8 @@ fun HomeScreen(
     // The preview starts after the card has settled, so decoder setup does not compete with the focus
     // lift. A trailer counts as "not previewing": leaving the preview decoding behind the trailer window
     // costs a second video pipeline for a picture nobody can see.
-    LaunchedEffect(isPreviewActive, hero, previewIndex, focusedHeroIndex, lastInteractionMs, trailerVideoKey) {
-        if (!isPreviewActive || trailerVideoKey != null || hero == null || previewIndex < 0 ||
+    LaunchedEffect(isPreviewActive, hero, previewIndex, focusedHeroIndex, lastInteractionMs, trailerVideoKey, trailerPreviewKey) {
+        if (!isPreviewActive || trailerVideoKey != null || trailerPreviewKey != null || hero == null || previewIndex < 0 ||
             focusedHeroIndex != previewIndex
         ) {
             heroPreviewEngine.stop()
@@ -726,6 +769,19 @@ private fun TrendingBackdrop(item: TrendingHomeItem, folded: Boolean, modifier: 
                 Box(Modifier.fillMaxSize().backdropLeftWash(0f to 0.70f, 0.30f to 0.35f, 0.60f to 0f, 1f to 0f))
             }
         }
+    }
+}
+
+/**
+ * The trailer in the backdrop's own place: the same right-aligned 1500-of-1920 frame at 16:9 as the
+ * unfolded [TrendingBackdrop], drawn over the still, so the title and buttons on the left are untouched.
+ * The still stays underneath and shows again the moment the preview is dropped.
+ */
+@Composable
+private fun TrendingTrailerBackdrop(videoKey: String, modifier: Modifier = Modifier, onStop: () -> Unit) {
+    BoxWithConstraints(modifier.fillMaxWidth(1500f / 1920f)) {
+        val height = maxWidth * 844f / 1500f
+        TrendingTrailerPreview(videoKey, Modifier.fillMaxWidth().height(height), onStop)
     }
 }
 

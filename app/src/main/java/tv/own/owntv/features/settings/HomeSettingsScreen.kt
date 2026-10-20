@@ -52,6 +52,7 @@ fun HomeSettingsScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
     val androidTvHomeEnabled by settingsVm.androidTvHomeEnabled.collectAsStateWithLifecycle()
     val tvHomeRefresh by settingsVm.tvHomeRefresh.collectAsStateWithLifecycle()
     val hideAdultCategoriesHome by vm.hideAdultCategoriesHome.collectAsStateWithLifecycle()
+    val playTrailersOnHome by vm.playTrailersOnHome.collectAsStateWithLifecycle()
     val trendingEnabled = HomeRow.TRENDING !in config.hidden
     val trendingStatus = trendingStatusText(hidden = !trendingEnabled, availability = trendingAvailability)
 
@@ -119,6 +120,18 @@ fun HomeSettingsScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
             value = hideAdultValue,
             onClick = { vm.setHideAdultCategoriesHome(!hideAdultCategoriesHome) },
             help = settingHelp(null, hideAdultTitle, hideAdultDesc, hideAdultValue, pinnable = false),
+        )
+
+        val trailersTitle = stringResource(R.string.settings_home_play_trailers)
+        val trailersDesc = stringResource(R.string.settings_home_play_trailers_description)
+        val trailersValue = SettingValue.Switch(playTrailersOnHome)
+        StageSettingRow(
+            icon = OwnTVIcon.PLAY_CIRCLE,
+            title = trailersTitle,
+            desc = trailersDesc,
+            value = trailersValue,
+            onClick = { vm.setPlayTrailersOnHome(!playTrailersOnHome) },
+            help = settingHelp(null, trailersTitle, trailersDesc, trailersValue, pinnable = false),
         )
 
         StageSettingsHeading(stringResource(R.string.settings_sections), config.settingsRows.size)
