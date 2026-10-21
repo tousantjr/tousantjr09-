@@ -205,6 +205,12 @@ fun SportsSettingsPage(vm: SportsSettingsViewModel = koinViewModel()) {
                         if (oddsApi) tv.own.owntv.mobile.ui.stage.StageChevron.FORWARD else tv.own.owntv.mobile.ui.stage.StageChevron.NONE,
                     )
                 }
+                // The match page's side-by-side table: only The Odds API carries more than one book, so the row is theirs alone.
+                if (oddsApi) {
+                    SwitchRow(MobileIcons.GridView, stringResource(R.string.sports_odds_compare), stringResource(R.string.sports_odds_compare_description), o.compareBookmakers) {
+                        vm.setOddsCompare(!o.compareBookmakers)
+                    }
+                }
                 StageSettingRow(stringResource(R.string.sports_odds_status), icon = MobileIcons.Info, subtitle = oddsStatusText(o, oddsStatus))
             }
         }

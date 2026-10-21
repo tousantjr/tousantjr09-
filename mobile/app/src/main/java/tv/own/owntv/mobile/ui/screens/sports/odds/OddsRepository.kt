@@ -28,7 +28,9 @@ import java.time.LocalDate
  *
  * Frugal by design, because The Odds API's free tier is 500 requests a month: a league's lines are
  * kept for [CACHE_MS] and fetched only for the league of a game actually shown (the open match
- * page, Home's featured game); ESPN's per-game line is kept just as long. When the key's quota reads
+ * page, Home's featured game), and one fetch carries every bookmaker Settings lists, so switching
+ * the bookmaker or the comparison on and off re-reads the cache rather than the service; ESPN's
+ * per-game line is kept just as long. When the key's quota reads
  * zero (or the service answers 429) no call is made again until the next local day, and Settings
  * says so rather than a toast. The key is never logged — nor is any message that could quote a URL.
  */
@@ -127,10 +129,9 @@ class OddsRepository(
             return null
         }
         val now = System.currentTimeMillis()
-        val cacheKey = sportKey + "|" + c.bookmaker.key
-        val league = leagueCache[cacheKey]?.takeIf { now - it.at < CACHE_MS }?.value ?: run {
+        val league = leagueCache[sportKey]?.takeIf { now - it.at < CACHE_MS }?.value ?: run {
             val fetched = try {
-                api.league(sportKey, c.effectiveKey, c.bookmaker)
+                api.league(sportKey, c.effectiveKey)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: SportsHttpException) {
@@ -145,12 +146,12 @@ class OddsRepository(
                 _status.value = Status.Unreachable
                 return null
             }
-            leagueCache[cacheKey] = Cached(now, fetched)
+            leagueCache[sportKey] = Cached(now, fetched)
             settings.recordQuota(fetched.requestsRemaining, if (fetched.requestsRemaining == 0) today else null)
             fetched
         }
         val hit = OddsMatcher.find(league.events, match)
-        val line = hit?.let { OddsMatcher.line(it, match, now) }
+        val line = hit?.let { OddsMatcher.line(it, match, now, c.bookmaker, c.compareBookmakers) }
         _status.value = if (line != null) Status.Shown(line.bookmaker) else Status.NoLine
         return line
     }

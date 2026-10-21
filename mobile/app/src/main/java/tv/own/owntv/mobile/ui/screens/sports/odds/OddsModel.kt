@@ -35,6 +35,9 @@ enum class Bookmaker(val key: String) {
 
     companion object {
         fun of(key: String?): Bookmaker = entries.firstOrNull { it.key == key } ?: DRAFTKINGS
+
+        /** The bookmaker behind The Odds API's key, or null for one the app does not list. */
+        fun find(key: String?): Bookmaker? = entries.firstOrNull { it.key == key }
     }
 }
 
@@ -57,6 +60,14 @@ data class OddsLine(
     val awayProbability: Int?,
     val drawProbability: Int? = null,
     val fetchedAt: Long,
+    /** The Odds API's key for [bookmaker] ("draftkings"), for the comparison table's short header; null from ESPN. */
+    val bookmakerKey: String? = null,
+    /**
+     * The other bookmakers' lines for the same game, for the match page's comparison table — only
+     * from The Odds API with Settings' Compare bookmakers on; empty otherwise, and the box draws the
+     * one line as before. Each carries no [others] of its own.
+     */
+    val others: List<OddsLine> = emptyList(),
 ) {
     val hasAnything: Boolean get() = details != null || spread != null || overUnder != null || homeMoneyLine != null || awayMoneyLine != null
 }

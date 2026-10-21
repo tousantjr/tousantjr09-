@@ -57,6 +57,7 @@ class SportsSettingsViewModel(
     fun setOddsSource(source: OddsSource) = viewModelScope.launch { oddsSettings.setSource(source) }
     fun setOddsApiKey(key: String) = viewModelScope.launch { oddsSettings.setApiKey(key) }
     fun setOddsBookmaker(bookmaker: Bookmaker) = viewModelScope.launch { oddsSettings.setBookmaker(bookmaker) }
+    fun setOddsCompare(on: Boolean) = viewModelScope.launch { oddsSettings.setCompareBookmakers(on) }
 
     /** The profile's live playlists (id → name), for the Playlist filter. */
     val playlists: StateFlow<List<Pair<Long, String>>> = activeProfileSources(settings, sourceDao)

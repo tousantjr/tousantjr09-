@@ -113,6 +113,13 @@
     <string name="sports_odds_bookmaker_fanduel">FanDuel</string>
     <string name="sports_odds_bookmaker_betmgm">BetMGM</string>
     <string name="sports_odds_bookmaker_caesars">Caesars</string>
+    <string name="sports_odds_compare">Compare bookmakers</string>
+    <string name="sports_odds_compare_description">On the match page, show DraftKings, FanDuel, BetMGM and Caesars side by side. The same single request, so no extra quota</string>
+    <string name="sports_odds_book_short_draftkings">DK</string>
+    <string name="sports_odds_book_short_fanduel">FD</string>
+    <string name="sports_odds_book_short_betmgm">MGM</string>
+    <string name="sports_odds_book_short_caesars">CZR</string>
+    <string name="sports_odds_no_line_cell">—</string>
     <string name="sports_odds_status">Status</string>
     <string name="sports_odds_status_espn">ESPN lines, no key needed</string>
     <string name="sports_odds_status_no_key">Enter a key to use The Odds API</string>
