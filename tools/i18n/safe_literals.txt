@@ -229,31 +229,24 @@
 1	json	app/src/main/java/tv/own/owntv/features/mdblist/MdbListApi.kt	value
 1	json	app/src/main/java/tv/own/owntv/features/mdblist/MdbListApi.kt	votes
 1	json	app/src/main/java/tv/own/owntv/features/mdblist/MdbListApi.kt	year
-3	empty	app/src/main/java/tv/own/owntv/features/mdblist/MdbListRepository.kt	\0
-1	sql	app/src/main/java/tv/own/owntv/features/mdblist/MdbListRepository.kt	)
-1	sql	app/src/main/java/tv/own/owntv/features/mdblist/MdbListRepository.kt	,
+1	empty	app/src/main/java/tv/own/owntv/features/mdblist/MdbListRepository.kt	\0
 1	technical	app/src/main/java/tv/own/owntv/features/mdblist/MdbListRepository.kt	:
-1	protocol	app/src/main/java/tv/own/owntv/features/mdblist/MdbListRepository.kt	:kids
-1	sql	app/src/main/java/tv/own/owntv/features/mdblist/MdbListRepository.kt	?
 1	log	app/src/main/java/tv/own/owntv/features/mdblist/MdbListRepository.kt	MDBList unreachable: ${e.javaClass.simpleName}
 1	log	app/src/main/java/tv/own/owntv/features/mdblist/MdbListRepository.kt	OwnTV-MDBList
-1	sql	app/src/main/java/tv/own/owntv/features/mdblist/MdbListRepository.kt	SELECT imdbId, tmdbId, type FROM metadata_cache WHERE imdbId IN (
-1	sql	app/src/main/java/tv/own/owntv/features/mdblist/MdbListRepository.kt	SELECT localKey, tmdbId, type FROM metadata_match WHERE tmdbId IN (
 1	json	app/src/main/java/tv/own/owntv/features/mdblist/MdbListRepository.kt	at
 1	json	app/src/main/java/tv/own/owntv/features/mdblist/MdbListRepository.kt	body
 1	log	app/src/main/java/tv/own/owntv/features/mdblist/MdbListRepository.kt	cache not written: ${it.javaClass.simpleName}
 1	locale	app/src/main/java/tv/own/owntv/features/mdblist/MdbListRepository.kt	en
+1	technical	app/src/main/java/tv/own/owntv/features/mdblist/MdbListRepository.kt	episode:
 1	json	app/src/main/java/tv/own/owntv/features/mdblist/MdbListRepository.kt	items
 1	log	app/src/main/java/tv/own/owntv/features/mdblist/MdbListRepository.kt	list items did not parse as expected: ${it.javaClass.simpleName}
 1	file-path	app/src/main/java/tv/own/owntv/features/mdblist/MdbListRepository.kt	mdblist_cache.json
-1	protocol	app/src/main/java/tv/own/owntv/features/mdblist/MdbListRepository.kt	movie
 1	technical	app/src/main/java/tv/own/owntv/features/mdblist/MdbListRepository.kt	movie:
 1	json	app/src/main/java/tv/own/owntv/features/mdblist/MdbListRepository.kt	ratings
 1	log	app/src/main/java/tv/own/owntv/features/mdblist/MdbListRepository.kt	ratings did not parse as expected: ${it.javaClass.simpleName}
 1	technical	app/src/main/java/tv/own/owntv/features/mdblist/MdbListRepository.kt	series:
 2	json	app/src/main/java/tv/own/owntv/features/mdblist/MdbListRepository.kt	top
 1	log	app/src/main/java/tv/own/owntv/features/mdblist/MdbListRepository.kt	top lists did not parse as expected: ${it.javaClass.simpleName}
-1	protocol	app/src/main/java/tv/own/owntv/features/mdblist/MdbListRepository.kt	tv
 2	empty	app/src/main/java/tv/own/owntv/features/mdblist/MdbListSettings.kt	\0
 1	preference-key	app/src/main/java/tv/own/owntv/features/mdblist/MdbListSettings.kt	mdblist
 1	preference-key	app/src/main/java/tv/own/owntv/features/mdblist/MdbListSettings.kt	mdblist_api_key
@@ -263,6 +256,15 @@
 1	technical	app/src/main/java/tv/own/owntv/features/mdblist/MdbListSettingsViewModel.kt	/
 1	uri	app/src/main/java/tv/own/owntv/features/mdblist/MdbListSettingsViewModel.kt	/lists/
 1	technical	app/src/main/java/tv/own/owntv/features/mdblist/MdbRatingsText.kt	%.1f
+2	empty	app/src/main/java/tv/own/owntv/features/mdblist/MetadataIdLookup.kt	\0
+1	sql	app/src/main/java/tv/own/owntv/features/mdblist/MetadataIdLookup.kt	)
+1	sql	app/src/main/java/tv/own/owntv/features/mdblist/MetadataIdLookup.kt	,
+1	protocol	app/src/main/java/tv/own/owntv/features/mdblist/MetadataIdLookup.kt	:kids
+1	sql	app/src/main/java/tv/own/owntv/features/mdblist/MetadataIdLookup.kt	?
+1	sql	app/src/main/java/tv/own/owntv/features/mdblist/MetadataIdLookup.kt	SELECT imdbId, tmdbId, type FROM metadata_cache WHERE imdbId IN (
+1	sql	app/src/main/java/tv/own/owntv/features/mdblist/MetadataIdLookup.kt	SELECT localKey, tmdbId, type FROM metadata_match WHERE tmdbId IN (
+1	protocol	app/src/main/java/tv/own/owntv/features/mdblist/MetadataIdLookup.kt	movie
+1	protocol	app/src/main/java/tv/own/owntv/features/mdblist/MetadataIdLookup.kt	tv
 2	technical	app/src/main/java/tv/own/owntv/features/more/MorePages.kt	\0
 1	technical	app/src/main/java/tv/own/owntv/features/more/MorePages.kt	$it
 1	technical	app/src/main/java/tv/own/owntv/features/more/MorePages.kt	%d:%02d
@@ -1141,6 +1143,9 @@
 1	url	app/src/main/java/tv/own/owntv/features/trakt/TraktApi.kt	$API/oauth/revoke
 1	url	app/src/main/java/tv/own/owntv/features/trakt/TraktApi.kt	$API/oauth/token
 1	url	app/src/main/java/tv/own/owntv/features/trakt/TraktApi.kt	$API/scrobble/$action
+1	url	app/src/main/java/tv/own/owntv/features/trakt/TraktApi.kt	$API/shows/$traktId/progress/watched?hidden=false&specials=false&count_specials=false
+1	url	app/src/main/java/tv/own/owntv/features/trakt/TraktApi.kt	$API/sync/playback/$kind
+1	url	app/src/main/java/tv/own/owntv/features/trakt/TraktApi.kt	$API/sync/watched/shows
 1	url	app/src/main/java/tv/own/owntv/features/trakt/TraktApi.kt	$API/sync/watchlist/$kind
 1	url	app/src/main/java/tv/own/owntv/features/trakt/TraktApi.kt	$API/users/me
 1	protocol	app/src/main/java/tv/own/owntv/features/trakt/TraktApi.kt	2
@@ -1160,30 +1165,37 @@
 1	json	app/src/main/java/tv/own/owntv/features/trakt/TraktApi.kt	code_verifier
 1	json	app/src/main/java/tv/own/owntv/features/trakt/TraktApi.kt	created_at
 1	json	app/src/main/java/tv/own/owntv/features/trakt/TraktApi.kt	device_code
+1	json	app/src/main/java/tv/own/owntv/features/trakt/TraktApi.kt	episode
 2	json	app/src/main/java/tv/own/owntv/features/trakt/TraktApi.kt	expires_in
 1	json	app/src/main/java/tv/own/owntv/features/trakt/TraktApi.kt	grant_type
 1	url	app/src/main/java/tv/own/owntv/features/trakt/TraktApi.kt	http://localhost/callback
 1	url	app/src/main/java/tv/own/owntv/features/trakt/TraktApi.kt	https://api.trakt.tv
 1	url	app/src/main/java/tv/own/owntv/features/trakt/TraktApi.kt	https://trakt.tv/activate
-2	json	app/src/main/java/tv/own/owntv/features/trakt/TraktApi.kt	ids
-1	json	app/src/main/java/tv/own/owntv/features/trakt/TraktApi.kt	imdb
+4	json	app/src/main/java/tv/own/owntv/features/trakt/TraktApi.kt	ids
+3	json	app/src/main/java/tv/own/owntv/features/trakt/TraktApi.kt	imdb
 1	json	app/src/main/java/tv/own/owntv/features/trakt/TraktApi.kt	interval
-1	json	app/src/main/java/tv/own/owntv/features/trakt/TraktApi.kt	movie
-1	json	app/src/main/java/tv/own/owntv/features/trakt/TraktApi.kt	progress
+1	json	app/src/main/java/tv/own/owntv/features/trakt/TraktApi.kt	last_watched_at
+2	json	app/src/main/java/tv/own/owntv/features/trakt/TraktApi.kt	movie
+1	json	app/src/main/java/tv/own/owntv/features/trakt/TraktApi.kt	next_episode
+2	json	app/src/main/java/tv/own/owntv/features/trakt/TraktApi.kt	number
+1	json	app/src/main/java/tv/own/owntv/features/trakt/TraktApi.kt	paused_at
+2	json	app/src/main/java/tv/own/owntv/features/trakt/TraktApi.kt	progress
 1	json	app/src/main/java/tv/own/owntv/features/trakt/TraktApi.kt	rank
 1	json	app/src/main/java/tv/own/owntv/features/trakt/TraktApi.kt	redirect_uri
 3	json	app/src/main/java/tv/own/owntv/features/trakt/TraktApi.kt	refresh_token
-1	json	app/src/main/java/tv/own/owntv/features/trakt/TraktApi.kt	show
+2	json	app/src/main/java/tv/own/owntv/features/trakt/TraktApi.kt	season
+3	json	app/src/main/java/tv/own/owntv/features/trakt/TraktApi.kt	show
 1	json	app/src/main/java/tv/own/owntv/features/trakt/TraktApi.kt	slug
-1	json	app/src/main/java/tv/own/owntv/features/trakt/TraktApi.kt	title
-1	json	app/src/main/java/tv/own/owntv/features/trakt/TraktApi.kt	tmdb
+3	json	app/src/main/java/tv/own/owntv/features/trakt/TraktApi.kt	title
+3	json	app/src/main/java/tv/own/owntv/features/trakt/TraktApi.kt	tmdb
 1	json	app/src/main/java/tv/own/owntv/features/trakt/TraktApi.kt	token
+1	json	app/src/main/java/tv/own/owntv/features/trakt/TraktApi.kt	trakt
 1	protocol	app/src/main/java/tv/own/owntv/features/trakt/TraktApi.kt	trakt-api-key
 1	protocol	app/src/main/java/tv/own/owntv/features/trakt/TraktApi.kt	trakt-api-version
 1	json	app/src/main/java/tv/own/owntv/features/trakt/TraktApi.kt	user_code
 1	json	app/src/main/java/tv/own/owntv/features/trakt/TraktApi.kt	username
 1	json	app/src/main/java/tv/own/owntv/features/trakt/TraktApi.kt	verification_url
-1	json	app/src/main/java/tv/own/owntv/features/trakt/TraktApi.kt	year
+2	json	app/src/main/java/tv/own/owntv/features/trakt/TraktApi.kt	year
 1	empty	app/src/main/java/tv/own/owntv/features/trakt/TraktRepository.kt	\0
 1	log	app/src/main/java/tv/own/owntv/features/trakt/TraktRepository.kt	OwnTV-Trakt
 2	log	app/src/main/java/tv/own/owntv/features/trakt/TraktRepository.kt	Trakt unreachable: ${e.javaClass.simpleName}
@@ -1191,10 +1203,17 @@
 1	json	app/src/main/java/tv/own/owntv/features/trakt/TraktRepository.kt	body
 1	log	app/src/main/java/tv/own/owntv/features/trakt/TraktRepository.kt	cache not written: ${it.javaClass.simpleName}
 1	locale	app/src/main/java/tv/own/owntv/features/trakt/TraktRepository.kt	en
+1	json	app/src/main/java/tv/own/owntv/features/trakt/TraktRepository.kt	episodes
 1	protocol	app/src/main/java/tv/own/owntv/features/trakt/TraktRepository.kt	movies
+1	json	app/src/main/java/tv/own/owntv/features/trakt/TraktRepository.kt	playback
+1	log	app/src/main/java/tv/own/owntv/features/trakt/TraktRepository.kt	playback did not parse as expected: ${it.javaClass.simpleName}
+1	json	app/src/main/java/tv/own/owntv/features/trakt/TraktRepository.kt	progress
 1	protocol	app/src/main/java/tv/own/owntv/features/trakt/TraktRepository.kt	shows
+1	protocol	app/src/main/java/tv/own/owntv/features/trakt/TraktRepository.kt	trakt/up-next
 1	technical	app/src/main/java/tv/own/owntv/features/trakt/TraktRepository.kt	trakt/watchlist
 1	file-path	app/src/main/java/tv/own/owntv/features/trakt/TraktRepository.kt	trakt_cache.json
+1	json	app/src/main/java/tv/own/owntv/features/trakt/TraktRepository.kt	watched
+1	log	app/src/main/java/tv/own/owntv/features/trakt/TraktRepository.kt	watched shows did not parse as expected: ${it.javaClass.simpleName}
 1	json	app/src/main/java/tv/own/owntv/features/trakt/TraktRepository.kt	watchlist
 1	log	app/src/main/java/tv/own/owntv/features/trakt/TraktRepository.kt	watchlist did not parse as expected: ${it.javaClass.simpleName}
 2	technical	app/src/main/java/tv/own/owntv/features/trakt/TraktScrobbler.kt	:
@@ -1222,7 +1241,9 @@
 1	preference-key	app/src/main/java/tv/own/owntv/features/trakt/TraktSettings.kt	trakt_client_secret
 1	preference-key	app/src/main/java/tv/own/owntv/features/trakt/TraktSettings.kt	trakt_expires_at
 1	preference-key	app/src/main/java/tv/own/owntv/features/trakt/TraktSettings.kt	trakt_refresh_token
+1	preference-key	app/src/main/java/tv/own/owntv/features/trakt/TraktSettings.kt	trakt_resume
 1	preference-key	app/src/main/java/tv/own/owntv/features/trakt/TraktSettings.kt	trakt_scrobble
+1	preference-key	app/src/main/java/tv/own/owntv/features/trakt/TraktSettings.kt	trakt_up_next_row
 1	preference-key	app/src/main/java/tv/own/owntv/features/trakt/TraktSettings.kt	trakt_username
 1	preference-key	app/src/main/java/tv/own/owntv/features/trakt/TraktSettings.kt	trakt_watchlist_row
 1	empty	app/src/main/java/tv/own/owntv/features/trakt/TraktSettingsViewModel.kt	\0

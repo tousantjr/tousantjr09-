@@ -450,8 +450,8 @@ private fun mdbStatusText(c: MdbListConfig, status: MdbListRepository.Status): S
     }
 }
 
-/** Rows the Trakt group adds to the page's count: Connect, the two switches, the client id and secret, and Status. */
-private const val TRAKT_ROWS = 6
+/** Rows the Trakt group adds to the page's count: Connect, the four switches, the client id and secret, and Status. */
+private const val TRAKT_ROWS = 8
 
 /**
  * Trakt (Settings › Layout › Home): Connect / Disconnect (the device-code login runs on the Connect
@@ -521,6 +521,24 @@ private fun TraktRows() {
         icon = OwnTVIcon.LIST, title = watchlistTitle, desc = watchlistDesc, value = watchlistValue, enabled = c.connected,
         onClick = { vm.setWatchlistRow(!c.watchlistRow) },
         help = settingHelp(null, watchlistTitle, watchlistDesc, watchlistValue, pinnable = false),
+    )
+
+    val upNextTitle = stringResource(R.string.trakt_up_next_row)
+    val upNextDesc = if (c.connected) stringResource(R.string.trakt_up_next_row_description) else notConnected
+    val upNextValue = SettingValue.Switch(c.upNextOn)
+    StageSettingRow(
+        icon = OwnTVIcon.LIST, title = upNextTitle, desc = upNextDesc, value = upNextValue, enabled = c.connected,
+        onClick = { vm.setUpNextRow(!c.upNextRow) },
+        help = settingHelp(null, upNextTitle, upNextDesc, upNextValue, pinnable = false),
+    )
+
+    val resumeTitle = stringResource(R.string.trakt_resume)
+    val resumeDesc = if (c.connected) stringResource(R.string.trakt_resume_description) else notConnected
+    val resumeValue = SettingValue.Switch(c.resumeOn)
+    StageSettingRow(
+        icon = OwnTVIcon.PLAY_CIRCLE, title = resumeTitle, desc = resumeDesc, value = resumeValue, enabled = c.connected,
+        onClick = { vm.setResume(!c.resume) },
+        help = settingHelp(null, resumeTitle, resumeDesc, resumeValue, pinnable = false),
     )
 
     // The client id and the optional secret, each saved a moment after typing stops (and on Done), not

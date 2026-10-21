@@ -1347,8 +1347,13 @@ private fun EpisodeView(
     val chNavDownSkip by settingsVm.chNavDownSkip.collectAsStateWithLifecycle()
     var epPaneFocused by remember { mutableStateOf(false) }
     var resumePrompt by remember { mutableStateOf<Pair<EpisodeEntity, Long>?>(null) }
+    // A position paused on another device (Trakt) is folded into the saved ones first — see TraktResume:
+    // the whole show's as its episodes arrive (the bars under the rows), the one episode's on Play.
+    val traktResume: tv.own.owntv.features.trakt.TraktResume = org.koin.compose.koinInject()
+    LaunchedEffect(series.id, episodes.size) { if (episodes.isNotEmpty()) traktResume.mergeShow(series, episodes) }
     val startEpisode: (EpisodeEntity) -> Unit = { ep ->
         scope.launch {
+            traktResume.mergeEpisode(series, ep)
             val pos = vm.savedPositionMs(ep)
             when {
                 resumeMode == SettingsRepository.ResumeMode.ASK && pos >= 10_000 -> resumePrompt = ep to pos

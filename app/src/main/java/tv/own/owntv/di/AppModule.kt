@@ -111,9 +111,14 @@ val appModule = module {
             profileDao = get(),
             categoryDao = get(),
             customize = get(),
+            progressDao = get(),
+            seriesRepository = get(),
+            database = get(),
         )
     }
     single { tv.own.owntv.features.trakt.TraktScrobbler(player = get(), repo = get(), metadata = get()) }
+    // Resume from Trakt: folds another device's paused position into this one's before Play — see TraktResume.
+    single { tv.own.owntv.features.trakt.TraktResume(repo = get(), metadata = get(), progressDao = get(), settings = get(), player = get()) }
     viewModelOf(::TraktSettingsViewModel)
     // Home's subscription notice: asks each Xtream playlist for its expiry and caches the answer for
     // hours, so one instance for the process — see SubscriptionExpiry.

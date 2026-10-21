@@ -215,11 +215,14 @@ fun MoviesScreen(
     val selectedItem = railItems.getOrNull(selectedIndex)
     val selectedLabel = selectedItem?.displayLabel(R.string.content_category_all_movies) ?: stringResource(R.string.content_category_all_movies)
 
-    // Resume flow: AUTO continues silently, ASK prompts (≥10s saved), NEVER starts from zero.
+    // Resume flow: AUTO continues silently, ASK prompts (≥10s saved), NEVER starts from zero. A newer
+    // position paused on another device (Trakt) is folded into the saved one first — see TraktResume.
     val scope = rememberCoroutineScope()
+    val traktResume: tv.own.owntv.features.trakt.TraktResume = org.koin.compose.koinInject()
     var resumePrompt by remember { mutableStateOf<Pair<MovieEntity, Long>?>(null) }
     val startMovie: (MovieEntity) -> Unit = { m ->
         scope.launch {
+            traktResume.mergeMovie(m)
             val pos = vm.savedPositionMs(m)
             when {
                 resumeMode == SettingsRepository.ResumeMode.ASK && pos >= 10_000 -> resumePrompt = m to pos

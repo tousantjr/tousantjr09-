@@ -537,6 +537,7 @@ fun HomeScreen(
                             gapAbove = trendingDrawn,
                             onOpenMovie = onOpenMovie,
                             onOpenSeries = onOpenSeries,
+                            onPlayEpisode = onPlayEpisode,
                             onFocus = onNonHeroFocused,
                             firstItemFocusRequester = if (trendingDrawn) null else firstItemFocusRequester ?: trendingPrimaryFocus,
                             track = track,
@@ -1309,6 +1310,8 @@ private fun <T> FavoritePosterRow(
     firstItemFocusRequester: FocusRequester?,
     track: (FocusRequester) -> Unit,
     modifier: Modifier = Modifier,
+    /** A muted line under the title (an Up next card's episode); null for the plain poster. */
+    line: (T) -> String? = { null },
 ) {
     Column(modifier) {
         HomeRowHeader(title, small = items.size.toString(), start = start)
@@ -1323,6 +1326,7 @@ private fun <T> FavoritePosterRow(
                     onClick = { onItemClick(item) },
                     width = 196.mpx,
                     height = 294.mpx,
+                    line = line(item),
                     modifier = Modifier
                         .then(if (index == 0 && firstItemFocusRequester != null) Modifier.focusRequester(firstItemFocusRequester) else Modifier)
                         .tracked(track = track)
@@ -1348,6 +1352,7 @@ private fun CuratedRails(
     gapAbove: Boolean,
     onOpenMovie: (MovieEntity) -> Unit,
     onOpenSeries: (SeriesEntity) -> Unit,
+    onPlayEpisode: (seriesId: Long, episodeId: Long, positionMs: Long) -> Unit,
     onFocus: () -> Unit,
     firstItemFocusRequester: FocusRequester?,
     track: (FocusRequester) -> Unit,
@@ -1360,11 +1365,14 @@ private fun CuratedRails(
             key = { it.key },
             name = { it.name },
             poster = { it.posterUrl },
+            line = { (it as? tv.own.owntv.features.mdblist.CuratedItem.Episode)?.subtitle },
             start = start,
             onItemClick = { item ->
                 when (item) {
                     is tv.own.owntv.features.mdblist.CuratedItem.Movie -> onOpenMovie(item.movie)
                     is tv.own.owntv.features.mdblist.CuratedItem.Series -> onOpenSeries(item.series)
+                    // Trakt's Up next: the episode plays straight away, as from the Keep watching row.
+                    is tv.own.owntv.features.mdblist.CuratedItem.Episode -> onPlayEpisode(item.series.id, item.episode.id, item.positionMs)
                 }
             },
             onFocus = onFocus,

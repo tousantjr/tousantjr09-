@@ -16,6 +16,8 @@ import tv.own.owntv.core.metadata.MetadataType
 import java.io.IOException
 import java.security.MessageDigest
 import java.security.SecureRandom
+import java.time.OffsetDateTime
+import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit
 
 /** A non-2xx answer from Trakt. No message: one could quote the URL or a token. */
@@ -54,6 +56,33 @@ data class TraktWatchlistItem(
     val rank: Int,
     val type: MetadataType,
 )
+
+/**
+ * One position Trakt holds from a pause on any device: a film ([type] MOVIE, the film's ids) or an
+ * episode ([type] TV: the show's ids plus [season] and [number]), [progress] percent in, at [pausedAtMs].
+ */
+data class TraktPlaybackItem(
+    val type: MetadataType,
+    val tmdbId: Int,
+    val imdbId: String?,
+    val season: Int?,
+    val number: Int?,
+    val progress: Double,
+    val pausedAtMs: Long,
+)
+
+/** A show the user has watched something of, newest first: Trakt's own id (what the progress call takes) and the ids to match it by. */
+data class TraktWatchedShow(
+    val traktId: Long,
+    val tmdbId: Int,
+    val imdbId: String?,
+    val title: String,
+    val year: Int?,
+    val lastWatchedAtMs: Long,
+)
+
+/** The episode Trakt says comes next in a show; null from the call means the show is finished (or unknown). */
+data class TraktNextEpisode(val season: Int, val number: Int, val title: String?)
 
 /**
  * Trakt's REST API (api.trakt.tv, version 2). The device-code login, token refresh, who the token
@@ -160,6 +189,18 @@ class TraktApi(client: OkHttpClient) {
     suspend fun watchlist(clientId: String, accessToken: String, kind: String): String =
         get("$API/sync/watchlist/$kind", clientId, accessToken)
 
+    /** The paused positions Trakt holds for films or episodes (`movies` / `episodes`) as raw JSON; see [TraktParser.playback]. */
+    suspend fun playback(clientId: String, accessToken: String, kind: String): String =
+        get("$API/sync/playback/$kind", clientId, accessToken)
+
+    /** Every show the user has watched an episode of, as raw JSON; see [TraktParser.watchedShows]. */
+    suspend fun watchedShows(clientId: String, accessToken: String): String =
+        get("$API/sync/watched/shows", clientId, accessToken)
+
+    /** One show's watched progress — the episode that comes next — as raw JSON; see [TraktParser.nextEpisode]. */
+    suspend fun showProgress(clientId: String, accessToken: String, traktId: Long): String =
+        get("$API/shows/$traktId/progress/watched?hidden=false&specials=false&count_specials=false", clientId, accessToken)
+
     private fun parseAuth(body: String): TraktAuth? {
         val o = JSONObject(body)
         val access = o.optString("access_token").ifEmpty { return null }
@@ -254,4 +295,65 @@ internal object TraktParser {
         }
         return out.sortedBy { it.rank }
     }
+
+    /**
+     * A playback answer: one object per paused title — `movie` with its ids, or `show` with its ids
+     * plus `episode` with the season and number — `progress` percent and `paused_at`.
+     */
+    fun playback(body: String, type: MetadataType): List<TraktPlaybackItem> {
+        val arr = JSONArray(body)
+        val out = ArrayList<TraktPlaybackItem>()
+        for (i in 0 until arr.length()) {
+            val entry = arr.optJSONObject(i) ?: continue
+            val media = entry.optJSONObject(if (type == MetadataType.TV) "show" else "movie") ?: continue
+            val ids = media.optJSONObject("ids") ?: continue
+            val tmdbId = ids.optInt("tmdb", 0)
+            val imdb = ids.optString("imdb").takeIf { it.isNotBlank() }
+            if (tmdbId <= 0 && imdb == null) continue
+            val progress = entry.optDouble("progress", Double.NaN)
+            if (progress.isNaN()) continue
+            val pausedAt = time(entry.optString("paused_at")) ?: 0L
+            var season: Int? = null
+            var number: Int? = null
+            if (type == MetadataType.TV) {
+                val episode = entry.optJSONObject("episode") ?: continue
+                season = episode.optInt("season", -1).takeIf { it >= 0 } ?: continue
+                number = episode.optInt("number", 0).takeIf { it > 0 } ?: continue
+            }
+            out += TraktPlaybackItem(type, tmdbId, imdb, season, number, progress, pausedAt)
+        }
+        return out
+    }
+
+    /** A watched-shows answer: one object per show with `last_watched_at` and the `show` object, newest first. */
+    fun watchedShows(body: String): List<TraktWatchedShow> {
+        val arr = JSONArray(body)
+        val out = ArrayList<TraktWatchedShow>()
+        for (i in 0 until arr.length()) {
+            val entry = arr.optJSONObject(i) ?: continue
+            val show = entry.optJSONObject("show") ?: continue
+            val ids = show.optJSONObject("ids") ?: continue
+            val traktId = ids.optLong("trakt", 0L)
+            val title = show.optString("title").trim()
+            if (traktId <= 0L || title.isEmpty()) continue
+            val tmdbId = ids.optInt("tmdb", 0)
+            val imdb = ids.optString("imdb").takeIf { it.isNotBlank() }
+            val year = show.optInt("year", 0).takeIf { it > 0 }
+            out += TraktWatchedShow(traktId, tmdbId, imdb, title, year, time(entry.optString("last_watched_at")) ?: 0L)
+        }
+        return out.sortedByDescending { it.lastWatchedAtMs }
+    }
+
+    /** A show-progress answer's `next_episode`; null when Trakt names none (the show is finished, or has nothing aired). */
+    fun nextEpisode(body: String): TraktNextEpisode? {
+        val next = JSONObject(body).optJSONObject("next_episode") ?: return null
+        val season = next.optInt("season", -1).takeIf { it >= 0 } ?: return null
+        val number = next.optInt("number", 0).takeIf { it > 0 } ?: return null
+        return TraktNextEpisode(season, number, next.optString("title").trim().takeIf { it.isNotEmpty() })
+    }
+
+    /** Trakt's ISO-8601 instants (`2026-10-21T19:04:11.000Z`) as epoch milliseconds; null for anything else. */
+    private fun time(s: String): Long? =
+        if (s.isBlank()) null
+        else runCatching { OffsetDateTime.parse(s, DateTimeFormatter.ISO_OFFSET_DATE_TIME).toInstant().toEpochMilli() }.getOrNull()
 }
