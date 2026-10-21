@@ -86,6 +86,14 @@ class TraktSettingsViewModel(
         viewModelScope.launch { settings.setWatchlistRow(on) }
     }
 
+    fun setResume(on: Boolean) {
+        viewModelScope.launch { settings.setResume(on) }
+    }
+
+    fun setUpNextRow(on: Boolean) {
+        viewModelScope.launch { settings.setUpNextRow(on) }
+    }
+
     /** A new client id or secret forgets the login: tokens the old pair minted are not valid for it. */
     fun setClientId(id: String) {
         viewModelScope.launch {

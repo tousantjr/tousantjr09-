@@ -334,10 +334,29 @@ fun HomeScreen(
                                         ContentTarget(MediaType.SERIES, item.series.id, item.series.name, item.series.posterUrl),
                                         item.series.posterUrl, item.series.rating, progress = seriesProgress[item.series.id],
                                     )
+                                    // Trakt's Up next: the show's poster, the episode named under it; a tap plays it.
+                                    is CuratedItem.Episode -> HomePoster(
+                                        ContentTarget(MediaType.EPISODE, item.episode.id, item.series.name, item.series.posterUrl),
+                                        item.series.posterUrl, item.series.rating, progress = null, subtitle = item.subtitle,
+                                    )
                                 }
                             },
-                            onOpen = { target -> if (target.type == MediaType.MOVIE) onOpenMovie(target.id) else onOpenSeries(target.id) },
-                            onMenu = { menuFor = it },
+                            onOpen = { target ->
+                                when (target.type) {
+                                    MediaType.MOVIE -> onOpenMovie(target.id)
+                                    MediaType.EPISODE -> {
+                                        val positionMs = rail.items.firstNotNullOfOrNull { (it as? CuratedItem.Episode)?.takeIf { e -> e.episode.id == target.id }?.positionMs } ?: 0L
+                                        resumeGate(positionMs) { vm.playEpisode(target.id, it, onPlayerOpened) }
+                                    }
+                                    else -> onOpenSeries(target.id)
+                                }
+                            },
+                            // An episode's long press is its show's menu: the card is the show, one episode on.
+                            onMenu = { target ->
+                                menuFor = if (target.type != MediaType.EPISODE) target
+                                else rail.items.firstNotNullOfOrNull { (it as? CuratedItem.Episode)?.takeIf { e -> e.episode.id == target.id } }
+                                    ?.let { ContentTarget(MediaType.SERIES, it.series.id, it.series.name, it.series.posterUrl) } ?: target
+                            },
                         )
                     }
                     }
@@ -591,8 +610,8 @@ private fun KeepWatchingRow(
     }
 }
 
-/** A poster on a Home row: what it is, its picture and rating, and how far in (0..1) it has been watched. */
-private data class HomePoster(val target: ContentTarget, val posterUrl: String?, val rating: Double?, val progress: Float?)
+/** A poster on a Home row: what it is, its picture and rating, how far in (0..1) it has been watched, and a line under the title (an Up next card's episode). */
+private data class HomePoster(val target: ContentTarget, val posterUrl: String?, val rating: Double?, val progress: Float?, val subtitle: String? = null)
 
 /**
  * Favourite films or shows: 104 dp posters with the rating, the watch progress and ✓ once watched
@@ -614,6 +633,7 @@ private fun PosterRow(
                 StagePoster(
                     imageUrl = poster.posterUrl,
                     title = poster.target.title,
+                    subtitle = poster.subtitle,
                     rating = poster.rating?.takeIf { it > 0 }?.let { formatRating(it) },
                     watched = watched,
                     progress = poster.progress?.takeIf { it > 0f && !watched },

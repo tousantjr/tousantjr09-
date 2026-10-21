@@ -10,6 +10,7 @@ import tv.own.owntv.mobile.mdblist.MdbListSettings
 import tv.own.owntv.mobile.mdblist.MdbListSettingsViewModel
 import tv.own.owntv.mobile.trakt.TraktApi
 import tv.own.owntv.mobile.trakt.TraktRepository
+import tv.own.owntv.mobile.trakt.TraktResume
 import tv.own.owntv.mobile.trakt.TraktScrobbler
 import tv.own.owntv.mobile.trakt.TraktSettings
 import tv.own.owntv.mobile.trakt.TraktSettingsViewModel
@@ -84,9 +85,14 @@ val homeModule = module {
             profileDao = get(),
             categoryDao = get(),
             customize = get(),
+            progressDao = get(),
+            seriesRepository = get(),
+            database = get(),
         )
     }
     single { TraktScrobbler(player = get(), repo = get(), metadata = get()) }
+    // Resume from Trakt: folds another device's paused position into this one's before Play — see TraktResume.
+    single { TraktResume(repo = get(), metadata = get(), progressDao = get(), settings = get(), player = get()) }
     viewModelOf(::TraktSettingsViewModel)
     viewModelOf(::HomeViewModel)
 }

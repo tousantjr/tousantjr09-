@@ -224,6 +224,8 @@ private val LEAF_ROWS: List<Pair<SettingsLeaf, Int>> = listOf(
     SettingsLeaf.HOME to R.string.trakt_connect_cancel,
     SettingsLeaf.HOME to R.string.trakt_scrobble,
     SettingsLeaf.HOME to R.string.trakt_watchlist_row,
+    SettingsLeaf.HOME to R.string.trakt_up_next_row,
+    SettingsLeaf.HOME to R.string.trakt_resume,
     SettingsLeaf.HOME to R.string.trakt_client_id,
     SettingsLeaf.HOME to R.string.trakt_client_secret,
     SettingsLeaf.HOME to R.string.trakt_status,

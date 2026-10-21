@@ -467,6 +467,18 @@ private fun TraktRows() {
         role = Role.Switch,
         onClick = if (c.connected) ({ vm.setWatchlistRow(!c.watchlistRow) }) else null,
     ) { StageSwitch(c.watchlistOn) }
+    StageSettingRow(
+        title = stringResource(R.string.trakt_up_next_row),
+        subtitle = if (c.connected) stringResource(R.string.trakt_up_next_row_description) else notConnected,
+        role = Role.Switch,
+        onClick = if (c.connected) ({ vm.setUpNextRow(!c.upNextRow) }) else null,
+    ) { StageSwitch(c.upNextOn) }
+    StageSettingRow(
+        title = stringResource(R.string.trakt_resume),
+        subtitle = if (c.connected) stringResource(R.string.trakt_resume_description) else notConnected,
+        role = Role.Switch,
+        onClick = if (c.connected) ({ vm.setResume(!c.resume) }) else null,
+    ) { StageSwitch(c.resumeOn) }
     // Typed once and saved from their sheets; with nothing typed and one built in, a row says so and
     // never shows it. The secret is optional: Trakt's newer apps are PKCE apps and have none.
     StageTextRow(

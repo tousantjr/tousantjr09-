@@ -18,20 +18,25 @@ import tv.own.owntv.mobile.R
 import tv.own.owntv.core.content.AdultCategoryClassifier
 import tv.own.owntv.core.customize.CustomizationStore
 import tv.own.owntv.core.customize.CustomizeKeys
+import tv.own.owntv.core.database.OwnTVDatabase
 import tv.own.owntv.core.database.dao.CategoryDao
 import tv.own.owntv.core.database.dao.MovieDao
 import tv.own.owntv.core.database.dao.ProfileDao
+import tv.own.owntv.core.database.dao.ProgressDao
 import tv.own.owntv.core.database.dao.SeriesDao
 import tv.own.owntv.core.database.dao.SourceDao
 import tv.own.owntv.core.database.dao.TrendingCatalogRow
+import tv.own.owntv.core.database.entity.SeriesEntity
 import tv.own.owntv.core.metadata.MetadataType
 import tv.own.owntv.core.metadata.TrendingCandidate
 import tv.own.owntv.core.model.MediaType
+import tv.own.owntv.core.repository.SeriesRepository
 import tv.own.owntv.core.repository.activeSourceIds
 import tv.own.owntv.core.settings.SettingsRepository
 import tv.own.owntv.core.trending.TrendingMatcher
 import tv.own.owntv.mobile.mdblist.CuratedItem
 import tv.own.owntv.mobile.mdblist.CuratedRail
+import tv.own.owntv.mobile.mdblist.MetadataIdLookup
 import java.io.File
 
 /** How a device-code login ended: connected, or declined with Trakt's status (0 = never reached). */
@@ -42,8 +47,9 @@ sealed interface TraktLoginResult {
 
 /**
  * What Trakt adds to the app, behind Settings → Layout → Home → Trakt: scrobbling (what is playing,
- * paused and finished goes to the user's Trakt profile) and the watchlist as a Home rail, cut down to
- * the titles the active playlists actually hold.
+ * paused and finished goes to the user's Trakt profile), the watchlist and the Up next episodes as
+ * Home rails, cut down to the titles the active playlists actually hold, and the paused positions
+ * Trakt holds from other devices ([playbackPositions], which [TraktResume] folds into this device's).
  *
  * The login is Trakt's device code: the app shows a short code, the user types it at trakt.tv/activate
  * on any device, and the app polls until Trakt says yes. Tokens live in [TraktSettings] and are
@@ -68,6 +74,9 @@ class TraktRepository(
     private val profileDao: ProfileDao,
     private val categoryDao: CategoryDao,
     private val customize: CustomizationStore,
+    private val progressDao: ProgressDao,
+    private val seriesRepository: SeriesRepository,
+    database: OwnTVDatabase,
 ) {
 
     /** What the last call came to, for Settings' status line. */
@@ -91,6 +100,7 @@ class TraktRepository(
     private val cacheMutex = Mutex()
     private val railMutex = Mutex()
     private val cache = DiskCache(File(context.cacheDir, CACHE_FILE))
+    private val idLookup = MetadataIdLookup(database)
 
     // --- Login ---------------------------------------------------------------------------------------
 
@@ -132,7 +142,7 @@ class TraktRepository(
                 is TraktTokenPoll.Granted -> {
                     val username = runCatching { api.me(c.effectiveClientId, poll.auth.accessToken) }.getOrDefault("")
                     settings.setAuth(poll.auth, username)
-                    cacheMutex.withLock { cache.clear(SECTION_WATCHLIST) }
+                    cacheMutex.withLock { cache.clearAll() }
                     _status.value = Status.Idle
                     result = TraktLoginResult.Connected(username)
                 }
@@ -153,7 +163,7 @@ class TraktRepository(
         val auth = c.auth
         if (auth != null && c.hasCredentials) api.revoke(c.effectiveClientId, c.effectiveClientSecret, auth.accessToken)
         settings.clearAuth()
-        cacheMutex.withLock { cache.clear(SECTION_WATCHLIST) }
+        cacheMutex.withLock { cache.clearAll() }
         _status.value = Status.Idle
     }
 
@@ -184,7 +194,146 @@ class TraktRepository(
         _status.value = Status.Scrobbled(title)
     }
 
-    // --- Home's rail ---------------------------------------------------------------------------------
+    // --- Paused positions (Resume from Trakt) --------------------------------------------------------
+
+    /**
+     * Every position Trakt holds from a pause on any device — films and episodes — kept five minutes
+     * so the two or three starts of an evening cost one round trip. Null while the setting is off or
+     * not connected, and when a call failed (the status says why); [TraktResume] does the comparing.
+     */
+    suspend fun playbackPositions(): List<TraktPlaybackItem>? = withContext(Dispatchers.IO) {
+        val c = settings.config.first()
+        if (!c.resumeOn) return@withContext null
+        val now = System.currentTimeMillis()
+        val out = ArrayList<TraktPlaybackItem>()
+        for ((kind, type) in listOf(KIND_MOVIES to MetadataType.MOVIE, KIND_EPISODES to MetadataType.TV)) {
+            val body = playbackBody(c, kind, now) ?: return@withContext null
+            out += runCatching { TraktParser.playback(body, type) }
+                .getOrElse { Log.w(TAG, "playback did not parse as expected: ${it.javaClass.simpleName}"); emptyList() }
+        }
+        out
+    }
+
+    /** One kind's raw playback answer, from the cache or Trakt; null when the call failed. */
+    private suspend fun playbackBody(c: TraktConfig, kind: String, now: Long): String? {
+        cacheMutex.withLock { cache.body(SECTION_PLAYBACK, kind, PLAYBACK_TTL_MS, now) }?.let { return it }
+        val token = accessToken(c) ?: return null
+        val fresh = fetch { api.playback(c.effectiveClientId, token, kind) } ?: return null
+        cacheMutex.withLock { cache.put(SECTION_PLAYBACK, kind, fresh, now) }
+        return fresh
+    }
+
+    // --- Home's rails --------------------------------------------------------------------------------
+
+    /**
+     * Home's Up next rail for [profileId]: for each show the user watched most recently on Trakt (the
+     * twelve newest), the episode Trakt says comes next, when the profile's playlists hold the show and
+     * that episode — one card per show, newest show first, finished episodes (watched to the end here)
+     * left out. Shown with a single match: this is the user's own progress, not a public list. Null
+     * while the row is off, and null (with a status) when a call failed.
+     */
+    suspend fun upNextRail(profileId: Long, hideAdult: Boolean): CuratedRail? = withContext(Dispatchers.IO) {
+        val c = settings.config.first()
+        if (!c.upNextOn || profileId < 0) return@withContext null
+        railMutex.withLock {
+            val shows = watchedShows(c)?.take(MAX_UP_NEXT_SHOWS) ?: return@withLock null
+            if (shows.isEmpty()) return@withLock null
+            val seriesSources = activeSourceIds(appSettings, sourceDao, profileId, MediaType.SERIES)
+            if (seriesSources.isEmpty()) return@withLock null
+            val language = runCatching { appSettings.metadataConfig().resolvedLanguage }.getOrDefault(DEFAULT_LANGUAGE)
+            val matched = matchShows(shows, seriesSources, language)
+            if (matched.isEmpty()) return@withLock null
+            val hiddenSeries = runCatching { customize.observe(profileId, MediaType.SERIES).first().hiddenItems.keys }.getOrDefault(emptySet())
+            val categoryNames = HashMap<Long, String?>()
+            val out = ArrayList<CuratedItem>()
+            for (show in shows) {
+                val series = matched[show.traktId] ?: continue
+                if (CustomizeKeys.series(series) in hiddenSeries) continue
+                if (!allowed(profileId, series.categoryId, hideAdult, categoryNames)) continue
+                // One request per show, sequential; the first failure ends the pass (the status says why).
+                val next = nextEpisode(c, show.traktId) ?: break
+                val wanted = next.episode ?: continue
+                seriesRepository.loadEpisodes(series)
+                val episode = seriesDao.findEpisodeByNumber(series.id, wanted.season, wanted.number) ?: continue
+                val local = progressDao.get(profileId, MediaType.EPISODE, episode.id)
+                if (local != null && local.durationMs > 0 && local.positionMs >= (local.durationMs * FINISHED_FRACTION).toLong()) continue
+                val title = wanted.title ?: episode.name.takeIf { it.isNotBlank() }
+                val subtitle = if (title.isNullOrBlank()) context.getString(R.string.content_season_episode, wanted.season, wanted.number)
+                else context.getString(R.string.content_season_episode_title, wanted.season, wanted.number, title)
+                out += CuratedItem.Episode(series, episode, subtitle, local?.positionMs ?: 0L)
+                if (out.size >= MAX_UP_NEXT) break
+            }
+            if (out.isEmpty()) null else CuratedRail(UP_NEXT_REF, context.getString(R.string.trakt_up_next_rail), out)
+        }
+    }
+
+    /** The shows the user has watched, newest first (an hour's cache); null when the call failed. */
+    private suspend fun watchedShows(c: TraktConfig): List<TraktWatchedShow>? {
+        val now = System.currentTimeMillis()
+        val cached = cacheMutex.withLock { cache.body(SECTION_WATCHED, KIND_SHOWS, WATCHED_TTL_MS, now) }
+        val body = cached ?: run {
+            val token = accessToken(c) ?: return null
+            val fresh = fetch { api.watchedShows(c.effectiveClientId, token) } ?: return null
+            cacheMutex.withLock { cache.put(SECTION_WATCHED, KIND_SHOWS, fresh, now) }
+            fresh
+        }
+        return runCatching { TraktParser.watchedShows(body) }
+            .getOrElse { Log.w(TAG, "watched shows did not parse as expected: ${it.javaClass.simpleName}"); emptyList() }
+    }
+
+    /** A show's next episode per Trakt (an hour's cache per show); null when the call failed, [NextEpisode] with null inside when the show is done. */
+    private class NextEpisode(val episode: TraktNextEpisode?)
+
+    private suspend fun nextEpisode(c: TraktConfig, traktId: Long): NextEpisode? {
+        val now = System.currentTimeMillis()
+        val key = traktId.toString()
+        val cached = cacheMutex.withLock { cache.body(SECTION_PROGRESS, key, PROGRESS_TTL_MS, now) }
+        val body = cached ?: run {
+            val token = accessToken(c) ?: return null
+            val fresh = fetch { api.showProgress(c.effectiveClientId, token, traktId) } ?: return null
+            cacheMutex.withLock { cache.put(SECTION_PROGRESS, key, fresh, now) }
+            fresh
+        }
+        return NextEpisode(runCatching { TraktParser.nextEpisode(body) }.getOrNull())
+    }
+
+    /**
+     * Trakt id → the playlist's show, for [shows]: first by TMDB/IMDb id through the metadata layer's
+     * match table (the MDBList rails' id pass), then by title through core's [TrendingMatcher] for the
+     * rest; the first of [seriesSources] to hold a show keeps it.
+     */
+    private suspend fun matchShows(shows: List<TraktWatchedShow>, seriesSources: List<Long>, language: String): Map<Long, SeriesEntity> {
+        val out = HashMap<Long, SeriesEntity>()
+        val byIds = shows.filter { it.tmdbId > 0 || it.imdbId != null }
+        if (byIds.isNotEmpty()) {
+            val viaImdb = idLookup.tmdbIdsByImdb(byIds.mapNotNull { it.imdbId }.distinct())
+            val rows = idLookup.matchRows((byIds.map { it.tmdbId }.filter { it > 0 } + viaImdb.values.flatten().map { it.tmdbId }).distinct())
+            for (show in byIds) {
+                val row = idLookup.bestRow(show.tmdbId, show.imdbId, MetadataIdLookup.TYPE_TV, seriesSources, rows, viaImdb) ?: continue
+                val series = seriesDao.findSeriesByRemote(row.sourceId, row.tail) ?: seriesDao.findSeriesByName(row.sourceId, row.tail) ?: continue
+                out[show.traktId] = series
+            }
+        }
+        val open = shows.filter { it.traktId !in out && it.tmdbId > 0 }
+        if (open.isNotEmpty()) {
+            val candidates = open.mapIndexed { i, s ->
+                TrendingCandidate(
+                    tmdbId = s.tmdbId, type = MetadataType.TV, localizedTitle = s.title, originalTitle = null, year = s.year,
+                    overview = null, posterPath = null, backdropPath = null, rating = null, popularity = 0.0, trendingRank = i + 1,
+                )
+            }
+            val ids = matchIds(
+                candidates, MetadataType.TV, MediaType.SERIES, seriesSources, language,
+                exact = { sid, signatures -> seriesDao.trendingExact(sid, signatures) },
+                fts = { sid, query, limit -> seriesDao.trendingFts(sid, query, limit) },
+            )
+            if (ids.isNotEmpty()) {
+                val series = seriesDao.getSeriesByIds(ids.values.toList()).associateBy { it.id }
+                for (show in open) ids[show.tmdbId]?.let(series::get)?.let { out[show.traktId] = it }
+            }
+        }
+        return out
+    }
 
     /**
      * Home's watchlist rail for [profileId]: the user's Trakt watchlist cut down to the titles the
@@ -373,6 +522,13 @@ class TraktRepository(
             }
         }
 
+        /** Another account, or none: nothing cached belongs to it. */
+        fun clearAll() {
+            val r = JSONObject()
+            root = r
+            save(r)
+        }
+
         private fun save(r: JSONObject) {
             runCatching {
                 file.parentFile?.mkdirs()
@@ -387,15 +543,29 @@ class TraktRepository(
     }
 
     companion object {
-        /** The rail's key on Home, beside the MDBList rails' list references. */
+        /** The rails' keys on Home, beside the MDBList rails' list references. */
         const val RAIL_REF = "trakt/watchlist"
+        const val UP_NEXT_REF = "trakt/up-next"
         private const val TAG = "OwnTV-Trakt"
         private const val CACHE_FILE = "trakt_cache.json"
         private const val SECTION_WATCHLIST = "watchlist"
+        private const val SECTION_PLAYBACK = "playback"
+        private const val SECTION_WATCHED = "watched"
+        private const val SECTION_PROGRESS = "progress"
         private const val KIND_MOVIES = "movies"
         private const val KIND_SHOWS = "shows"
+        private const val KIND_EPISODES = "episodes"
         private const val DEFAULT_LANGUAGE = "en"
         private const val WATCHLIST_TTL_MS = 12 * 60 * 60 * 1000L
+        private const val PLAYBACK_TTL_MS = 5 * 60 * 1000L
+        private const val WATCHED_TTL_MS = 60 * 60 * 1000L
+        private const val PROGRESS_TTL_MS = 60 * 60 * 1000L
+        /** The shows the Up next rail asks about: the ones watched most recently. */
+        private const val MAX_UP_NEXT_SHOWS = 12
+        /** The most cards the Up next rail shows. */
+        private const val MAX_UP_NEXT = 12
+        /** An episode watched this far here is finished, as the Series screen counts it, and leaves Up next. */
+        private const val FINISHED_FRACTION = 0.95
         private const val REFRESH_AHEAD_MS = 24 * 60 * 60 * 1000L
         /** Trakt's 429 on the device poll: wait this much longer between polls, each time. */
         private const val SLOW_DOWN_MS = 1_000L

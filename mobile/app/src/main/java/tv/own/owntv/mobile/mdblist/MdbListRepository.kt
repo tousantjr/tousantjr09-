@@ -2,7 +2,6 @@ package tv.own.owntv.mobile.mdblist
 
 import android.content.Context
 import android.util.Log
-import androidx.room.useReaderConnection
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -23,6 +22,7 @@ import tv.own.owntv.core.database.dao.ProfileDao
 import tv.own.owntv.core.database.dao.SeriesDao
 import tv.own.owntv.core.database.dao.SourceDao
 import tv.own.owntv.core.database.dao.TrendingCatalogRow
+import tv.own.owntv.core.database.entity.EpisodeEntity
 import tv.own.owntv.core.database.entity.MovieEntity
 import tv.own.owntv.core.database.entity.SeriesEntity
 import tv.own.owntv.core.metadata.MetadataType
@@ -60,9 +60,28 @@ sealed interface CuratedItem {
         override val categoryId: Long? get() = series.categoryId
     }
 
+    /**
+     * One episode of a show (Trakt's Up next rail): the show's poster and name, [subtitle] naming the
+     * episode ("S2 · E5 Title"), and where this profile left it ([positionMs], 0 when unstarted). A
+     * click plays the episode rather than opening the show.
+     */
+    data class Episode(
+        val series: SeriesEntity,
+        val episode: EpisodeEntity,
+        val subtitle: String,
+        val positionMs: Long = 0L,
+    ) : CuratedItem {
+        override val key: String get() = KEY_EPISODE + episode.id
+        override val name: String get() = series.name
+        override val posterUrl: String? get() = series.posterUrl
+        override val rating: Double? get() = series.rating
+        override val categoryId: Long? get() = series.categoryId
+    }
+
     companion object {
         private const val KEY_MOVIE = "movie:"
         private const val KEY_SERIES = "series:"
+        private const val KEY_EPISODE = "episode:"
     }
 }
 
@@ -127,6 +146,7 @@ class MdbListRepository(
     private val cacheMutex = Mutex()
     private val railsMutex = Mutex()
     private val cache = DiskCache(File(context.cacheDir, CACHE_FILE))
+    private val idLookup = MetadataIdLookup(database)
 
     // --- Ratings -------------------------------------------------------------------------------------
 
@@ -329,21 +349,18 @@ class MdbListRepository(
     ): Map<Pair<MetadataType, Int>, CuratedItem> {
         val wanted = items.filter { it.type != MetadataType.EPISODE && it.tmdbId > 0 }
         if (wanted.isEmpty() || (movieSources.isEmpty() && seriesSources.isEmpty())) return emptyMap()
-        val viaImdb = tmdbIdsByImdb(wanted.mapNotNull { it.imdbId }.distinct())
-        val rows = matchRows((wanted.map { it.tmdbId } + viaImdb.values.flatten().map { it.tmdbId }).distinct())
+        val viaImdb = idLookup.tmdbIdsByImdb(wanted.mapNotNull { it.imdbId }.distinct())
+        val rows = idLookup.matchRows((wanted.map { it.tmdbId } + viaImdb.values.flatten().map { it.tmdbId }).distinct())
         if (rows.isEmpty()) return emptyMap()
         val out = HashMap<Pair<MetadataType, Int>, CuratedItem>()
         for (item in wanted) {
             val (type, sources) = when (item.type) {
-                MetadataType.MOVIE -> TYPE_MOVIE to movieSources
-                MetadataType.TV -> TYPE_TV to seriesSources
+                MetadataType.MOVIE -> MetadataIdLookup.TYPE_MOVIE to movieSources
+                MetadataType.TV -> MetadataIdLookup.TYPE_TV to seriesSources
                 MetadataType.EPISODE -> continue
             }
             if (sources.isEmpty()) continue
-            val ids = (listOf(item.tmdbId) + item.imdbId?.let(viaImdb::get).orEmpty().filter { it.type == type }.map { it.tmdbId }).distinct()
-            val row = ids.flatMap { rows[it].orEmpty() }
-                .filter { it.type == type && it.sourceId in sources }
-                .minByOrNull { sources.indexOf(it.sourceId) } ?: continue
+            val row = idLookup.bestRow(item.tmdbId, item.imdbId, type, sources, rows, viaImdb) ?: continue
             val found: CuratedItem = when (item.type) {
                 MetadataType.MOVIE ->
                     (movieDao.findByRemote(row.sourceId, row.tail) ?: movieDao.findByName(row.sourceId, row.tail))?.let(CuratedItem::Movie)
@@ -361,65 +378,8 @@ class MdbListRepository(
     private fun CuratedItem.isHidden(hidden: HiddenTitles): Boolean = when (this) {
         is CuratedItem.Movie -> CustomizeKeys.movie(movie) in hidden.movies
         is CuratedItem.Series -> CustomizeKeys.series(series) in hidden.series
+        is CuratedItem.Episode -> CustomizeKeys.series(series) in hidden.series
     }
-
-    /** One match-table row: the playlist, and the provider's id (or the name, for an M3U row) its key names. */
-    private data class LocalRow(val type: String, val sourceId: Long, val tail: String) {
-        companion object {
-            /** `movie:12:tt-remote` or `movie:12:Some Title`, minus the `:kids` a kids profile's lookup appends; null for anything else. */
-            fun parse(localKey: String, type: String): LocalRow? {
-                val afterType = localKey.removeSuffix(KIDS_SUFFIX).substringAfter(':', "").ifEmpty { return null }
-                val sourceId = afterType.substringBefore(':').toLongOrNull() ?: return null
-                val tail = afterType.substringAfter(':', "").ifEmpty { return null }
-                return LocalRow(type, sourceId, tail)
-            }
-        }
-    }
-
-    /** A cache row's identity: its type and TMDB id (one row per metadata language, hence a list per IMDb id). */
-    private data class CachedId(val type: String, val tmdbId: Int)
-
-    /**
-     * The match table's rows resolved to [tmdbIds]: TMDB id → the local keys. A raw statement, because
-     * core's DAO reads that table by local key only, and core is a compiled dependency.
-     */
-    private suspend fun matchRows(tmdbIds: List<Int>): Map<Int, List<LocalRow>> {
-        if (tmdbIds.isEmpty()) return emptyMap()
-        val out = HashMap<Int, MutableList<LocalRow>>()
-        for (chunk in tmdbIds.chunked(QUERY_CHUNK)) {
-            database.useReaderConnection { connection ->
-                connection.usePrepared(SQL_MATCH_ROWS + placeholders(chunk.size)) { statement ->
-                    chunk.forEachIndexed { i, id -> statement.bindLong(i + 1, id.toLong()) }
-                    while (statement.step()) {
-                        val row = LocalRow.parse(statement.getText(0), statement.getText(2)) ?: continue
-                        out.getOrPut(statement.getLong(1).toInt()) { ArrayList() } += row
-                    }
-                }
-            }
-        }
-        return out
-    }
-
-    /** The cache's TMDB ids for [imdbIds]: IMDb id → the cache rows (type and TMDB id) carrying it. */
-    private suspend fun tmdbIdsByImdb(imdbIds: List<String>): Map<String, List<CachedId>> {
-        if (imdbIds.isEmpty()) return emptyMap()
-        val out = HashMap<String, MutableList<CachedId>>()
-        for (chunk in imdbIds.chunked(QUERY_CHUNK)) {
-            database.useReaderConnection { connection ->
-                connection.usePrepared(SQL_CACHE_BY_IMDB + placeholders(chunk.size)) { statement ->
-                    chunk.forEachIndexed { i, id -> statement.bindText(i + 1, id) }
-                    while (statement.step()) {
-                        if (statement.isNull(0)) continue
-                        out.getOrPut(statement.getText(0)) { ArrayList() } += CachedId(statement.getText(2), statement.getLong(1).toInt())
-                    }
-                }
-            }
-        }
-        return out
-    }
-
-    /** `?,?,?)` for [n] bound values — the tail of an `IN (` clause. */
-    private fun placeholders(n: Int): String = List(n) { "?" }.joinToString(",") + ")"
 
     /** TMDB id → the playlist row's id, across [sources] in order: the first playlist to hold a title keeps it. */
     private suspend fun matchIds(
@@ -553,15 +513,6 @@ class MdbListRepository(
         const val SECTION_TOP = "top"
         const val KEY_TOP = "top"
         const val DEFAULT_LANGUAGE = "en"
-        /** The match and cache tables' `type` column for a film and a show, as core writes them. */
-        const val TYPE_MOVIE = "movie"
-        const val TYPE_TV = "tv"
-        /** What a kids profile's lookup appends to a local key — the same local row either way. */
-        const val KIDS_SUFFIX = ":kids"
-        const val SQL_MATCH_ROWS = "SELECT localKey, tmdbId, type FROM metadata_match WHERE tmdbId IN ("
-        const val SQL_CACHE_BY_IMDB = "SELECT imdbId, tmdbId, type FROM metadata_cache WHERE imdbId IN ("
-        /** Bound values per statement — far under SQLite's limit, and a list tries at most [MAX_CANDIDATES] anyway. */
-        const val QUERY_CHUNK = 400
         const val RATINGS_TTL_MS = 7 * 24 * 60 * 60 * 1000L
         const val ITEMS_TTL_MS = 12 * 60 * 60 * 1000L
         const val TOP_TTL_MS = 24 * 60 * 60 * 1000L

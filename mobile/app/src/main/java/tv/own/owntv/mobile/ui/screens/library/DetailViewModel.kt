@@ -73,6 +73,7 @@ class DetailViewModel(
     private val metadata: MetadataRepository,
     private val subtitleController: SubtitleController,
     private val customize: CustomizationStore,
+    private val traktResume: tv.own.owntv.mobile.trakt.TraktResume,
 ) : ViewModel() {
 
     private data class Target(val tab: LibraryTab, val id: Long)
@@ -289,7 +290,12 @@ class DetailViewModel(
             if (tab == LibraryTab.MOVIES) {
                 val film = movieDao.getById(id)
                 _movie.value = film
-                if (film != null) loadMoviePage(film)
+                if (film != null) {
+                    // A position paused on another device (Trakt) folds into the saved one the Resume
+                    // button reads — the progress flow above picks the merged row up. See TraktResume.
+                    launch { traktResume.mergeMovie(film) }
+                    loadMoviePage(film)
+                }
                 return@launch
             }
             _loading.value = true
@@ -298,6 +304,8 @@ class DetailViewModel(
             if (entity != null) {
                 launch { loadSeriesPage(entity) }
                 _episodesFailure.value = (seriesRepository.loadEpisodes(entity) as? EpisodeLoad.Failed)?.reason
+                // The same for every episode of the show, once its episodes are in: the bars under the rows.
+                launch { traktResume.mergeShow(entity, seriesDao.episodesBySeriesOnce(entity.id)) }
             }
             _loading.value = false
             val pid = profileId.value

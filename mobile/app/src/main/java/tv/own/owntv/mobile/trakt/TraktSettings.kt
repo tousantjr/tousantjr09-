@@ -24,6 +24,10 @@ data class TraktAuth(val accessToken: String, val refreshToken: String, val expi
 data class TraktConfig(
     val scrobble: Boolean = true,
     val watchlistRow: Boolean = true,
+    /** Resume from Trakt: a newer paused position on another device replaces this device's before Play. */
+    val resume: Boolean = true,
+    /** The Up next row on Home: the next unwatched episode of each show being watched on Trakt. */
+    val upNextRow: Boolean = true,
     /** The API app's client id and secret the user typed. Kept here only; never logged, never put in a report. */
     val clientId: String = "",
     val clientSecret: String = "",
@@ -57,6 +61,10 @@ data class TraktConfig(
     val scrobbleOn: Boolean get() = scrobble && connected
 
     val watchlistOn: Boolean get() = watchlistRow && connected
+
+    val resumeOn: Boolean get() = resume && connected
+
+    val upNextOn: Boolean get() = upNextRow && connected
 }
 
 /**
@@ -73,6 +81,8 @@ class TraktSettings(
     private object Keys {
         val SCROBBLE = booleanPreferencesKey("trakt_scrobble")
         val WATCHLIST = booleanPreferencesKey("trakt_watchlist_row")
+        val RESUME = booleanPreferencesKey("trakt_resume")
+        val UP_NEXT = booleanPreferencesKey("trakt_up_next_row")
         val CLIENT_ID = stringPreferencesKey("trakt_client_id")
         val CLIENT_SECRET = stringPreferencesKey("trakt_client_secret")
         val ACCESS_TOKEN = stringPreferencesKey("trakt_access_token")
@@ -87,6 +97,8 @@ class TraktSettings(
         TraktConfig(
             scrobble = p[Keys.SCROBBLE] ?: true,
             watchlistRow = p[Keys.WATCHLIST] ?: true,
+            resume = p[Keys.RESUME] ?: true,
+            upNextRow = p[Keys.UP_NEXT] ?: true,
             clientId = p[Keys.CLIENT_ID].orEmpty(),
             clientSecret = p[Keys.CLIENT_SECRET].orEmpty(),
             builtInClientId = builtInClientId,
@@ -99,6 +111,10 @@ class TraktSettings(
     suspend fun setScrobble(on: Boolean) = edit { it[Keys.SCROBBLE] = on }
 
     suspend fun setWatchlistRow(on: Boolean) = edit { it[Keys.WATCHLIST] = on }
+
+    suspend fun setResume(on: Boolean) = edit { it[Keys.RESUME] = on }
+
+    suspend fun setUpNextRow(on: Boolean) = edit { it[Keys.UP_NEXT] = on }
 
     /** A new client pair starts afresh: tokens the old one minted are not valid for it. */
     suspend fun setClientId(id: String) = edit {

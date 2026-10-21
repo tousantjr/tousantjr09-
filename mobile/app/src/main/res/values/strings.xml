@@ -348,6 +348,11 @@
     <string name="trakt_watchlist_row">Watchlist row on Home</string>
     <string name="trakt_watchlist_row_description">Your Trakt watchlist as a row under Now trending, showing only the titles your playlists have.</string>
     <string name="trakt_watchlist_rail">Your Trakt watchlist</string>
+    <string name="trakt_up_next_row">Up next row on Home</string>
+    <string name="trakt_up_next_row_description">The next unwatched episode of each show you are watching on Trakt, as a row above the watchlist — only the shows your playlists have.</string>
+    <string name="trakt_up_next_rail">Up next</string>
+    <string name="trakt_resume">Resume from Trakt</string>
+    <string name="trakt_resume_description">Picks up where you paused on another device: a newer position on Trakt replaces this device\'s saved one before you press Play.</string>
     <string name="trakt_client_id">Trakt client ID</string>
     <string name="trakt_client_id_description">From your Trakt API app (developer.trakt.tv → your app → Credentials); its redirect URI must be http://localhost/callback. Stored only on this device; it always wins over the one built into the app.</string>
     <string name="trakt_client_id_hint">Paste the client ID</string>
