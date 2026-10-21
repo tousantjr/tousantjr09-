@@ -29,6 +29,7 @@ import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.tv.material3.Text
 import kotlinx.coroutines.CancellationException
@@ -431,7 +432,7 @@ private fun StatusRow(icon: OwnTVIcon, title: String, desc: String?, status: Dia
         DiagnosticStatus.PROBLEM -> stringResource(R.string.diagnostics_status_problem) to StageColors.Danger
     }
     val value = SettingValue.Custom {
-        Text(label, style = stageText(18, 700), color = color, maxLines = 1)
+        Text(label, style = stageText(18, 700), color = color, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
     StageSettingRow(
         icon = icon,

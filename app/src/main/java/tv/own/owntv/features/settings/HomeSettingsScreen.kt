@@ -441,6 +441,6 @@ private fun mdbStatusText(c: MdbListConfig, status: MdbListRepository.Status): S
         is MdbListRepository.Status.HttpError -> stringResource(R.string.mdblist_status_http, status.code)
         MdbListRepository.Status.Unreachable -> stringResource(R.string.mdblist_status_unreachable)
         MdbListRepository.Status.NoMatches -> stringResource(R.string.mdblist_status_no_matches)
-        is MdbListRepository.Status.Shown -> stringResource(R.string.mdblist_status_shown, status.rails, status.titles)
+        is MdbListRepository.Status.Shown -> pluralStringResource(R.plurals.mdblist_status_shown, status.rails, status.rails, status.titles)
     }
 }

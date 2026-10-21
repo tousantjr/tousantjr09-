@@ -135,7 +135,7 @@ class MdbListApi(client: OkHttpClient) {
         try {
             call.execute().use { response ->
                 if (!response.isSuccessful) throw MdbListHttpException(response.code)
-                response.body.string()
+                response.body?.string().orEmpty()
             }
         } finally {
             hook?.dispose()

@@ -272,7 +272,10 @@
     <string name="mdblist_status_http">MDBList answered HTTP %1$d</string>
     <string name="mdblist_status_unreachable">MDBList unreachable</string>
     <string name="mdblist_status_no_matches">Lists fetched, but your playlists have too few of their titles for a row.</string>
-    <string name="mdblist_status_shown">Showing %1$d rows with %2$d titles</string>
+    <plurals name="mdblist_status_shown">
+        <item quantity="one">Showing %1$d row with %2$d titles</item>
+        <item quantity="other">Showing %1$d rows with %2$d titles</item>
+    </plurals>
     <string name="mdblist_rating_imdb">IMDb %1$s</string>
     <string name="mdblist_rating_rt">RT %1$d%%</string>
     <string name="mdblist_rating_mc">MC %1$d</string>
