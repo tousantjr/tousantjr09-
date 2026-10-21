@@ -184,6 +184,8 @@ internal fun LiveStageRow(
         }
         if (trailing != null) trailing()
         else Row(horizontalArrangement = Arrangement.spacedBy(8.mpx), verticalAlignment = Alignment.CenterVertically) {
+            // The reliability dot sits with the tags: how this channel has behaved here, once it has been tried.
+            tv.own.owntv.features.health.ChannelHealthDot(channel.id)
             name.tags.forEach { StageTag(it) }
             if (channel.catchup) OwnTVIcon(OwnTVIcon.REWIND, StageColors.Dim, Modifier.size(22.mpx))
             if (isFavorite) OwnTVIcon(OwnTVIcon.FAVORITE, stageAccent.accent, Modifier.size(22.mpx), filled = true)

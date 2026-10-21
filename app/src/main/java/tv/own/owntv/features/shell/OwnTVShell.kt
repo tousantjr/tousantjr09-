@@ -426,6 +426,13 @@ fun OwnTVShell(
         watchingSourceId?.let { watchSession.open(it) }
         onDispose { watchingSourceId?.let { watchSession.close(it) } }
     }
+    // Channel reliability: the live channel on screen — the Live TV pane's preview, or the full-screen
+    // player when a channel is what it plays — and the engine holding it. A catch-up replay is a
+    // recording's stream, not the channel's, so it says nothing about the channel.
+    val healthChannel = previewChannel?.takeIf {
+        !catchupActive && (if (playerMode == PlayerMode.NONE) selectedSection == MainSection.LIVE_TV else zapSource == MainSection.LIVE_TV)
+    }
+    tv.own.owntv.features.health.ChannelHealthBinder(healthChannel, if (liveOnExo) liveVm.previewEngine else mpvEngine)
     // Current programme per channel for the in-player channel list overlay (small subtitle under each row).
     // Only resolved while the overlay is actually open. Keyed on the channel set so a zap-list change re-resolves.
     // Shares the Live list's resolved titles, so opening the overlay over a list already on screen

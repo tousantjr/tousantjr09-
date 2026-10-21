@@ -121,6 +121,28 @@ val appModule = module {
     // The player's connection-limit line under a failed stream: asks the Xtream account for its
     // active/max connections after a failure that could be a refusal — see ConnectionLimitNotices.
     single { tv.own.owntv.player.ConnectionLimitNotices(get(), get()) }
+    // Channel reliability: what this device has learnt about each channel (ChannelHealthStore), the
+    // engine watcher the shell feeds (ChannelHealthRecorder — an account refusal is kept out through
+    // the same check the player's connection-limit line makes), and Diagnostics' sweep (ChannelSweep).
+    single { tv.own.owntv.features.health.ChannelHealthStore(androidContext()) }
+    single {
+        val notices = get<tv.own.owntv.player.ConnectionLimitNotices>()
+        tv.own.owntv.features.health.ChannelHealthRecorder(get()) { channel, failure ->
+            runCatching { notices.explain(channel.sourceId, failure) }.getOrNull() != null
+        }
+    }
+    single {
+        tv.own.owntv.features.health.ChannelSweep(
+            context = androidContext(),
+            settings = get(),
+            sourceDao = get(),
+            channelDao = get(),
+            customize = get(),
+            resolver = get(),
+            http = get(),
+            store = get(),
+        )
+    }
     // Sports Hub: which match the playing channel came from. Lazy; nothing runs until it is asked.
     singleOf(::SportsPlayback)
     // Process-long scope for work that must outlive the screen that started it (a first-run restore).

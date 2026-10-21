@@ -63,7 +63,9 @@ internal val DIAGNOSTICS_SEARCH_ROWS: List<Int> = listOf(
     R.string.diagnostics_sports_title, R.string.diagnostics_storage_title,
     R.string.diagnostics_speed_test_title, R.string.diagnostics_player_title,
     R.string.diagnostics_app_title, R.string.diagnostics_device_title,
-    R.string.diagnostics_clear_image_cache, R.string.diagnostics_open_app_settings,
+    R.string.diagnostics_clear_image_cache, R.string.diagnostics_sweep_title,
+    R.string.diagnostics_sweep_hide, R.string.diagnostics_sweep_show_list,
+    R.string.diagnostics_open_app_settings,
     R.string.diagnostics_restart_app, R.string.diagnostics_show_report,
     R.string.diagnostics_copy_report, R.string.diagnostics_share_report,
 )
@@ -121,6 +123,14 @@ fun DiagnosticsScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
     var showUpdate by remember { mutableStateOf(false) }
     var showReport by remember { mutableStateOf(false) }
 
+    // The channel sweep: its state is app-wide (ChannelSweep), the probing is the view model's job.
+    val sweepState by vm.channelSweep.collectAsStateWithLifecycle()
+    var showSweepConfirm by remember { mutableStateOf(false) }
+    var showSweepStop by remember { mutableStateOf(false) }
+    var showDeadList by remember { mutableStateOf(false) }
+    val sweepDone = sweepState as? tv.own.owntv.features.health.SweepUi.Done
+    val deadFound = sweepDone?.dead?.takeIf { it.isNotEmpty() }
+
     val explanation = stringResource(R.string.diagnostics_run_checks_help)
     val report = (diagnostics as? DiagnosticsUi.Done)?.report
     val running = diagnostics is DiagnosticsUi.Running
@@ -145,7 +155,7 @@ fun DiagnosticsScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
 
     // Run checks, the check rows (two per playlist: its verdict and its Re-sync), the speed test,
     // then the three always-on sections: player/app/device, quick fixes, report.
-    val rows = 1 + (report?.let { 1 + (if (it.sources.isEmpty()) 1 else it.sources.size * 2) + 2 + 1 + 1 } ?: 0) + 1 + 3 + 3 + 3
+    val rows = 1 + (report?.let { 1 + (if (it.sources.isEmpty()) 1 else it.sources.size * 2) + 2 + 1 + 1 } ?: 0) + 1 + 3 + 4 + (if (deadFound != null) 2 else 0) + 3
 
     StageFullPage(
         parents = listOf(stringResource(R.string.settings_group_app), stringResource(R.string.settings_group_network)),
@@ -333,6 +343,58 @@ fun DiagnosticsScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
             help = SettingHelp(clearCacheTitle, clearCacheDesc, hints = settingHints(null, pinnable = false)),
         )
 
+        // Channel sweep: one row that starts, resumes, stops or re-runs it and shows where it is; then,
+        // once it has found channels that never answered, "Hide them" and the list.
+        val sweepTitle = stringResource(R.string.diagnostics_sweep_title)
+        val sweepDesc = stringResource(R.string.diagnostics_sweep_desc)
+        val sweepLine = sweepLine(sweepState)
+        val sweepAction = stringResource(
+            when (val s = sweepState) {
+                is tv.own.owntv.features.health.SweepUi.Running -> R.string.diagnostics_sweep_cancel
+                is tv.own.owntv.features.health.SweepUi.Idle -> if (s.resumable) R.string.diagnostics_sweep_resume else R.string.diagnostics_sweep_start
+                is tv.own.owntv.features.health.SweepUi.Done -> R.string.diagnostics_sweep_run_again
+                tv.own.owntv.features.health.SweepUi.NoChannels -> R.string.diagnostics_sweep_start
+            },
+        )
+        StageSettingRow(
+            icon = OwnTVIcon.LIVE_TV,
+            title = stringResource(R.string.diagnostics_sweep_title),
+            desc = sweepLine ?: sweepDesc,
+            value = SettingValue.Action(sweepAction),
+            onClick = {
+                when (sweepState) {
+                    is tv.own.owntv.features.health.SweepUi.Running -> showSweepStop = true
+                    else -> showSweepConfirm = true
+                }
+            },
+            help = SettingHelp(sweepTitle, sweepDesc, hints = settingHints(null, pinnable = false)),
+        )
+        if (deadFound != null && sweepDone != null) {
+            val hideTitle = stringResource(R.string.diagnostics_sweep_hide)
+            val hideDesc = stringResource(R.string.diagnostics_sweep_hide_desc)
+            val hiddenLine = pluralStringResource(R.plurals.diagnostics_sweep_hidden, deadFound.size, deadFound.size)
+            val alreadyHidden = sweepDone.hidden > 0
+            StageSettingRow(
+                icon = OwnTVIcon.EYE_OFF,
+                title = stringResource(R.string.diagnostics_sweep_hide),
+                desc = if (alreadyHidden) hiddenLine else hideDesc,
+                value = if (alreadyHidden) null else SettingValue.Action(hideTitle),
+                onClick = { if (!alreadyHidden) scope.launch { if (vm.hideDeadChannels() > 0) toast.show(hiddenLine) } },
+                help = SettingHelp(hideTitle, hideDesc, hints = settingHints(null, pinnable = false)),
+                enabled = !alreadyHidden,
+            )
+            val listTitle = stringResource(R.string.diagnostics_sweep_show_list)
+            val listDesc = stringResource(R.string.diagnostics_sweep_show_list_desc)
+            StageSettingRow(
+                icon = OwnTVIcon.LIST,
+                title = stringResource(R.string.diagnostics_sweep_show_list),
+                desc = listDesc,
+                value = SettingValue.Opens(null),
+                onClick = { showDeadList = true },
+                help = SettingHelp(listTitle, listDesc, hints = settingHints(null, pinnable = false)),
+            )
+        }
+
         val appSettingsTitle = stringResource(R.string.diagnostics_open_app_settings)
         val appSettingsDesc = stringResource(R.string.diagnostics_open_app_settings_desc)
         StageSettingRow(
@@ -407,6 +469,91 @@ fun DiagnosticsScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
             onShare = { shareReport() },
             onDismiss = { showReport = false },
         )
+    }
+    if (showSweepConfirm) {
+        val confirmHeading = stringResource(R.string.diagnostics_sweep_confirm_title)
+        StagePopup(
+            onDismiss = { showSweepConfirm = false },
+            title = confirmHeading,
+            body = stringResource(R.string.diagnostics_sweep_confirm_body),
+            buttons = {
+                StageButton(
+                    stringResource(if ((sweepState as? tv.own.owntv.features.health.SweepUi.Idle)?.resumable == true) R.string.diagnostics_sweep_resume else R.string.diagnostics_sweep_start),
+                    onClick = { showSweepConfirm = false; vm.startSweep() },
+                    height = 56.mpx, textSize = 19, tinted = true,
+                )
+                StageButton(stringResource(R.string.diagnostics_sweep_cancel), onClick = { showSweepConfirm = false }, height = 56.mpx, textSize = 19)
+            },
+        )
+    }
+    if (showSweepStop) {
+        val stopHeading = stringResource(R.string.diagnostics_sweep_stop_title)
+        StagePopup(
+            onDismiss = { showSweepStop = false },
+            title = stopHeading,
+            body = stringResource(R.string.diagnostics_sweep_stop_body),
+            buttons = {
+                StageButton(stringResource(R.string.diagnostics_sweep_keep), onClick = { showSweepStop = false; vm.stopSweep() }, height = 56.mpx, textSize = 19, tinted = true)
+                StageButton(stringResource(R.string.diagnostics_sweep_discard), onClick = { showSweepStop = false; vm.discardSweep() }, height = 56.mpx, textSize = 19)
+                StageButton(stringResource(R.string.diagnostics_sweep_back), onClick = { showSweepStop = false }, height = 56.mpx, textSize = 19)
+            },
+        )
+    }
+    if (showDeadList && deadFound != null) {
+        DeadListPopup(names = deadFound.map { it.name }, onDismiss = { showDeadList = false })
+    }
+}
+
+/** The Channel sweep row's second line for the state it is in; null = the row's own description. */
+@Composable
+private fun sweepLine(state: tv.own.owntv.features.health.SweepUi): String? {
+    val sep = stringResource(R.string.content_epg_bits_separator)
+    val numbers = java.text.NumberFormat.getIntegerInstance()
+    @Composable
+    fun progress(checked: Int, total: Int, dead: Int): String =
+        stringResource(R.string.diagnostics_sweep_progress, numbers.format(checked), numbers.format(total)) + sep +
+            pluralStringResource(R.plurals.diagnostics_sweep_dead, dead, dead)
+    return when (state) {
+        is tv.own.owntv.features.health.SweepUi.Running ->
+            progress(state.checked, state.total, state.dead) + if (state.retrying) sep + stringResource(R.string.diagnostics_sweep_retrying) else ""
+        is tv.own.owntv.features.health.SweepUi.Idle ->
+            if (state.resumable) stringResource(R.string.diagnostics_sweep_paused, progress(state.checked, state.total, state.dead)) else null
+        is tv.own.owntv.features.health.SweepUi.Done ->
+            if (state.dead.isEmpty()) stringResource(R.string.diagnostics_sweep_none_dead, numbers.format(state.total))
+            else pluralStringResource(R.plurals.diagnostics_sweep_dead, state.dead.size, state.dead.size) +
+                if (state.hidden > 0) sep + pluralStringResource(R.plurals.diagnostics_sweep_hidden, state.hidden, state.hidden) else ""
+        tv.own.owntv.features.health.SweepUi.NoChannels -> stringResource(R.string.diagnostics_sweep_no_channels)
+    }
+}
+
+/** The channels the sweep could not reach, by name, scrolled with Up/Down from the Done button. */
+@Composable
+private fun DeadListPopup(names: List<String>, onDismiss: () -> Unit) {
+    val scroll = rememberScrollState()
+    val scope = rememberCoroutineScope()
+    val first = remember { FocusRequester() }
+    LaunchedEffect(Unit) { delay(60); runCatching { first.requestFocus() } }
+    val stepPx = with(androidx.compose.ui.platform.LocalDensity.current) { REPORT_SCROLL_STEP.mpx.toPx() }
+    val scrollKeys = Modifier.onPreviewKeyEvent { e ->
+        if (e.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
+        when (e.key) {
+            Key.DirectionUp -> { scope.launch { scroll.animateScrollBy(-stepPx) }; true }
+            Key.DirectionDown -> { scope.launch { scroll.animateScrollBy(stepPx) }; true }
+            else -> false
+        }
+    }
+    StagePopup(
+        onDismiss = onDismiss,
+        title = pluralStringResource(R.plurals.diagnostics_sweep_dead, names.size, names.size),
+        width = 1100.mpx,
+        scroll = false,
+        buttons = {
+            StageButton(stringResource(R.string.common_done), onClick = onDismiss, height = 56.mpx, textSize = 19, tinted = true, modifier = Modifier.focusRequester(first).then(scrollKeys))
+        },
+    ) {
+        Column(Modifier.heightIn(max = REPORT_MAX_HEIGHT.mpx).verticalScroll(scroll)) {
+            names.forEach { Text(it, style = stageText(17, 500), color = StageColors.Text, maxLines = 1, overflow = TextOverflow.Ellipsis) }
+        }
     }
 }
 

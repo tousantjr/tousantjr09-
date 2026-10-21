@@ -115,6 +115,8 @@ class SportsViewModel(
     private val playback: SportsPlayback,
     sourceDao: SourceDao,
     private val odds: OddsRepository,
+    /** How each channel has behaved here: same-tier channels are reordered by it (see [ChannelHealthStore.rank]). */
+    private val health: tv.own.owntv.features.health.ChannelHealthStore,
 ) : ViewModel() {
 
     private val config = settings.activeSportsConfig.distinctUntilChanged()
@@ -194,7 +196,7 @@ class SportsViewModel(
         val c = config.first()
         val found = watchReader.found(match) { SportsMemory.rememberedFor(c, it) }
             ?: watchReader.watchFor(listOf(match)) { SportsMemory.rememberedFor(c, it) }[match.key].orEmpty()
-        val shown = WatchList.of(found, WatchFilter.from(c, Locale.getDefault().language, liveSources.value)).shown
+        val shown = health.rank(WatchList.of(found, WatchFilter.from(c, Locale.getDefault().language, liveSources.value)).shown)
         val ok = shown.isNotEmpty() && alerts.remind(settings.activeProfileIdNow(), match, shown, c.reminderLeadMinutes)
         onDone(ok)
     }
@@ -262,7 +264,7 @@ class SportsViewModel(
                 standings = leagueKey?.let { b.standings[it] },
                 config = c,
                 search = s,
-                list = WatchList.of(opts, filter, preferred, alsoList = preferred.toSet()),
+                list = health.rank(WatchList.of(opts, filter, preferred, alsoList = preferred.toSet())),
                 filter = filter,
                 playlists = lists,
                 preferredLanguages = preferred,
@@ -394,7 +396,7 @@ class SportsViewModel(
     suspend fun channelsFound(match: Match): List<WatchOption> {
         val c = config.first()
         val options = watchReader.found(match) { SportsMemory.rememberedFor(c, it) } ?: return emptyList()
-        return WatchList.of(options, WatchFilter.from(c, Locale.getDefault().language, liveSources.value)).shown
+        return health.rank(WatchList.of(options, WatchFilter.from(c, Locale.getDefault().language, liveSources.value)).shown)
     }
 
     companion object {

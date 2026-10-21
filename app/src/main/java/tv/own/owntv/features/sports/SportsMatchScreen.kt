@@ -583,6 +583,8 @@ internal fun ChannelRow(o: WatchOption, m: Match, onClick: () -> Unit, onHold: (
             Row(horizontalArrangement = Arrangement.spacedBy(9.mpx), verticalAlignment = Alignment.CenterVertically) {
                 Text(o.facets.name, style = stageText(20, 700), color = StageColors.Text, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
                 qualityTag(o.facets.qualityRank)?.let { StageTag(it) }
+                // How this channel has behaved on this television; nothing until it has been tried.
+                tv.own.owntv.features.health.ChannelHealthDot(o.channel.id)
             }
             val (color, icon, text) = when {
                 playing -> Triple(StageColors.Muted, null, stringResource(R.string.sports_playing_now))
