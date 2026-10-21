@@ -2,6 +2,7 @@ package tv.own.owntv.features.mdblist
 
 import android.content.Context
 import android.util.Log
+import androidx.room.useReaderConnection
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -14,6 +15,8 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import tv.own.owntv.core.content.AdultCategoryClassifier
+import tv.own.owntv.core.customize.CustomizeKeys
+import tv.own.owntv.core.database.OwnTVDatabase
 import tv.own.owntv.core.database.dao.CategoryDao
 import tv.own.owntv.core.database.dao.MovieDao
 import tv.own.owntv.core.database.dao.ProfileDao
@@ -64,6 +67,12 @@ sealed interface CuratedItem {
 }
 
 /**
+ * The titles this profile hid through Customize, as [CustomizeKeys] (which survive a re-sync), so a
+ * curated rail never shows what the Movies and Series screens no longer do.
+ */
+data class HiddenTitles(val movies: Set<String> = emptySet(), val series: Set<String> = emptySet())
+
+/**
  * What MDBList adds to the app, behind Settings → Layout → Home → MDBList: curated rails on Home (a
  * public list, cut down to the titles the active playlists actually hold) and a title's ratings from
  * IMDb, Rotten Tomatoes, Metacritic and Letterboxd on its details page.
@@ -73,11 +82,15 @@ sealed interface CuratedItem {
  * nothing. The *matching* of a list against the playlists is local and re-run on every Home load, so a
  * sync that brings a title in shows it without another call.
  *
- * Matching reuses core's own [TrendingMatcher] — the exact title-signature lookup and the FTS fallback
- * that core's Trending uses for TMDB's titles — against each active playlist, so a list item is shown
- * only when the playlist holds it under a title that passes the same test. A kids profile's hard block
- * ([AdultCategoryClassifier.allows]) always applies; "Hide adult categories from Home" applies when on.
- * A rail is shown only with [MIN_MATCHES] titles or more.
+ * Matching is two passes against each active playlist. First by id: a title the metadata layer has
+ * already resolved to the item's TMDB id (or to the TMDB id the cache holds for its IMDb id) for one
+ * of these playlists is taken as is — exact, and indifferent to how the playlist spells the title.
+ * The rest go through core's own [TrendingMatcher] — the exact title-signature lookup and the FTS
+ * fallback that core's Trending uses for TMDB's titles — so a list item is shown only when the
+ * playlist holds it under a title that passes the same test. A kids profile's hard block
+ * ([AdultCategoryClassifier.allows]) always applies; "Hide adult categories from Home" applies when on;
+ * a title hidden through Customize ([HiddenTitles]) never shows. A rail is shown only with
+ * [MIN_MATCHES] titles or more.
  *
  * The key is never logged — nor is any message that could quote a URL.
  */
@@ -91,6 +104,7 @@ class MdbListRepository(
     private val seriesDao: SeriesDao,
     private val profileDao: ProfileDao,
     private val categoryDao: CategoryDao,
+    private val database: OwnTVDatabase,
 ) {
 
     /** What the last call came to, for Settings' status line. */
@@ -206,9 +220,10 @@ class MdbListRepository(
     /**
      * Home's curated rails for [profileId]: the chosen lists (or the top three), each cut down to the
      * titles the profile's active playlists hold, in the list's order; a rail with fewer than
-     * [MIN_MATCHES] is left out. Empty while the rows are off or no playlist has films or shows.
+     * [MIN_MATCHES] is left out, and a title in [hidden] never shows. Empty while the rows are off or
+     * no playlist has films or shows.
      */
-    suspend fun rails(profileId: Long, hideAdult: Boolean): List<CuratedRail> = withContext(Dispatchers.IO) {
+    suspend fun rails(profileId: Long, hideAdult: Boolean, hidden: HiddenTitles = HiddenTitles()): List<CuratedRail> = withContext(Dispatchers.IO) {
         val c = settings.config.first()
         if (!c.rowsOn || profileId < 0) return@withContext emptyList<CuratedRail>()
         railsMutex.withLock {
@@ -228,7 +243,7 @@ class MdbListRepository(
                     failed = true
                     continue
                 }
-                val matched = match(items, movieSources, seriesSources, language, profileId, hideAdult, categoryNames)
+                val matched = match(items, movieSources, seriesSources, language, profileId, hideAdult, hidden, categoryNames)
                 if (matched.size >= MIN_MATCHES) {
                     rails += CuratedRail(list.ref, list.title, matched)
                     titles += matched.size
@@ -253,6 +268,13 @@ class MdbListRepository(
         .joinToString(separator = " ") { word -> word.replaceFirstChar { it.uppercase() } }
         .ifBlank { ref }
 
+    /**
+     * A list's titles the playlists hold, in the list's order. First by id ([matchByIds]) — a title the
+     * metadata layer has already resolved to this TMDB or IMDb id for one of these playlists — then, for
+     * the rest, by title through [TrendingMatcher]. The id pass is exact and language-proof, which the
+     * title pass is not: a playlist naming a film by its local title, or with a year the list lacks,
+     * still matches once its details have ever been looked up.
+     */
     private suspend fun match(
         items: List<MdbListItem>,
         movieSources: List<Long>,
@@ -260,9 +282,12 @@ class MdbListRepository(
         language: String,
         profileId: Long,
         hideAdult: Boolean,
+        hidden: HiddenTitles,
         categoryNames: MutableMap<Long, String?>,
     ): List<CuratedItem> {
-        val candidates = items.take(MAX_CANDIDATES).map { it.toCandidate() }
+        val wanted = items.take(MAX_CANDIDATES)
+        val byId = matchByIds(wanted, movieSources, seriesSources)
+        val candidates = wanted.filter { it.idKey !in byId }.map { it.toCandidate() }
         val movieIds = matchIds(
             candidates, MetadataType.MOVIE, MediaType.MOVIE, movieSources, language,
             exact = { sid, signatures -> movieDao.trendingExact(sid, signatures) },
@@ -276,18 +301,125 @@ class MdbListRepository(
         val movies = if (movieIds.isEmpty()) emptyMap() else movieDao.getByIds(movieIds.values.toList()).associateBy { it.id }
         val series = if (seriesIds.isEmpty()) emptyMap() else seriesDao.getSeriesByIds(seriesIds.values.toList()).associateBy { it.id }
         val out = ArrayList<CuratedItem>()
-        for (candidate in candidates) {
-            val item: CuratedItem = when (candidate.type) {
-                MetadataType.MOVIE -> movieIds[candidate.tmdbId]?.let(movies::get)?.let(CuratedItem::Movie)
-                MetadataType.TV -> seriesIds[candidate.tmdbId]?.let(series::get)?.let(CuratedItem::Series)
+        for (entry in wanted) {
+            val item: CuratedItem = byId[entry.idKey] ?: when (entry.type) {
+                MetadataType.MOVIE -> movieIds[entry.tmdbId]?.let(movies::get)?.let(CuratedItem::Movie)
+                MetadataType.TV -> seriesIds[entry.tmdbId]?.let(series::get)?.let(CuratedItem::Series)
                 MetadataType.EPISODE -> null
             } ?: continue
+            if (item.isHidden(hidden)) continue
             if (!allowed(profileId, item.categoryId, hideAdult, categoryNames)) continue
             out += item
             if (out.size >= MAX_PER_RAIL) break
         }
         return out
     }
+
+    /**
+     * The id pass: for each item, the playlist row the metadata layer has resolved to its TMDB id —
+     * the match table holds one for every title whose details were ever shown, and for what the
+     * trending backfill resolved — the first of [movieSources] / [seriesSources] to hold it winning,
+     * as in the title pass. The item's IMDb id is tried too, through the TMDB id the cache holds for
+     * it, since MDBList and TMDB occasionally disagree on a TMDB id. Keyed like [idKey].
+     */
+    private suspend fun matchByIds(
+        items: List<MdbListItem>,
+        movieSources: List<Long>,
+        seriesSources: List<Long>,
+    ): Map<Pair<MetadataType, Int>, CuratedItem> {
+        val wanted = items.filter { it.type != MetadataType.EPISODE && it.tmdbId > 0 }
+        if (wanted.isEmpty() || (movieSources.isEmpty() && seriesSources.isEmpty())) return emptyMap()
+        val viaImdb = tmdbIdsByImdb(wanted.mapNotNull { it.imdbId }.distinct())
+        val rows = matchRows((wanted.map { it.tmdbId } + viaImdb.values.flatten().map { it.tmdbId }).distinct())
+        if (rows.isEmpty()) return emptyMap()
+        val out = HashMap<Pair<MetadataType, Int>, CuratedItem>()
+        for (item in wanted) {
+            val (type, sources) = when (item.type) {
+                MetadataType.MOVIE -> TYPE_MOVIE to movieSources
+                MetadataType.TV -> TYPE_TV to seriesSources
+                MetadataType.EPISODE -> continue
+            }
+            if (sources.isEmpty()) continue
+            val ids = (listOf(item.tmdbId) + item.imdbId?.let(viaImdb::get).orEmpty().filter { it.type == type }.map { it.tmdbId }).distinct()
+            val row = ids.flatMap { rows[it].orEmpty() }
+                .filter { it.type == type && it.sourceId in sources }
+                .minByOrNull { sources.indexOf(it.sourceId) } ?: continue
+            val found: CuratedItem = when (item.type) {
+                MetadataType.MOVIE ->
+                    (movieDao.findByRemote(row.sourceId, row.tail) ?: movieDao.findByName(row.sourceId, row.tail))?.let(CuratedItem::Movie)
+                else ->
+                    (seriesDao.findSeriesByRemote(row.sourceId, row.tail) ?: seriesDao.findSeriesByName(row.sourceId, row.tail))?.let(CuratedItem::Series)
+            } ?: continue
+            out[item.idKey] = found
+        }
+        return out
+    }
+
+    /** What the id pass and the title pass are keyed by: a list item's type and TMDB id. */
+    private val MdbListItem.idKey: Pair<MetadataType, Int> get() = type to tmdbId
+
+    private fun CuratedItem.isHidden(hidden: HiddenTitles): Boolean = when (this) {
+        is CuratedItem.Movie -> CustomizeKeys.movie(movie) in hidden.movies
+        is CuratedItem.Series -> CustomizeKeys.series(series) in hidden.series
+    }
+
+    /** One match-table row: the playlist, and the provider's id (or the name, for an M3U row) its key names. */
+    private data class LocalRow(val type: String, val sourceId: Long, val tail: String) {
+        companion object {
+            /** `movie:12:tt-remote` or `movie:12:Some Title`, minus the `:kids` a kids profile's lookup appends; null for anything else. */
+            fun parse(localKey: String, type: String): LocalRow? {
+                val afterType = localKey.removeSuffix(KIDS_SUFFIX).substringAfter(':', "").ifEmpty { return null }
+                val sourceId = afterType.substringBefore(':').toLongOrNull() ?: return null
+                val tail = afterType.substringAfter(':', "").ifEmpty { return null }
+                return LocalRow(type, sourceId, tail)
+            }
+        }
+    }
+
+    /** A cache row's identity: its type and TMDB id (one row per metadata language, hence a list per IMDb id). */
+    private data class CachedId(val type: String, val tmdbId: Int)
+
+    /**
+     * The match table's rows resolved to [tmdbIds]: TMDB id → the local keys. A raw statement, because
+     * core's DAO reads that table by local key only, and core is a compiled dependency.
+     */
+    private suspend fun matchRows(tmdbIds: List<Int>): Map<Int, List<LocalRow>> {
+        if (tmdbIds.isEmpty()) return emptyMap()
+        val out = HashMap<Int, MutableList<LocalRow>>()
+        for (chunk in tmdbIds.chunked(QUERY_CHUNK)) {
+            database.useReaderConnection { connection ->
+                connection.usePrepared(SQL_MATCH_ROWS + placeholders(chunk.size)) { statement ->
+                    chunk.forEachIndexed { i, id -> statement.bindLong(i + 1, id.toLong()) }
+                    while (statement.step()) {
+                        val row = LocalRow.parse(statement.getText(0), statement.getText(2)) ?: continue
+                        out.getOrPut(statement.getLong(1).toInt()) { ArrayList() } += row
+                    }
+                }
+            }
+        }
+        return out
+    }
+
+    /** The cache's TMDB ids for [imdbIds]: IMDb id → the cache rows (type and TMDB id) carrying it. */
+    private suspend fun tmdbIdsByImdb(imdbIds: List<String>): Map<String, List<CachedId>> {
+        if (imdbIds.isEmpty()) return emptyMap()
+        val out = HashMap<String, MutableList<CachedId>>()
+        for (chunk in imdbIds.chunked(QUERY_CHUNK)) {
+            database.useReaderConnection { connection ->
+                connection.usePrepared(SQL_CACHE_BY_IMDB + placeholders(chunk.size)) { statement ->
+                    chunk.forEachIndexed { i, id -> statement.bindText(i + 1, id) }
+                    while (statement.step()) {
+                        if (statement.isNull(0)) continue
+                        out.getOrPut(statement.getText(0)) { ArrayList() } += CachedId(statement.getText(2), statement.getLong(1).toInt())
+                    }
+                }
+            }
+        }
+        return out
+    }
+
+    /** `?,?,?)` for [n] bound values — the tail of an `IN (` clause. */
+    private fun placeholders(n: Int): String = List(n) { "?" }.joinToString(",") + ")"
 
     /** TMDB id → the playlist row's id, across [sources] in order: the first playlist to hold a title keeps it. */
     private suspend fun matchIds(
@@ -421,6 +553,15 @@ class MdbListRepository(
         const val SECTION_TOP = "top"
         const val KEY_TOP = "top"
         const val DEFAULT_LANGUAGE = "en"
+        /** The match and cache tables' `type` column for a film and a show, as core writes them. */
+        const val TYPE_MOVIE = "movie"
+        const val TYPE_TV = "tv"
+        /** What a kids profile's lookup appends to a local key — the same local row either way. */
+        const val KIDS_SUFFIX = ":kids"
+        const val SQL_MATCH_ROWS = "SELECT localKey, tmdbId, type FROM metadata_match WHERE tmdbId IN ("
+        const val SQL_CACHE_BY_IMDB = "SELECT imdbId, tmdbId, type FROM metadata_cache WHERE imdbId IN ("
+        /** Bound values per statement — far under SQLite's limit, and a list tries at most [MAX_CANDIDATES] anyway. */
+        const val QUERY_CHUNK = 400
         const val RATINGS_TTL_MS = 7 * 24 * 60 * 60 * 1000L
         const val ITEMS_TTL_MS = 12 * 60 * 60 * 1000L
         const val TOP_TTL_MS = 24 * 60 * 60 * 1000L

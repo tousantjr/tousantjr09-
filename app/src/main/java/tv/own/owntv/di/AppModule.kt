@@ -88,6 +88,7 @@ val appModule = module {
             seriesDao = get(),
             profileDao = get(),
             categoryDao = get(),
+            database = get(),
         )
     }
     viewModelOf(::MdbListSettingsViewModel)

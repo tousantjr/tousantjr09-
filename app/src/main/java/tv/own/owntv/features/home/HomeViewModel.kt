@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
@@ -144,6 +145,7 @@ class HomeViewModel(
     private val subscriptionExpiry: SubscriptionExpiry,
     private val homeTrailers: HomeTrailerSettings,
     private val mdbList: tv.own.owntv.features.mdblist.MdbListRepository,
+    private val customize: tv.own.owntv.core.customize.CustomizationStore,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
@@ -157,28 +159,32 @@ class HomeViewModel(
 
     /**
      * MDBList's curated rails (Settings › Layout › Home › MDBList): the chosen lists cut down to what
-     * this profile's playlists hold, under Now trending. Re-run when the profile, the MDBList settings
-     * or the adult filter change, and after every Home load; the list items themselves come from the
-     * repository's cache, so a reload is local work. Empty while the rows are off.
+     * this profile's playlists hold, under Now trending. Re-run when the profile, the MDBList settings,
+     * the adult filter or the profile's hidden titles (Customize) change, and after every Home load;
+     * the list items themselves come from the repository's cache, so a reload is local work. Empty
+     * while the rows are off.
      */
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     val curatedRails: StateFlow<List<tv.own.owntv.features.mdblist.CuratedRail>> = combine(
         settings.activeProfileId, mdbList.config, homeContentFilter.hideAdultCategories, railsRefresh,
     ) { pid, config, hideAdult, _ -> Triple(pid, config, hideAdult) }
         .flatMapLatest { (pid, config, hideAdult) ->
-            kotlinx.coroutines.flow.flow {
-                val rails: List<tv.own.owntv.features.mdblist.CuratedRail> = if (pid < 0 || !config.rowsOn) {
-                    emptyList()
-                } else {
-                    try {
-                        mdbList.rails(profileDao.resolveExistingProfileId(pid) ?: -1L, hideAdult)
+            if (pid < 0 || !config.rowsOn) {
+                flowOf(emptyList<tv.own.owntv.features.mdblist.CuratedRail>())
+            } else {
+                // A title hidden through Customize leaves the rails as it is hidden, not at the next Home load.
+                combine(customize.observe(pid, MediaType.MOVIE), customize.observe(pid, MediaType.SERIES)) { m, s ->
+                    tv.own.owntv.features.mdblist.HiddenTitles(m.hiddenItems.keys, s.hiddenItems.keys)
+                }.distinctUntilChanged().map { hidden ->
+                    val rails: List<tv.own.owntv.features.mdblist.CuratedRail> = try {
+                        mdbList.rails(profileDao.resolveExistingProfileId(pid) ?: -1L, hideAdult, hidden)
                     } catch (e: kotlinx.coroutines.CancellationException) {
                         throw e
                     } catch (e: Exception) {
                         emptyList()
                     }
+                    rails
                 }
-                emit(rails)
             }
         }
         .flowOn(Dispatchers.IO)
