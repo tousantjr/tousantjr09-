@@ -20,11 +20,12 @@ import java.util.concurrent.TimeUnit
 import kotlin.math.abs
 
 /**
- * The Odds API (the-odds-api.com), v4: one call per league returns its upcoming games with the asked
- * bookmaker's moneyline (`h2h`), spread and total in American format. Needs a key; the free tier is
- * 500 requests a month, so [OddsRepository] keeps a league for 30 minutes and asks only for the league
- * of a game actually on screen. The response's `x-requests-remaining` header is passed back so
- * Settings can show it and the app can stop for the day at zero.
+ * The Odds API (the-odds-api.com), v4: one call per league returns its upcoming games with every
+ * listed [Bookmaker]'s moneyline (`h2h`), spread and total in American format — the four books in
+ * one answer, since the API prices a request by its markets and regions, not by bookmakers. Needs a
+ * key; the free tier is 500 requests a month, so [OddsRepository] keeps a league for 30 minutes and
+ * asks only for the league of a game actually on screen. The response's `x-requests-remaining`
+ * header is passed back so Settings can show it and the app can stop for the day at zero.
  *
  * The key travels only in the request URL. Nothing here logs a URL, an exception message (OkHttp's
  * can quote the URL) or the key itself. Unverified against a live response — this sandbox cannot
@@ -34,10 +35,11 @@ class TheOddsApiSource(client: OkHttpClient) {
 
     private val http = client.newBuilder().callTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS).build()
 
-    /** [sportKey]'s games with [bookmaker]'s lines. HTTP errors (401 bad key, 429 quota) surface as [SportsHttpException]. */
-    suspend fun league(sportKey: String, apiKey: String, bookmaker: Bookmaker): LeagueOdds {
+    /** [sportKey]'s games with every listed bookmaker's lines. HTTP errors (401 bad key, 429 quota) surface as [SportsHttpException]. */
+    suspend fun league(sportKey: String, apiKey: String): LeagueOdds {
         val key = URLEncoder.encode(apiKey, Charsets.UTF_8.name())
-        val url = "$API/v4/sports/$sportKey/odds?apiKey=$key&regions=us&markets=h2h,spreads,totals&oddsFormat=american&bookmakers=${bookmaker.key}"
+        val books = Bookmaker.entries.joinToString(",") { it.key }
+        val url = "$API/v4/sports/$sportKey/odds?apiKey=$key&regions=us&markets=h2h,spreads,totals&oddsFormat=american&bookmakers=$books"
         val (body, remaining) = get(url)
         val events = runCatching { OddsApiParser.events(body) }
             .getOrElse { Log.w(TAG, "odds did not parse as expected: ${it.javaClass.simpleName}"); emptyList() }
@@ -66,16 +68,27 @@ class TheOddsApiSource(client: OkHttpClient) {
     }
 }
 
-/** One league's answer: its games (each with the one bookmaker asked for) and the key's requests left. */
+/** One league's answer: its games (each with every bookmaker that priced it) and the key's requests left. */
 data class LeagueOdds(val events: List<OddsEvent>, val requestsRemaining: Int?)
 
-/** One game as The Odds API lists it. Outcome names are the API's own team names. */
+/** One game as The Odds API lists it, with each bookmaker's lines in the API's own order. */
 data class OddsEvent(
     val id: String,
     val commenceMs: Long,
     val homeTeam: String,
     val awayTeam: String,
-    val bookmaker: String,
+    /** Every bookmaker in the answer that priced this game; never empty. */
+    val books: List<BookOdds>,
+) {
+    /** The user's bookmaker when it priced the game, else the first listed — so one line is always there. */
+    fun preferred(bookmaker: Bookmaker): BookOdds = books.firstOrNull { it.key == bookmaker.key } ?: books.first()
+}
+
+/** One bookmaker's markets for a game. Outcome names are the API's own team names. */
+data class BookOdds(
+    /** The API's bookmaker key ("draftkings"), as [Bookmaker.key]. */
+    val key: String,
+    val title: String,
     /** Moneyline by outcome name (a team, or "Draw"), American. */
     val moneyLines: Map<String, Int>,
     /** Spread point by team name: the side's own handicap, −6.5 for the favourite. */
@@ -97,9 +110,15 @@ internal object OddsApiParser {
         val commence = time(e.optString("commence_time")) ?: return null
         val home = e.optString("home_team").ifEmpty { return null }
         val away = e.optString("away_team").ifEmpty { return null }
-        // One bookmaker was asked for; the first listed is it.
-        val book = objects(e.optJSONArray("bookmakers")).firstOrNull() ?: return null
-        val title = book.optString("title").ifEmpty { book.optString("key") }
+        // Every bookmaker asked for that priced the game, in the API's order; one with no market is skipped.
+        val books = objects(e.optJSONArray("bookmakers")).mapNotNull { b -> runCatching { book(b) }.getOrNull() }
+        if (books.isEmpty()) return null
+        return OddsEvent(id, commence, home, away, books)
+    }
+
+    private fun book(book: JSONObject): BookOdds? {
+        val key = book.optString("key").ifEmpty { return null }
+        val title = book.optString("title").ifEmpty { key }
         val markets = objects(book.optJSONArray("markets")).associateBy { it.optString("key") }
         val moneyLines = objects(markets["h2h"]?.optJSONArray("outcomes")).mapNotNull { o ->
             val name = o.optString("name")
@@ -112,7 +131,8 @@ internal object OddsApiParser {
             if (name.isEmpty() || point == null) null else name to point
         }.toMap()
         val total = objects(markets["totals"]?.optJSONArray("outcomes")).firstNotNullOfOrNull { point(it) }
-        return OddsEvent(id, commence, home, away, title, moneyLines, spreads, total)
+        if (moneyLines.isEmpty() && spreads.isEmpty() && total == null) return null
+        return BookOdds(key, title, moneyLines, spreads, total)
     }
 
     private fun price(o: JSONObject): Int? =
@@ -151,21 +171,35 @@ internal object OddsMatcher {
         return null
     }
 
-    /** The matched game's line for [match], its sides mapped back to the match's home and away. */
-    fun line(hit: Hit, match: Match, now: Long): OddsLine? {
+    /**
+     * The matched game's line for [match], its sides mapped back to the match's home and away: the
+     * user's [bookmaker] (or the first that priced the game — or, failing a usable line there, the
+     * next that has one), and with [compare] the other books' lines behind it in [OddsLine.others],
+     * in the [Bookmaker] order Settings lists them.
+     */
+    fun line(hit: Hit, match: Match, now: Long, bookmaker: Bookmaker, compare: Boolean): OddsLine? {
+        val e = hit.event
+        val first = e.preferred(bookmaker)
+        val ordered = listOf(first) + e.books.filter { it !== first }.sortedBy { Bookmaker.find(it.key)?.ordinal ?: Int.MAX_VALUE }
+        val lines = ordered.mapNotNull { bookLine(it, hit, match, now) }
+        val main = lines.firstOrNull() ?: return null
+        return if (compare) main.copy(others = lines.drop(1)) else main
+    }
+
+    private fun bookLine(b: BookOdds, hit: Hit, match: Match, now: Long): OddsLine? {
         val e = hit.event
         val homeName = if (hit.swapped) e.awayTeam else e.homeTeam
         val awayName = if (hit.swapped) e.homeTeam else e.awayTeam
-        val homeMl = e.moneyLines[homeName]
-        val awayMl = e.moneyLines[awayName]
-        val drawMl = e.moneyLines.entries.firstOrNull { it.key.equals(DRAW, ignoreCase = true) }?.value
-        val homeSpread = e.spreads[homeName] ?: e.spreads[awayName]?.let { -it }
+        val homeMl = b.moneyLines[homeName]
+        val awayMl = b.moneyLines[awayName]
+        val drawMl = b.moneyLines.entries.firstOrNull { it.key.equals(DRAW, ignoreCase = true) }?.value
+        val homeSpread = b.spreads[homeName] ?: b.spreads[awayName]?.let { -it }
         val p = ImpliedProbability.normalised(homeMl, awayMl, drawMl)
         return OddsLine(
-            bookmaker = e.bookmaker,
+            bookmaker = b.title,
             details = homeSpread?.let { spreadDetails(match, it) },
             spread = homeSpread,
-            overUnder = e.total,
+            overUnder = b.total,
             homeMoneyLine = homeMl,
             awayMoneyLine = awayMl,
             drawMoneyLine = drawMl,
@@ -173,6 +207,7 @@ internal object OddsMatcher {
             awayProbability = p?.second,
             drawProbability = p?.third,
             fetchedAt = now,
+            bookmakerKey = b.key,
         ).takeIf { it.hasAnything }
     }
 

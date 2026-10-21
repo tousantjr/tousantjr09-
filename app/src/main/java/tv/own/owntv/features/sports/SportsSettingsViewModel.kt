@@ -56,6 +56,7 @@ class SportsSettingsViewModel(
     fun setOddsSource(source: OddsSource) = viewModelScope.launch { oddsSettings.setSource(source) }
     fun setOddsApiKey(key: String) = viewModelScope.launch { oddsSettings.setApiKey(key) }
     fun setOddsBookmaker(bookmaker: Bookmaker) = viewModelScope.launch { oddsSettings.setBookmaker(bookmaker) }
+    fun setOddsCompare(on: Boolean) = viewModelScope.launch { oddsSettings.setCompareBookmakers(on) }
 
     val shownInMenu: StateFlow<Boolean> = settings.navMenuHidden.map { MainSection.SPORTS.name !in it }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), true)

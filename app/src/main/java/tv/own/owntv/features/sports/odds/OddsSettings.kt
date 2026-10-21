@@ -23,6 +23,8 @@ data class OddsConfig(
     /** The key the app was built with (`BuildConfig.ODDS_API_KEY`, from CI's secret); "" in a fork or local build. */
     val builtInKey: String = "",
     val bookmaker: Bookmaker = Bookmaker.DRAFTKINGS,
+    /** The match page's comparison table: every listed bookmaker beside [bookmaker]'s line (The Odds API only). */
+    val compareBookmakers: Boolean = true,
     /** The Odds API's `x-requests-remaining` after the last call; null until one was made. */
     val requestsRemaining: Int? = null,
     /** The local day (ISO date) the key's quota ran out, if it did: no call is made again that day. */
@@ -54,6 +56,7 @@ class OddsSettings(private val context: Context, private val builtInKey: String 
         val SOURCE = stringPreferencesKey("odds_source")
         val API_KEY = stringPreferencesKey("odds_api_key")
         val BOOKMAKER = stringPreferencesKey("odds_bookmaker")
+        val COMPARE = booleanPreferencesKey("odds_compare")
         val REMAINING = intPreferencesKey("odds_requests_remaining")
         val EXHAUSTED_DAY = stringPreferencesKey("odds_exhausted_day")
     }
@@ -66,6 +69,7 @@ class OddsSettings(private val context: Context, private val builtInKey: String 
             apiKey = p[Keys.API_KEY].orEmpty(),
             builtInKey = builtInKey,
             bookmaker = Bookmaker.of(p[Keys.BOOKMAKER]),
+            compareBookmakers = p[Keys.COMPARE] ?: true,
             requestsRemaining = p[Keys.REMAINING]?.takeIf { it >= 0 },
             exhaustedDay = p[Keys.EXHAUSTED_DAY]?.takeIf { it.isNotEmpty() },
         )
@@ -83,6 +87,8 @@ class OddsSettings(private val context: Context, private val builtInKey: String 
     }
 
     suspend fun setBookmaker(bookmaker: Bookmaker) = edit { it[Keys.BOOKMAKER] = bookmaker.key }
+
+    suspend fun setCompareBookmakers(on: Boolean) = edit { it[Keys.COMPARE] = on }
 
     /** After a call: the requests left (null = the header was missing) and the day the quota ran out, or null to clear it. */
     suspend fun recordQuota(remaining: Int?, exhaustedDay: String?) = edit {

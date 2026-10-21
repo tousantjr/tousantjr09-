@@ -134,8 +134,8 @@ private fun Row(icon: OwnTVIcon, title: String, desc: String?, value: SettingVal
     )
 }
 
-/** Rows on the main page (the "N settings" beside its title): 5 + 6 + 3 + 2 + 5 + 4. */
-private const val MAIN_ROWS = 25
+/** Rows on the main page (the "N settings" beside its title): 5 + 6 + 3 + 2 + 6 + 4. */
+private const val MAIN_ROWS = 26
 
 /** The main page: What to show · Watching · While watching · Channels · Betting odds · Data. */
 @Composable
@@ -236,6 +236,9 @@ private fun MainRows(vm: SportsSettingsViewModel, c: SportsConfig, shown: Boolea
     val stepBook: (Int) -> Unit = { d -> vm.setOddsBookmaker(books[(o.bookmaker.ordinal + d).mod(books.size)]) }
     Row(OwnTVIcon.LIST, stringResource(R.string.sports_odds_bookmaker), stringResource(R.string.sports_odds_bookmaker_description),
         SettingValue.Stepper(bookmakerLabel(o.bookmaker)), onStep = stepBook, enabled = o.source == OddsSource.ODDS_API) { stepBook(1) }
+    // The match page's side-by-side table; like the Bookmaker row, meaningless (and greyed) under ESPN's one line.
+    Row(OwnTVIcon.LIST_GRID, stringResource(R.string.sports_odds_compare), stringResource(R.string.sports_odds_compare_description),
+        SettingValue.Switch(o.compareBookmakers), enabled = o.source == OddsSource.ODDS_API) { vm.setOddsCompare(!o.compareBookmakers) }
     Row(OwnTVIcon.INFO, stringResource(R.string.sports_odds_status), oddsStatusText(o, oddsStatus), null) {}
 
     StageSettingsHeading(stringResource(R.string.sports_settings_data), 4)
