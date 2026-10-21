@@ -19,6 +19,10 @@ work = "2.11.2"
 # Home's "Hide adult categories" toggle (HomeContentFilterSettings): an app-level flag that cannot
 # live in :core's compiled SettingsRepository. Matches the TV app's own pin.
 datastore = "1.2.1"
+# Room's runtime, for the MDBList rails' raw read of core's metadata tables (useReaderConnection):
+# core keeps Room as `implementation`, so its API is not on this app's compile path otherwise. The
+# version core was built with — the runtime is in the APK through core either way.
+room = "2.8.5"
 
 # --- Paging ---
 paging = "3.5.1"
@@ -116,6 +120,7 @@ androidx-paging-compose = { group = "androidx.paging", name = "paging-compose", 
 
 # DataStore — HomeContentFilterSettings' one persisted flag, outside :core's compiled SettingsRepository.
 androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
+androidx-room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
 
 # Coroutines
 kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }

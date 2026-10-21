@@ -88,10 +88,16 @@
 1	json	app/src/main/java/tv/own/owntv/mobile/mdblist/MdbListApi.kt	value
 1	json	app/src/main/java/tv/own/owntv/mobile/mdblist/MdbListApi.kt	votes
 1	json	app/src/main/java/tv/own/owntv/mobile/mdblist/MdbListApi.kt	year
-1	empty	app/src/main/java/tv/own/owntv/mobile/mdblist/MdbListRepository.kt	\0
+3	empty	app/src/main/java/tv/own/owntv/mobile/mdblist/MdbListRepository.kt	\0
+1	sql	app/src/main/java/tv/own/owntv/mobile/mdblist/MdbListRepository.kt	)
+1	sql	app/src/main/java/tv/own/owntv/mobile/mdblist/MdbListRepository.kt	,
 1	technical	app/src/main/java/tv/own/owntv/mobile/mdblist/MdbListRepository.kt	:
+1	protocol	app/src/main/java/tv/own/owntv/mobile/mdblist/MdbListRepository.kt	:kids
+1	sql	app/src/main/java/tv/own/owntv/mobile/mdblist/MdbListRepository.kt	?
 1	log	app/src/main/java/tv/own/owntv/mobile/mdblist/MdbListRepository.kt	MDBList unreachable: ${e.javaClass.simpleName}
 1	log	app/src/main/java/tv/own/owntv/mobile/mdblist/MdbListRepository.kt	OwnTV-MDBList
+1	sql	app/src/main/java/tv/own/owntv/mobile/mdblist/MdbListRepository.kt	SELECT imdbId, tmdbId, type FROM metadata_cache WHERE imdbId IN (
+1	sql	app/src/main/java/tv/own/owntv/mobile/mdblist/MdbListRepository.kt	SELECT localKey, tmdbId, type FROM metadata_match WHERE tmdbId IN (
 1	json	app/src/main/java/tv/own/owntv/mobile/mdblist/MdbListRepository.kt	at
 1	json	app/src/main/java/tv/own/owntv/mobile/mdblist/MdbListRepository.kt	body
 1	log	app/src/main/java/tv/own/owntv/mobile/mdblist/MdbListRepository.kt	cache not written: ${it.javaClass.simpleName}
@@ -99,12 +105,14 @@
 1	json	app/src/main/java/tv/own/owntv/mobile/mdblist/MdbListRepository.kt	items
 1	log	app/src/main/java/tv/own/owntv/mobile/mdblist/MdbListRepository.kt	list items did not parse as expected: ${it.javaClass.simpleName}
 1	file-path	app/src/main/java/tv/own/owntv/mobile/mdblist/MdbListRepository.kt	mdblist_cache.json
+1	protocol	app/src/main/java/tv/own/owntv/mobile/mdblist/MdbListRepository.kt	movie
 1	technical	app/src/main/java/tv/own/owntv/mobile/mdblist/MdbListRepository.kt	movie:
 1	json	app/src/main/java/tv/own/owntv/mobile/mdblist/MdbListRepository.kt	ratings
 1	log	app/src/main/java/tv/own/owntv/mobile/mdblist/MdbListRepository.kt	ratings did not parse as expected: ${it.javaClass.simpleName}
 1	technical	app/src/main/java/tv/own/owntv/mobile/mdblist/MdbListRepository.kt	series:
 2	json	app/src/main/java/tv/own/owntv/mobile/mdblist/MdbListRepository.kt	top
 1	log	app/src/main/java/tv/own/owntv/mobile/mdblist/MdbListRepository.kt	top lists did not parse as expected: ${it.javaClass.simpleName}
+1	protocol	app/src/main/java/tv/own/owntv/mobile/mdblist/MdbListRepository.kt	tv
 2	empty	app/src/main/java/tv/own/owntv/mobile/mdblist/MdbListSettings.kt	\0
 1	preference-key	app/src/main/java/tv/own/owntv/mobile/mdblist/MdbListSettings.kt	mdblist
 1	preference-key	app/src/main/java/tv/own/owntv/mobile/mdblist/MdbListSettings.kt	mdblist_api_key

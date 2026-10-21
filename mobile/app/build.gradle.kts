@@ -371,6 +371,10 @@ dependencies {
 
     // DataStore — HomeContentFilterSettings' one persisted flag, outside :core's compiled SettingsRepository.
     implementation(libs.androidx.datastore.preferences)
+    // Room's runtime API only (no compiler: the database is core's). MdbListRepository reads core's
+    // metadata tables by TMDB id through useReaderConnection, which core's DAOs do not offer and
+    // core's `implementation` dependency keeps off this compile path. Same version as core's pin.
+    implementation(libs.androidx.room.runtime)
 
     // Image loading
     // Media3's SubtitleView, for the image subtitles the engine renders through ExoPlayer.
