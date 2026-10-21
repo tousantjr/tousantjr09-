@@ -1007,6 +1007,8 @@
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsParts.kt	🥍
 1	empty	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsPlayback.kt	\0
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsPlayerParts.kt	\0
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsPlayerParts.kt	${scoreText(m.sport, home?.score)}–${scoreText(m.sport, away?.score)}
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsPlayerParts.kt	– : –
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsScreen.kt	\0
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsScreen.kt	${sportEmoji(s)} ${sportLabel(s)}
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsScreen.kt	chips

@@ -6,13 +6,21 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import tv.own.owntv.core.database.dao.SourceDao
+import tv.own.owntv.core.repository.activeProfileSources
 import tv.own.owntv.core.settings.SettingsRepository
 import tv.own.owntv.core.sports.Demand
 import tv.own.owntv.core.sports.FollowedTeam
+import tv.own.owntv.core.sports.SportsMemory
 import tv.own.owntv.core.sports.SportsRepository
+import tv.own.owntv.core.sports.WatchFilter
+import tv.own.owntv.core.sports.WatchList
 import tv.own.owntv.core.sports.WatchOption
+import tv.own.owntv.core.sports.WatchReader
 import tv.own.owntv.core.sports.model.Match
+import java.util.Locale
 
 /** A channel started from a match: the match, and every channel showing it, best first (after the filter). */
 data class SportsSession(val match: Match, val options: List<WatchOption>)
@@ -25,6 +33,8 @@ data class SportsSession(val match: Match, val options: List<WatchOption>)
 class SportsPlayback(
     private val repository: SportsRepository,
     private val settings: SettingsRepository,
+    private val watchReader: WatchReader,
+    private val sourceDao: SourceDao,
 ) {
     private val _session = MutableStateFlow<SportsSession?>(null)
     val session: StateFlow<SportsSession?> = _session.asStateFlow()
@@ -62,4 +72,16 @@ class SportsPlayback(
                     compareBy({ !mine(it) }, { config.rankOf(it.sport, it.feed).first }, { config.rankOf(it.sport, it.feed).second }, { it.startMs }),
                 )
         }.distinctUntilChanged()
+
+    /**
+     * [match]'s channels as "Watch live" lists them by default (the profile's filter) — only if Find
+     * channels already found them; empty otherwise, and nothing is searched here. The television's,
+     * for the ticker's switch sheet.
+     */
+    suspend fun channelsFor(match: Match): List<WatchOption> {
+        val config = settings.activeSportsConfig.first()
+        val options = watchReader.found(match) { SportsMemory.rememberedFor(config, it) } ?: return emptyList()
+        val liveSources = activeProfileSources(settings, sourceDao).first().liveSourceIds
+        return WatchList.of(options, WatchFilter.from(config, Locale.getDefault().language, liveSources)).shown
+    }
 }

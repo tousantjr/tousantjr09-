@@ -828,12 +828,44 @@ fun PlayerScreen(
         // controls down (the dock takes that edge when they are up), no sheet open, never in the little window.
         val sportsNotices by koinInject<tv.own.owntv.mobile.ui.screens.sports.SportsNoticeSettings>().config
             .collectAsStateWithLifecycle(tv.own.owntv.mobile.ui.screens.sports.SportsNoticeConfig())
-        if (sportsNotices.scoreTicker && !controlsVisible && !inPip && sheet == null) {
+        // The ticker's state lives here, not in the pill, so a tap can act on the game it shows: the
+        // TickerSwitchSheet below (its channels, Play), a long press moving the pill along at once. The
+        // cycle stands still while the sheet is open; the little window closes it.
+        val ticker = if (sportsNotices.scoreTicker) tv.own.owntv.mobile.ui.screens.sports.rememberScoreTicker(sportsPlayback, matchSession?.match?.key) else null
+        var tickerSwitch by remember { mutableStateOf<tv.own.owntv.core.sports.model.Match?>(null) }
+        var tickerOptions by remember { mutableStateOf<List<tv.own.owntv.core.sports.WatchOption>?>(null) }
+        LaunchedEffect(ticker, tickerSwitch) { ticker?.paused = tickerSwitch != null }
+        LaunchedEffect(inPip) { if (inPip) tickerSwitch = null }
+        if (ticker != null && !controlsVisible && !inPip && sheet == null) {
             tv.own.owntv.mobile.ui.screens.sports.ScoreTickerPill(
-                playback = sportsPlayback,
-                excludeKey = matchSession?.match?.key,
+                state = ticker,
                 spoilerFree = sportsConfig.spoilerFree,
+                onClick = { ticker.current?.let { tickerSwitch = it } },
+                onLongClick = { ticker.next() },
                 modifier = Modifier.align(Alignment.TopCenter).systemBarsPadding().padding(top = 8.dp),
+            )
+        }
+        tickerSwitch?.takeIf { !inPip && multiview == null }?.let { m ->
+            LaunchedEffect(m.key) {
+                tickerOptions = null
+                tickerOptions = sportsPlayback.channelsFor(m)
+            }
+            tv.own.owntv.mobile.ui.screens.sports.TickerSwitchSheet(
+                playback = sportsPlayback,
+                match = m,
+                options = tickerOptions,
+                spoilerFree = sportsConfig.spoilerFree,
+                // The match page's in-player path: the session follows the new match, then the tuner switches.
+                onPlay = { o ->
+                    sportsPlayback.lastPlayedChannelId = o.channel.id
+                    sportsPlayback.start(m, tickerOptions.orEmpty())
+                    tuner.switchTo(o.channel)
+                    tickerSwitch = null
+                    tickerOptions = null
+                },
+                // No channel found yet: the match page, where Find channels lives (the nav host opens it).
+                onFind = { sportsPlayback.openMatchKey.value = m.key; tickerSwitch = null; tickerOptions = null },
+                onDismiss = { tickerSwitch = null; tickerOptions = null },
             )
         }
 
