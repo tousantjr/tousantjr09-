@@ -24,6 +24,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -90,7 +91,12 @@ fun SportsMatchScreen(
     LaunchedEffect(matchKey) { vm.matchOf(matchKey)?.let(vm::open) }
     val page by vm.matchPage.collectAsStateWithLifecycle()
     val odds by vm.matchOdds.collectAsStateWithLifecycle()
-    val state = page ?: return
+    val raw = page ?: return
+    // Same-tier channels reordered by how they have behaved on this phone — here rather than in the
+    // view model, whose constructor SportsModule binds positionally (the television ranks in its own).
+    val health: tv.own.owntv.mobile.health.ChannelHealthStore = org.koin.compose.koinInject()
+    val healthSnapshot by health.snapshot.collectAsState()
+    val state = remember(raw, healthSnapshot) { raw.copy(list = health.rank(raw.list)) }
     val m = state.match
     var tab by rememberSaveable { mutableStateOf(MatchTab.WATCH) }
     var revealed by remember(m.key) { mutableStateOf(false) }
@@ -385,6 +391,8 @@ internal fun ChannelRow(o: WatchOption, m: Match, onClick: () -> Unit, onHold: (
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(o.facets.name, style = stageText(13.5f, 700), color = palette.text, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
                 qualityTag(o.facets.qualityRank)?.let { StageTag(it) }
+                // How this channel has behaved on this phone; nothing until it has been tried.
+                tv.own.owntv.mobile.health.ChannelHealthDot(o.channel.id)
             }
             val (color, text) = when {
                 playing -> palette.muted to stringResource(R.string.sports_playing_now)

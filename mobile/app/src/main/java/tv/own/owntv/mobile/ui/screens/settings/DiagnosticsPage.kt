@@ -99,6 +99,14 @@ fun DiagnosticsPage(modifier: Modifier = Modifier, vm: DiagnosticsViewModel = ko
 
     var showReport by remember { mutableStateOf(false) }
 
+    // The channel sweep: its state is app-wide (ChannelSweep), the probing is the view model's job.
+    val sweepState by vm.channelSweep.collectAsStateWithLifecycle()
+    var showSweepConfirm by remember { mutableStateOf(false) }
+    var showSweepStop by remember { mutableStateOf(false) }
+    var showDeadList by remember { mutableStateOf(false) }
+    val sweepDone = sweepState as? tv.own.owntv.mobile.health.SweepUi.Done
+    val deadFound = sweepDone?.dead?.takeIf { it.isNotEmpty() }
+
     val report = (diagnostics as? DiagnosticsUi.Done)?.report
     val running = diagnostics is DiagnosticsUi.Running
     val appName = stringResource(R.string.app_name)
@@ -312,6 +320,45 @@ fun DiagnosticsPage(modifier: Modifier = Modifier, vm: DiagnosticsViewModel = ko
                 onClick = { scope.launch { vm.clearImageCache(); say(cacheCleared) } },
             ) {}
         }
+        // Channel sweep: one row that starts, resumes, stops or re-runs it and shows where it is; then,
+        // once it has found channels that never answered, "Hide them" and the list.
+        item(key = "sweep") {
+            val sweepLine = sweepLine(sweepState)
+            val sweepAction = stringResource(
+                when (val s = sweepState) {
+                    is tv.own.owntv.mobile.health.SweepUi.Running -> R.string.diagnostics_sweep_cancel
+                    is tv.own.owntv.mobile.health.SweepUi.Idle -> if (s.resumable) R.string.diagnostics_sweep_resume else R.string.diagnostics_sweep_start
+                    is tv.own.owntv.mobile.health.SweepUi.Done -> R.string.diagnostics_sweep_run_again
+                    tv.own.owntv.mobile.health.SweepUi.NoChannels -> R.string.diagnostics_sweep_start
+                },
+            )
+            StageSettingRow(
+                icon = MobileIcons.LiveTv,
+                title = stringResource(R.string.diagnostics_sweep_title),
+                subtitle = sweepLine ?: stringResource(R.string.diagnostics_sweep_desc),
+                onClick = { if (sweepState is tv.own.owntv.mobile.health.SweepUi.Running) showSweepStop = true else showSweepConfirm = true },
+            ) { StageRowValue(sweepAction) }
+        }
+        if (deadFound != null && sweepDone != null) {
+            item(key = "sweep-hide") {
+                val hiddenLine = pluralStringResource(R.plurals.diagnostics_sweep_hidden, deadFound.size, deadFound.size)
+                val alreadyHidden = sweepDone.hidden > 0
+                StageSettingRow(
+                    icon = MobileIcons.VisibilityOff,
+                    title = stringResource(R.string.diagnostics_sweep_hide),
+                    subtitle = if (alreadyHidden) hiddenLine else stringResource(R.string.diagnostics_sweep_hide_desc),
+                    onClick = if (alreadyHidden) null else ({ scope.launch { if (vm.hideDeadChannels() > 0) say(hiddenLine) } }),
+                ) { if (!alreadyHidden) StageRowValue(stringResource(R.string.diagnostics_sweep_hide)) }
+            }
+            item(key = "sweep-list") {
+                StageSettingRow(
+                    icon = MobileIcons.FormatListBulleted,
+                    title = stringResource(R.string.diagnostics_sweep_show_list),
+                    subtitle = stringResource(R.string.diagnostics_sweep_show_list_desc),
+                    onClick = { showDeadList = true },
+                ) { StageRowValue(buildString { }, StageChevron.FORWARD) }
+            }
+        }
         item(key = "app-settings") {
             StageSettingRow(
                 icon = MobileIcons.Settings,
@@ -372,6 +419,65 @@ fun DiagnosticsPage(modifier: Modifier = Modifier, vm: DiagnosticsViewModel = ko
             StageMenuItem(stringResource(R.string.common_share), onClick = { shareReport() }, icon = MobileIcons.Share)
             StageMenuItem(stringResource(R.string.common_done), onClick = { showReport = false }, icon = MobileIcons.Check)
         }
+    }
+    if (showSweepConfirm) {
+        val confirmHeading = stringResource(R.string.diagnostics_sweep_confirm_title)
+        val resumable = (sweepState as? tv.own.owntv.mobile.health.SweepUi.Idle)?.resumable == true
+        MobileBottomSheet(onDismissRequest = { showSweepConfirm = false }, title = confirmHeading) {
+            StageSheetHeader(confirmHeading, subtitle = stringResource(R.string.diagnostics_sweep_confirm_body))
+            StageMenuItem(
+                stringResource(if (resumable) R.string.diagnostics_sweep_resume else R.string.diagnostics_sweep_start),
+                onClick = { showSweepConfirm = false; vm.startSweep() },
+                icon = MobileIcons.LiveTv,
+            )
+            StageMenuItem(stringResource(R.string.diagnostics_sweep_cancel), onClick = { showSweepConfirm = false }, icon = MobileIcons.Close)
+        }
+    }
+    if (showSweepStop) {
+        val stopHeading = stringResource(R.string.diagnostics_sweep_stop_title)
+        MobileBottomSheet(onDismissRequest = { showSweepStop = false }, title = stopHeading) {
+            StageSheetHeader(stopHeading, subtitle = stringResource(R.string.diagnostics_sweep_stop_body))
+            StageMenuItem(stringResource(R.string.diagnostics_sweep_keep), onClick = { showSweepStop = false; vm.stopSweep() }, icon = MobileIcons.Check)
+            StageMenuItem(stringResource(R.string.diagnostics_sweep_discard), onClick = { showSweepStop = false; vm.discardSweep() }, icon = MobileIcons.Delete, danger = true)
+            StageMenuItem(stringResource(R.string.diagnostics_sweep_back), onClick = { showSweepStop = false }, icon = MobileIcons.Close)
+        }
+    }
+    if (showDeadList && deadFound != null) {
+        val listHeading = pluralStringResource(R.plurals.diagnostics_sweep_dead, deadFound.size, deadFound.size)
+        MobileBottomSheet(onDismissRequest = { showDeadList = false }, title = listHeading) {
+            StageSheetHeader(listHeading, subtitle = stringResource(R.string.diagnostics_sweep_show_list_desc))
+            Column(
+                Modifier
+                    .padding(horizontal = MobileDimens.ScreenPaddingH)
+                    .heightIn(max = REPORT_MAX_HEIGHT_DP.dp)
+                    .verticalScroll(rememberScrollState()),
+            ) {
+                deadFound.forEach { Text(it.name, style = stageText(12.5f, 500), color = LocalStagePalette.current.text, maxLines = 1, overflow = TextOverflow.Ellipsis) }
+            }
+            StageMenuItem(stringResource(R.string.common_done), onClick = { showDeadList = false }, icon = MobileIcons.Check)
+        }
+    }
+}
+
+/** The Channel sweep row's second line for the state it is in; null = the row's own description. */
+@Composable
+private fun sweepLine(state: tv.own.owntv.mobile.health.SweepUi): String? {
+    val sep = stringResource(R.string.content_epg_bits_separator)
+    val numbers = NumberFormat.getIntegerInstance()
+    @Composable
+    fun progress(checked: Int, total: Int, dead: Int): String =
+        stringResource(R.string.diagnostics_sweep_progress, numbers.format(checked), numbers.format(total)) + sep +
+            pluralStringResource(R.plurals.diagnostics_sweep_dead, dead, dead)
+    return when (state) {
+        is tv.own.owntv.mobile.health.SweepUi.Running ->
+            progress(state.checked, state.total, state.dead) + if (state.retrying) sep + stringResource(R.string.diagnostics_sweep_retrying) else ""
+        is tv.own.owntv.mobile.health.SweepUi.Idle ->
+            if (state.resumable) stringResource(R.string.diagnostics_sweep_paused, progress(state.checked, state.total, state.dead)) else null
+        is tv.own.owntv.mobile.health.SweepUi.Done ->
+            if (state.dead.isEmpty()) stringResource(R.string.diagnostics_sweep_none_dead, numbers.format(state.total))
+            else pluralStringResource(R.plurals.diagnostics_sweep_dead, state.dead.size, state.dead.size) +
+                if (state.hidden > 0) sep + pluralStringResource(R.plurals.diagnostics_sweep_hidden, state.hidden, state.hidden) else ""
+        tv.own.owntv.mobile.health.SweepUi.NoChannels -> stringResource(R.string.diagnostics_sweep_no_channels)
     }
 }
 

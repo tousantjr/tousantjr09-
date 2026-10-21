@@ -49,4 +49,16 @@ val liveModule = module {
         )
     }
     viewModelOf(::LiveViewModel)
+    // Channel reliability: what this phone has learnt about each channel (ChannelHealthStore), the
+    // engine watcher (ChannelHealthRecorder — an account refusal is kept out through the same check the
+    // player's connection-limit panel makes) and the monitor the Application starts, which feeds the
+    // recorder from the tuner without the tuner knowing.
+    single { tv.own.owntv.mobile.health.ChannelHealthStore(androidContext()) }
+    single {
+        val notices = get<tv.own.owntv.mobile.ui.player.ConnectionLimitNotices>()
+        tv.own.owntv.mobile.health.ChannelHealthRecorder(get()) { channel, failure ->
+            runCatching { notices.explain(channel, null, failure) }.getOrNull() != null
+        }
+    }
+    single { tv.own.owntv.mobile.health.ChannelHealthMonitor(tuner = get(), cast = get(), recorder = get()) }
 }

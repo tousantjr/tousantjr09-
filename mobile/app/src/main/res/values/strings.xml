@@ -226,6 +226,41 @@
     <string name="diagnostics_report_none">Run checks first</string>
     <string name="diagnostics_resync_queued">Re-sync started</string>
     <string name="diagnostics_share_unavailable">Nothing on this device can receive the report — copy it instead</string>
+    <!-- Diagnostics → Quick fixes → Channel sweep -->
+    <string name="diagnostics_sweep_title">Channel sweep</string>
+    <string name="diagnostics_sweep_desc">Tries every live channel in your playlist, one at a time, and lists the ones that never answer. It uses one of your account\'s connections while it runs, so don\'t start it while something is playing.</string>
+    <string name="diagnostics_sweep_start">Start</string>
+    <string name="diagnostics_sweep_resume">Resume</string>
+    <string name="diagnostics_sweep_run_again">Run again</string>
+    <string name="diagnostics_sweep_cancel">Cancel</string>
+    <string name="diagnostics_sweep_back">Back</string>
+    <string name="diagnostics_sweep_progress">%1$s of %2$s checked</string>
+    <plurals name="diagnostics_sweep_dead">
+        <item quantity="one">%1$d channel not responding</item>
+        <item quantity="other">%1$d channels not responding</item>
+    </plurals>
+    <string name="diagnostics_sweep_retrying">Trying the failed ones once more</string>
+    <string name="diagnostics_sweep_paused">Paused · %1$s</string>
+    <string name="diagnostics_sweep_none_dead">Every channel answered (%1$s checked)</string>
+    <string name="diagnostics_sweep_no_channels">No live channels to check</string>
+    <string name="diagnostics_sweep_hide">Hide them</string>
+    <string name="diagnostics_sweep_hide_desc">Hides the channels that did not respond from this profile\'s Live TV. Customize can bring them back.</string>
+    <plurals name="diagnostics_sweep_hidden">
+        <item quantity="one">%1$d channel hidden</item>
+        <item quantity="other">%1$d channels hidden</item>
+    </plurals>
+    <string name="diagnostics_sweep_show_list">Show list</string>
+    <string name="diagnostics_sweep_show_list_desc">The channels that did not respond, by name</string>
+    <string name="diagnostics_sweep_confirm_title">Start the channel sweep?</string>
+    <string name="diagnostics_sweep_confirm_body">Every live channel is tried one at a time, which can take a while on a big playlist. One of your account\'s connections is in use the whole time, so stop anything that is playing first. You can leave this screen and resume later.</string>
+    <string name="diagnostics_sweep_stop_title">Stop the sweep?</string>
+    <string name="diagnostics_sweep_stop_body">Keep the progress to resume later, or discard it and start over next time.</string>
+    <string name="diagnostics_sweep_keep">Keep progress</string>
+    <string name="diagnostics_sweep_discard">Discard</string>
+    <!-- The reliability dot beside a channel's name (how it has behaved on this device) -->
+    <string name="channel_health_good">Reliable channel</string>
+    <string name="channel_health_fair">Sometimes unreliable channel</string>
+    <string name="channel_health_poor">Often failing channel</string>
     <!-- MDBList (Settings → Layout → Home → MDBList): curated rows on Home and ratings on details pages -->
     <string name="mdblist_title">MDBList</string>
     <string name="mdblist_curated_rows">Curated rows on Home</string>

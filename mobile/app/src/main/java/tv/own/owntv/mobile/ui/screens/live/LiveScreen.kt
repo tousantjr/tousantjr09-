@@ -515,6 +515,8 @@ internal fun LiveChannelRow(
             }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(5.dp), verticalAlignment = Alignment.CenterVertically) {
+            // The reliability dot sits with the tags: how this channel has behaved here, once it has been tried.
+            tv.own.owntv.mobile.health.ChannelHealthDot(channel.id)
             name.tags.forEach { StageTag(it) }
             if (channel.catchup) StageIcon(MobileIcons.Catchup, 14.dp, palette.dim)
             if (isFavorite) StageIcon(MobileIcons.Favorite, 14.dp, accent)

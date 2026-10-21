@@ -94,6 +94,19 @@ val settingsModule = module {
     // The phone's own update check (core's UpdateManager reads the repository's latest release,
     // which is always the TV app's — see MobileUpdateCheck).
     single { MobileUpdateCheck(httpClient = get()) }
+    // Diagnostics → Channel sweep: app-wide, so a sweep stopped by leaving the page keeps its place.
+    single {
+        tv.own.owntv.mobile.health.ChannelSweep(
+            context = androidContext(),
+            settings = get(),
+            sourceDao = get(),
+            channelDao = get(),
+            customize = get(),
+            resolver = get(),
+            http = get(),
+            store = get(),
+        )
+    }
     viewModel {
         DiagnosticsViewModel(
             context = androidContext(),
@@ -111,6 +124,7 @@ val settingsModule = module {
             importFinalizer = get(),
             sportsRepository = get(),
             updateCheck = get(),
+            sweep = get(),
         )
     }
 }

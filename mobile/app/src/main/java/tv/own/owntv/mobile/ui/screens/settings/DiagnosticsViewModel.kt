@@ -165,10 +165,46 @@ class DiagnosticsViewModel(
     private val importFinalizer: ImportFinalizer,
     private val sportsRepository: SportsRepository,
     private val updateCheck: MobileUpdateCheck,
+    private val sweep: tv.own.owntv.mobile.health.ChannelSweep,
 ) : ViewModel() {
 
     private val _diagnostics = MutableStateFlow<DiagnosticsUi>(DiagnosticsUi.Idle)
     val diagnostics: StateFlow<DiagnosticsUi> = _diagnostics.asStateFlow()
+
+    // ---- Channel sweep (Quick fixes) ------------------------------------------------------------
+    // The sweep's state lives in the app-wide ChannelSweep; only the *job* is this view model's, so
+    // leaving the page cancels the probing (the sweep writes its place first) and coming back can
+    // resume it. Never more than one probe is in flight: ChannelSweep refuses a second run.
+
+    /** Idle / running / done, as the Channel sweep row reads it. */
+    val channelSweep: StateFlow<tv.own.owntv.mobile.health.SweepUi> = sweep.state
+
+    private var sweepJob: kotlinx.coroutines.Job? = null
+
+    /** Start the sweep, or resume one that was stopped part-way. */
+    fun startSweep() {
+        if (sweepJob?.isActive == true) return
+        sweepJob = viewModelScope.launch { sweep.run() }
+    }
+
+    /** Stop probing; the place reached is kept, so the row offers Resume. */
+    fun stopSweep() {
+        sweepJob?.cancel()
+        sweepJob = null
+    }
+
+    /** Stop probing and forget the place reached (and a finished sweep's list). */
+    fun discardSweep() {
+        val job = sweepJob
+        sweepJob = null
+        viewModelScope.launch {
+            job?.let { it.cancel(); it.join() }
+            sweep.discard()
+        }
+    }
+
+    /** Hides every channel the last sweep found not responding; how many it hid. */
+    suspend fun hideDeadChannels(): Int = sweep.hideDead()
 
     private val _update = MutableStateFlow<UpdateCheckUi>(UpdateCheckUi.Idle)
     val update: StateFlow<UpdateCheckUi> = _update.asStateFlow()

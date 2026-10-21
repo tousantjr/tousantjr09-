@@ -35,6 +35,8 @@ class SportsPlayback(
     private val settings: SettingsRepository,
     private val watchReader: WatchReader,
     private val sourceDao: SourceDao,
+    /** Same-tier channels in [channelsFor] are reordered by how they have behaved here, so "best" means reliable. */
+    private val health: tv.own.owntv.mobile.health.ChannelHealthStore,
 ) {
     private val _session = MutableStateFlow<SportsSession?>(null)
     val session: StateFlow<SportsSession?> = _session.asStateFlow()
@@ -82,6 +84,6 @@ class SportsPlayback(
         val config = settings.activeSportsConfig.first()
         val options = watchReader.found(match) { SportsMemory.rememberedFor(config, it) } ?: return emptyList()
         val liveSources = activeProfileSources(settings, sourceDao).first().liveSourceIds
-        return WatchList.of(options, WatchFilter.from(config, Locale.getDefault().language, liveSources)).shown
+        return health.rank(WatchList.of(options, WatchFilter.from(config, Locale.getDefault().language, liveSources)).shown)
     }
 }
