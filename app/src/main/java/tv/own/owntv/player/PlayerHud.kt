@@ -224,8 +224,16 @@ fun PlayerHud(
     onToastOk: (() -> Unit)? = null,
     // Settings → Sports → Score ticker: the other followed games' scores, drawn at the top edge while the
     // controls are hidden (the top strip, with the match's own score line, takes that edge when they are
-    // up) and over nothing but the picture. Informational, never focusable.
+    // up) and over nothing but the picture. Never focusable; the keys below act on it instead.
     ticker: (@Composable () -> Unit)? = null,
+    // The ticker's keys, with the controls hidden and no error up. UP, while the pill shows a game: the
+    // shell arms its switch prompt (and, armed, moves the pill along) — so UP does not zap while a game
+    // is on the pill; CH+, Down and the lists still do. DOWN and Back are the shell's only while a prompt
+    // is armed (the pill back a game; the prompt closed), so otherwise both keep their meaning. OK on an
+    // armed prompt rides [onToastOk].
+    onTickerUp: (() -> Unit)? = null,
+    onTickerDown: (() -> Unit)? = null,
+    onDismissPrompt: (() -> Unit)? = null,
     // The playlist the playing item came from, so a failed stream can be explained with the account's
     // own connection count (ConnectionLimitNotices). Null = unknown, no explanation.
     playingSourceId: Long? = null,
@@ -306,6 +314,8 @@ fun PlayerHud(
     // this handler is disabled, so Back falls through to the shell, which exits the player. Also disabled
     // while an error/dialog is up (a dialog handles its own Back; an error should exit).
     BackHandler(enabled = controlsVisible && !forceShow) { controlsVisible = false }
+    // The ticker's switch prompt is up (controls hidden): Back closes it rather than the player.
+    BackHandler(enabled = onDismissPrompt != null && !controlsVisible && !forceShow) { onDismissPrompt?.invoke() }
     // Channel zap (live only): a brief "now watching" card on up/down without revealing the full HUD.
     val canZap = onChannelUp != null && onChannelDown != null
     var channelFlash by remember { mutableIntStateOf(0) }
@@ -572,6 +582,10 @@ fun PlayerHud(
                 // intended: CH-/Down from the first channel lands on the last, and vice versa.
                 canZap && e.key == Key.MediaNext -> { zap(1); true }
                 canZap && e.key == Key.MediaPrevious -> { zap(-1); true }
+                // The score ticker's keys come first: UP while a game is on the pill arms (or, armed,
+                // moves) its switch prompt; DOWN is the ticker's only while a prompt is armed.
+                onTickerUp != null && !controlsVisible && error == null && e.key == Key.DirectionUp -> { onTickerUp(); true }
+                onTickerDown != null && !controlsVisible && error == null && e.key == Key.DirectionDown -> { onTickerDown(); true }
                 canZap && isLive && !controlsVisible && e.key == Key.DirectionUp -> { zap(1); true }
                 canZap && isLive && !controlsVisible && e.key == Key.DirectionDown -> { zap(-1); true }
                 // Left/Right with the controls hidden: reveal them on the timeline and take the first

@@ -303,6 +303,8 @@
     <string name="sports_game_day_now">Now</string>
     <string name="sports_score_ticker">Score ticker</string>
     <string name="sports_score_ticker_description">While you watch, a small line at the top of the picture cycles through your other followed games that are on. Spoiler-free leaves out the scores</string>
+    <!-- The ticker's switch prompt (D-pad Up on the pill): "Switch to Eagles – Cowboys?" over the channel it would play. -->
+    <string name="sports_ticker_switch_prompt">Switch to %1$s?</string>
     <string name="settings_search_keywords_sports_notices">sports notifications alerts kick-off game day heads-up score ticker</string>
     <!-- Settings › Layout › Home › Trakt -->
     <string name="trakt_title">Trakt</string>

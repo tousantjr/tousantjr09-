@@ -171,3 +171,41 @@ fun GoalToast(alert: MatchAlert, modifier: Modifier = Modifier) {
 }
 
 private const val GOAL_MARK = "⚽"
+
+/**
+ * A press of UP on the score ticker: the game the pill showed and the best channel Find channels already
+ * found for it — null when none is known yet, so OK opens the match page instead (the prompt says so).
+ * [armedAt] makes every press its own prompt, so each one restarts the five-second timer.
+ */
+data class TickerPrompt(val match: Match, val channelName: String?, val armedAt: Long = android.os.SystemClock.elapsedRealtime())
+
+/**
+ * The ticker's prompt, under the pill in the goal toast's clothes: "Switch to Eagles – Cowboys?" over the
+ * channel it would play (or "Find channels"), and the OK tag. The player handles the keys: OK switches,
+ * UP/DOWN move the pill along, Back or the timer closes it.
+ */
+@Composable
+fun TickerSwitchPrompt(prompt: TickerPrompt, modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    val sep = stringResource(R.string.content_epg_bits_separator)
+    Row(
+        modifier
+            .width(525.mpx)
+            .background(Color(0xD906090B), RoundedCornerShape(21.mpx))
+            .padding(horizontal = 24.mpx, vertical = 18.mpx),
+        horizontalArrangement = Arrangement.spacedBy(18.mpx),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text(
+                stringResource(R.string.sports_ticker_switch_prompt, MatchNotifications.pair(context, prompt.match)),
+                style = stageText(20, 800), color = StageColors.Text, maxLines = 1, overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                prompt.channelName ?: stringResource(R.string.sports_find_channels),
+                style = stageText(18, 400), color = StageColors.Muted, maxLines = 1, overflow = TextOverflow.Ellipsis,
+            )
+        }
+        StageTag(stringResource(R.string.common_ok) + sep + stringResource(R.string.sports_switch))
+    }
+}

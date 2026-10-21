@@ -1612,6 +1612,22 @@ fun OwnTVShell(
                 val sportsNotices by koinInject<tv.own.owntv.features.sports.SportsNoticeSettings>().config
                     .collectAsStateWithLifecycle(tv.own.owntv.features.sports.SportsNoticeConfig())
                 LaunchedEffect(goalToast) { if (goalToast != null) { kotlinx.coroutines.delay(GOAL_TOAST_MS); goalToast = null } }
+                // The ticker's own state lives here, not in the pill, so UP can act on the game it shows: a
+                // TickerSwitchPrompt under the pill for five seconds — OK plays its best found channel (or
+                // opens its page), UP/DOWN move the pill along and re-arm, Back closes. The cycle stands
+                // still while the prompt is up.
+                val ticker = if (sportsNotices.scoreTicker) tv.own.owntv.features.sports.rememberScoreTicker(sportsPlayback, matchSession?.match?.key) else null
+                var tickerPrompt by remember { mutableStateOf<tv.own.owntv.features.sports.TickerPrompt?>(null) }
+                LaunchedEffect(ticker, tickerPrompt) { ticker?.paused = tickerPrompt != null }
+                LaunchedEffect(tickerPrompt) { if (tickerPrompt != null) { kotlinx.coroutines.delay(TICKER_PROMPT_MS); tickerPrompt = null } }
+                val armTicker: () -> Unit = {
+                    val m = ticker?.current
+                    if (m != null) {
+                        scope.launch {
+                            tickerPrompt = tv.own.owntv.features.sports.TickerPrompt(m, sportsPlayback.channelsFor(m).firstOrNull()?.channel?.name)
+                        }
+                    }
+                }
                 // A goal elsewhere: play that match's best channel if Find channels already found one,
                 // else open its match page, where they can be found.
                 val switchToMatch: (tv.own.owntv.core.sports.model.Match) -> Unit = { m ->
@@ -1737,10 +1753,20 @@ fun OwnTVShell(
                     },
                     onOtherChannels = matchSession?.takeIf { it.options.size > 1 }?.let { { showOtherChannels = true } },
                     otherChannelsCount = (matchSession?.options?.size ?: 1) - 1,
-                    onToastOk = goalToast?.let { a -> { switchToMatch(a.match) } },
-                    ticker = if (sportsNotices.scoreTicker) {
-                        { tv.own.owntv.features.sports.ScoreTickerPill(sportsPlayback, matchSession?.match?.key, sportsConfig.spoilerFree) }
-                    } else null,
+                    // OK: the ticker's armed prompt first, else a goal toast — both switch to that match.
+                    onToastOk = tickerPrompt?.let { p -> { tickerPrompt = null; switchToMatch(p.match) } }
+                        ?: goalToast?.let { a -> { switchToMatch(a.match) } },
+                    onTickerUp = ticker?.takeIf { it.current != null }?.let { t -> { if (tickerPrompt != null) t.next(); armTicker() } },
+                    onTickerDown = tickerPrompt?.let { { ticker?.previous(); armTicker() } },
+                    onDismissPrompt = tickerPrompt?.let { { tickerPrompt = null } },
+                    ticker = ticker?.let { t ->
+                        {
+                            Column(horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.mpx)) {
+                                tv.own.owntv.features.sports.ScoreTickerPill(t, sportsConfig.spoilerFree, armed = tickerPrompt != null)
+                                tickerPrompt?.let { p -> tv.own.owntv.features.sports.TickerSwitchPrompt(p) }
+                            }
+                        }
+                    },
                     modifier = Modifier.fillMaxSize(),
                 )
                 goalToast?.let { a ->
@@ -2019,6 +2045,9 @@ fun OwnTVShell(
 
 /** A goal toast stays this long. */
 private const val GOAL_TOAST_MS = 8_000L
+
+/** How long the score ticker's switch prompt waits for OK before it closes on its own. */
+private const val TICKER_PROMPT_MS = 5_000L
 
 /** Long enough to read "Auto-matched 12 channels. 40 channels need review." from the sofa. */
 private const val EPG_MATCH_TOAST_MS = 6_000L

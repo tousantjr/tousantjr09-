@@ -824,6 +824,7 @@
 1	technical	app/src/main/java/tv/own/owntv/features/sports/GameDayWorker.kt	sports_game_day
 1	technical	app/src/main/java/tv/own/owntv/features/sports/LiveSportsRow.kt	featured:
 1	empty	app/src/main/java/tv/own/owntv/features/sports/ScoreTicker.kt	\0
+1	technical	app/src/main/java/tv/own/owntv/features/sports/ScoreTicker.kt	▲
 1	empty	app/src/main/java/tv/own/owntv/features/sports/SportsHubScreen.kt	\0
 1	technical	app/src/main/java/tv/own/owntv/features/sports/SportsHubScreen.kt	${scoreText(m.sport, home.score)} – ${scoreText(m.sport, away.score)}
 1	technical	app/src/main/java/tv/own/owntv/features/sports/SportsHubScreen.kt	${sportEmoji(s)} ${sportLabel(s)}
