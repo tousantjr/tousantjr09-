@@ -824,6 +824,19 @@ fun PlayerScreen(
             )
         }
 
+        // Settings → Sports → Score ticker: the other followed games' scores at the top edge, with the
+        // controls down (the dock takes that edge when they are up), no sheet open, never in the little window.
+        val sportsNotices by koinInject<tv.own.owntv.mobile.ui.screens.sports.SportsNoticeSettings>().config
+            .collectAsStateWithLifecycle(tv.own.owntv.mobile.ui.screens.sports.SportsNoticeConfig())
+        if (sportsNotices.scoreTicker && !controlsVisible && !inPip && sheet == null) {
+            tv.own.owntv.mobile.ui.screens.sports.ScoreTickerPill(
+                playback = sportsPlayback,
+                excludeKey = matchSession?.match?.key,
+                spoilerFree = sportsConfig.spoilerFree,
+                modifier = Modifier.align(Alignment.TopCenter).systemBarsPadding().padding(top = 8.dp),
+            )
+        }
+
         // Independent of the controls, so it still appears after they have faded out on their own.
         if (showNextCard) {
             NextEpisodeCard(

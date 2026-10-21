@@ -852,6 +852,10 @@
 1	empty	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/FeaturedMatch.kt	\0
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/FeaturedMatchHero.kt	${scoreText(m.sport, home.score)} – ${scoreText(m.sport, away.score)}
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/FeaturedMatchHero.kt	– : –
+2	empty	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/GameDayWorker.kt	\0
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/GameDayWorker.kt	mptv_game_day
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/GameDayWorker.kt	sports_game_day
+1	empty	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/ScoreTicker.kt	\0
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsCards.kt	${scoreText(m.sport, home.score)} – ${scoreText(m.sport, away.score)}
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsCards.kt	–
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsCards.kt	– : –
@@ -884,6 +888,11 @@
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsMatchScreen.kt	– : –
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsMatchScreen.kt	⚽
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsMatchScreen.kt	⚽ ${it.players.firstOrNull().orEmpty().substringAfterLast(' ')} ${it.minute}
+1	preference-key	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsNoticeSettings.kt	game_day
+1	preference-key	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsNoticeSettings.kt	game_day_hour
+1	preference-key	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsNoticeSettings.kt	game_day_notified_day
+1	preference-key	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsNoticeSettings.kt	score_ticker
+1	preference-key	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsNoticeSettings.kt	sports_notices
 3	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsParts.kt	\0
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsParts.kt	4K
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsParts.kt	8K
@@ -905,6 +914,7 @@
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsParts.kt	🏒
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsParts.kt	🥊
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsParts.kt	🥍
+1	empty	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsPlayback.kt	\0
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsPlayerParts.kt	\0
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsScreen.kt	\0
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsScreen.kt	${sportEmoji(s)} ${sportLabel(s)}

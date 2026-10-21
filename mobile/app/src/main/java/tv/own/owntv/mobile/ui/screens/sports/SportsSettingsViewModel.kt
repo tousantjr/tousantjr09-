@@ -44,9 +44,18 @@ class SportsSettingsViewModel(
     // Appended last: SportsModule binds this view-model positionally.
     private val oddsSettings: OddsSettings,
     odds: OddsRepository,
+    private val notices: SportsNoticeSettings,
 ) : ViewModel() {
     val config: StateFlow<SportsConfig> = settings.activeSportsConfig
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SportsConfig())
+
+    /** The game-day heads-up and the score ticker (app-level, not the profile's — SportsNoticeSettings). */
+    val noticeConfig: StateFlow<SportsNoticeConfig> = notices.config
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SportsNoticeConfig())
+
+    fun setGameDay(on: Boolean) = viewModelScope.launch { notices.setGameDay(on) }
+    fun setGameDayHour(hour: Int) = viewModelScope.launch { notices.setGameDayHour(hour) }
+    fun setScoreTicker(on: Boolean) = viewModelScope.launch { notices.setScoreTicker(on) }
 
     /** Betting odds (app-level, not the profile's — OddsSettings) and what its last fetch came to, for the Status row. */
     val oddsConfig: StateFlow<OddsConfig> = oddsSettings.config

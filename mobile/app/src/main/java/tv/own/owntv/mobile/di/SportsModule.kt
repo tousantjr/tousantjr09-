@@ -4,6 +4,7 @@ import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
+import tv.own.owntv.mobile.ui.screens.sports.SportsNoticeSettings
 import tv.own.owntv.mobile.ui.screens.sports.SportsPlayback
 import tv.own.owntv.mobile.ui.screens.sports.SportsSettingsViewModel
 import tv.own.owntv.mobile.ui.screens.sports.SportsUpcomingViewModel
@@ -25,9 +26,12 @@ val sportsModule = module {
     singleOf(::EspnOddsSource)
     singleOf(::TheOddsApiSource)
     singleOf(::OddsRepository)
+    // Settings → Sports → the game-day heads-up and the score ticker: app-level too (SportsNoticeSettings),
+    // core's SportsConfig being compiled; the store also keeps GameDayWorker's schedule in step.
+    single { SportsNoticeSettings(androidContext()) }
     // Positional: a constructor parameter added to either view-model goes last, with one more get() here.
     viewModel { SportsViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
-    viewModel { SportsSettingsViewModel(get(), get(), get(), get(), get(), get(), get(), get()) }
+    viewModel { SportsSettingsViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     // Sports hub → Upcoming: its own small view model, outside core's Demand/Feed system (see
     // SportsUpcomingViewModel) — the already-bound SportsSource (EspnSportsSource) is reused as is.
     viewModel { SportsUpcomingViewModel(get(), get()) }

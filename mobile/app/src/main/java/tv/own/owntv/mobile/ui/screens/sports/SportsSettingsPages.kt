@@ -144,6 +144,11 @@ fun SportsSettingsPage(vm: SportsSettingsViewModel = koinViewModel()) {
                 SwitchRow(MobileIcons.LiveTv, stringResource(R.string.sports_score_info_bar), stringResource(R.string.sports_score_info_bar_description_mobile), c.scoreInInfoBar) {
                     vm.update { it.copy(scoreInInfoBar = !it.scoreInInfoBar) }
                 }
+                // The score ticker is this device's, not the profile's (SportsNoticeSettings), like the odds below.
+                val notices by vm.noticeConfig.collectAsStateWithLifecycle()
+                SwitchRow(MobileIcons.LiveTv, stringResource(R.string.sports_score_ticker), stringResource(R.string.sports_score_ticker_description), notices.scoreTicker) {
+                    vm.setScoreTicker(!notices.scoreTicker)
+                }
                 OpensRow(MobileIcons.Bell, stringResource(R.string.sports_channel_goal_alerts), stringResource(R.string.sports_goal_alerts_description), alertsSummary(c)) {
                     nav(SettingsLeaf.SPORTS_ALERTS.route)
                 }
@@ -511,7 +516,30 @@ fun SportsAlertsPage(vm: SportsSettingsViewModel = koinViewModel()) {
                     SwitchRow(MobileIcons.LiveTv, stringResource(R.string.sports_live_card_offer), stringResource(R.string.sports_live_card_description), a.liveCard) { edit { it.copy(liveCard = !it.liveCard) } }
                     PageNote(stringResource(R.string.sports_alerts_footnote))
                 }
+                // The daily game-day heads-up: this device's, not the profile's (SportsNoticeSettings), and
+                // independent of goal alerts — a heads-up at breakfast wants no goal-by-goal buzzing.
+                val notices by vm.noticeConfig.collectAsStateWithLifecycle()
+                StageSectionHead(stringResource(R.string.sports_game_day_heading))
+                SwitchRow(MobileIcons.Schedule, stringResource(R.string.sports_game_day), stringResource(R.string.sports_game_day_description), notices.gameDay) {
+                    if (!notices.gameDay) tv.own.owntv.core.sports.MatchAlertHost.requestNotificationPermission?.invoke()
+                    vm.setGameDay(!notices.gameDay)
+                }
+                if (notices.gameDay) {
+                    val hours = SportsNoticeConfig.GAME_DAY_HOURS
+                    StageSettingRow(stringResource(R.string.sports_game_day_time), icon = MobileIcons.Schedule, subtitle = stringResource(R.string.sports_game_day_time_description)) {
+                        StageStepper(
+                            hourText(notices.gameDayHour),
+                            { vm.setGameDayHour(hours.step(notices.gameDayHour, -1)) },
+                            { vm.setGameDayHour(hours.step(notices.gameDayHour, 1)) },
+                        )
+                    }
+                }
             }
         }
     }
 }
+
+/** "9:00 AM" / "09:00": an hour of the day in the phone's own clock format. */
+@Composable
+private fun hourText(hour: Int): String =
+    timeText(java.time.LocalDate.now().atTime(hour.coerceIn(0, 23), 0).atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli())

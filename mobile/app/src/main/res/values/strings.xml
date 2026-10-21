@@ -275,4 +275,19 @@
     <string name="mdblist_rating_lb">LB %1$s</string>
     <string name="mdblist_lists_default">Top 3</string>
     <string name="mdblist_add_list_invalid">Not a list: type user/list-name, its mdblist.com address or its number — five lists at most</string>
+
+    <!-- Settings → Sports → Goal alerts → Game day (the daily heads-up) and While watching → Score ticker. -->
+    <string name="sports_game_day_heading">Game day</string>
+    <string name="sports_game_day">Your teams play today</string>
+    <string name="sports_game_day_description">One notification a day listing your followed teams\' games and their kick-off times — never a score</string>
+    <string name="sports_game_day_time">Heads-up time</string>
+    <string name="sports_game_day_time_description">When the daily heads-up arrives. Nothing is sent on a day without a game</string>
+    <string name="sports_game_day_channel">Game day</string>
+    <plurals name="sports_game_day_title">
+        <item quantity="one">Your teams play today: %1$d game</item>
+        <item quantity="other">Your teams play today: %1$d games</item>
+    </plurals>
+    <string name="sports_game_day_now">Now</string>
+    <string name="sports_score_ticker">Score ticker</string>
+    <string name="sports_score_ticker_description">While you watch, a small line at the top of the picture cycles through your other followed games that are on. Spoiler-free leaves out the scores</string>
 </resources>

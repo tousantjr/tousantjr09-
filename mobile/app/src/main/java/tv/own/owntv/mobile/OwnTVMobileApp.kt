@@ -199,6 +199,14 @@ class OwnTVMobileApp : Application(), androidx.work.Configuration.Provider {
         // Subscription expiry: the daily check behind Home's notice, as a notification when the app is
         // closed. Off the main thread: WorkManager's first touch opens its database.
         appScope.launch { runCatching { tv.own.owntv.mobile.subscription.SubscriptionExpiryWorker.schedule(this@OwnTVMobileApp) } }
+        // "Your teams play today": the daily heads-up's schedule follows its setting (Settings → Sports →
+        // Goal alerts → Game day); same thread rule as above.
+        appScope.launch {
+            runCatching {
+                val notices = org.koin.core.context.GlobalContext.get().get<tv.own.owntv.mobile.ui.screens.sports.SportsNoticeSettings>()
+                tv.own.owntv.mobile.ui.screens.sports.GameDayWorker.sync(this@OwnTVMobileApp, notices.current())
+            }
+        }
         // A new user starts on Stage with glass on; an existing install keeps its look.
         appScope.launch {
             runCatching {
