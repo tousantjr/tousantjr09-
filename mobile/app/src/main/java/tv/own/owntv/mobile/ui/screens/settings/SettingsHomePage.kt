@@ -24,6 +24,22 @@ import tv.own.owntv.mobile.ui.stage.StageSegmented
 import tv.own.owntv.mobile.ui.stage.StageSettingRow
 import tv.own.owntv.mobile.ui.stage.StageSwitch
 import androidx.compose.ui.semantics.Role
+import android.widget.Toast
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
+import tv.own.owntv.mobile.mdblist.MdbListConfig
+import tv.own.owntv.mobile.mdblist.MdbListInfo
+import tv.own.owntv.mobile.mdblist.MdbListRepository
+import tv.own.owntv.mobile.mdblist.MdbListSettings
+import tv.own.owntv.mobile.mdblist.MdbListSettingsViewModel
+import tv.own.owntv.mobile.ui.components.MobileBottomSheet
+import tv.own.owntv.mobile.ui.components.SheetScroll
+import tv.own.owntv.mobile.ui.stage.StageChevron
+import tv.own.owntv.mobile.ui.stage.StageMenuItem
+import tv.own.owntv.mobile.ui.stage.StageRowValue
+import tv.own.owntv.mobile.ui.stage.StageSheetHeader
+import tv.own.owntv.mobile.ui.stage.StageTextRow
 
 /**
  * Home, as the profile wants it: which rows appear, in what order, and what the Keep watching row is
@@ -90,6 +106,11 @@ fun SettingsHomePage(
                 onClick = { vm.setHideAdultCategoriesHome(!hideAdultCategoriesHome) },
             ) { StageSwitch(hideAdultCategoriesHome) }
         }
+
+        // MDBList: curated rows under Now trending and a ratings line on details pages, behind a key
+        // (typed, or built in) — see MdbListSettings. App-level: one key and one set of lists per device.
+        settingsSection(R.string.mdblist_title)
+        settingsGroup(key = "mdblist") { MdbListRows() }
 
         settingsSection(R.string.settings_sections)
         settingsNote(R.string.settings_hidden_sections)
@@ -253,4 +274,117 @@ private fun trendingStatusText(hidden: Boolean, availability: TrendingAvailabili
         availability.count,
     )
     else -> stringResource(R.string.settings_trending_status_waiting)
+}
+
+/**
+ * MDBList (Settings › Layout › Home): the two switches (off, and not tappable, until a key exists — built
+ * in or typed), the key, which lists (a sheet of the public top lists, five at most, plus one typed by
+ * hand), Test key and a status line. The same rows the television has, in the phone's shapes.
+ */
+@Composable
+private fun MdbListRows() {
+    val vm: MdbListSettingsViewModel = koinViewModel()
+    val c by vm.config.collectAsStateWithLifecycle()
+    val status by vm.status.collectAsStateWithLifecycle()
+    val topLists by vm.topLists.collectAsStateWithLifecycle()
+    val test by vm.test.collectAsStateWithLifecycle()
+    val testing by vm.testing.collectAsStateWithLifecycle()
+    var listsOpen by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val needsKey = stringResource(R.string.mdblist_needs_key)
+
+    StageSettingRow(
+        title = stringResource(R.string.mdblist_curated_rows),
+        subtitle = if (c.hasKey) stringResource(R.string.mdblist_curated_rows_description) else needsKey,
+        role = Role.Switch,
+        onClick = if (c.hasKey) ({ vm.setCuratedRows(!c.curatedRows) }) else null,
+    ) { StageSwitch(c.rowsOn) }
+    StageSettingRow(
+        title = stringResource(R.string.mdblist_ratings),
+        subtitle = if (c.hasKey) stringResource(R.string.mdblist_ratings_description) else needsKey,
+        role = Role.Switch,
+        onClick = if (c.hasKey) ({ vm.setRatings(!c.ratings) }) else null,
+    ) { StageSwitch(c.ratingsOn) }
+    // Typed once and saved from its sheet; with nothing typed and a key built in, the row says so and
+    // never shows that key.
+    StageTextRow(
+        icon = MobileIcons.Lock, label = stringResource(R.string.mdblist_api_key), value = c.apiKey, onSave = vm::setApiKey,
+        placeholder = stringResource(if (c.usesBuiltInKey) R.string.mdblist_api_key_built_in else R.string.mdblist_api_key_hint),
+        password = true,
+    )
+    StageSettingRow(
+        title = stringResource(R.string.mdblist_lists),
+        subtitle = stringResource(R.string.mdblist_lists_description),
+        onClick = if (c.hasKey) ({ listsOpen = true }) else null,
+    ) {
+        StageRowValue(
+            if (c.lists.isEmpty()) stringResource(R.string.mdblist_lists_default) else c.lists.size.toString(),
+            if (c.hasKey) StageChevron.FORWARD else StageChevron.NONE,
+        )
+    }
+    // A list typed by hand: its number, user/list-name, or its mdblist.com address.
+    StageTextRow(
+        icon = MobileIcons.Add, label = stringResource(R.string.mdblist_add_list), value = "",
+        onSave = { typed ->
+            if (typed.isNotBlank() && !vm.addList(typed)) Toast.makeText(context, R.string.mdblist_add_list_invalid, Toast.LENGTH_SHORT).show()
+        },
+        placeholder = stringResource(R.string.mdblist_add_list_hint),
+    )
+    val result = test
+    val testLine = when {
+        testing -> stringResource(R.string.mdblist_testing)
+        result == null -> stringResource(R.string.mdblist_test_key_description)
+        result.ok -> pluralStringResource(R.plurals.mdblist_test_ok, result.listsParsed, result.listsParsed)
+        result.httpCode == 0 -> stringResource(R.string.mdblist_status_unreachable)
+        result.httpCode == 401 || result.httpCode == 403 -> stringResource(R.string.mdblist_status_key_rejected)
+        else -> stringResource(R.string.mdblist_test_failed, result.httpCode)
+    }
+    StageSettingRow(
+        title = stringResource(R.string.mdblist_test_key),
+        subtitle = testLine,
+        onClick = if (c.hasKey && !testing) ({ vm.testKey() }) else null,
+    ) { StageRowValue(stringResource(R.string.mdblist_test_now), plain = true) }
+    StageSettingRow(title = stringResource(R.string.mdblist_status), subtitle = mdbStatusText(c, status))
+
+    if (listsOpen) MdbListsSheet(vm, c, topLists) { listsOpen = false }
+}
+
+/** The public top lists, each ticked or not (five at most), and the lists typed by hand, each removable. */
+@Composable
+private fun MdbListsSheet(vm: MdbListSettingsViewModel, c: MdbListConfig, topLists: List<MdbListInfo>, onDismiss: () -> Unit) {
+    val sep = stringResource(R.string.content_epg_bits_separator)
+    MobileBottomSheet(onDismissRequest = onDismiss) {
+        StageSheetHeader(stringResource(R.string.mdblist_lists))
+        SheetScroll {
+            val full = c.lists.size >= MdbListSettings.MAX_LISTS
+            topLists.forEach { list ->
+                val picked = list.ref in c.lists
+                val line = listOfNotNull(
+                    list.user.takeIf { it.isNotBlank() },
+                    pluralStringResource(R.plurals.mdblist_list_titles, list.items, list.items).takeIf { list.items > 0 },
+                ).joinToString(sep)
+                StageMenuItem(list.name, { vm.toggleList(list.ref) }, value = line.ifBlank { null }, checked = picked, enabled = picked || !full)
+            }
+            c.lists.filter { ref -> topLists.none { it.ref == ref } }.forEach { ref ->
+                StageMenuItem(ref, { vm.removeList(ref) }, checked = true)
+            }
+        }
+    }
+}
+
+/** The Status row: the key first, then what the last call came to. */
+@Composable
+private fun mdbStatusText(c: MdbListConfig, status: MdbListRepository.Status): String = when {
+    !c.hasKey -> stringResource(R.string.mdblist_status_no_key)
+    !c.rowsOn && !c.ratingsOn -> stringResource(R.string.mdblist_status_off)
+    else -> when (status) {
+        MdbListRepository.Status.Idle -> stringResource(R.string.mdblist_status_ready)
+        MdbListRepository.Status.NoKey -> stringResource(R.string.mdblist_status_no_key)
+        MdbListRepository.Status.KeyRejected -> stringResource(R.string.mdblist_status_key_rejected)
+        MdbListRepository.Status.Quota -> stringResource(R.string.mdblist_status_quota)
+        is MdbListRepository.Status.HttpError -> stringResource(R.string.mdblist_status_http, status.code)
+        MdbListRepository.Status.Unreachable -> stringResource(R.string.mdblist_status_unreachable)
+        MdbListRepository.Status.NoMatches -> stringResource(R.string.mdblist_status_no_matches)
+        is MdbListRepository.Status.Shown -> stringResource(R.string.mdblist_status_shown, status.rails, status.titles)
+    }
 }

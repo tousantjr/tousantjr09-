@@ -4,6 +4,10 @@ import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 import tv.own.owntv.core.home.HomeFeedReader
+import tv.own.owntv.mobile.mdblist.MdbListApi
+import tv.own.owntv.mobile.mdblist.MdbListRepository
+import tv.own.owntv.mobile.mdblist.MdbListSettings
+import tv.own.owntv.mobile.mdblist.MdbListSettingsViewModel
 import tv.own.owntv.mobile.ui.screens.home.HomeContentFilterSettings
 import tv.own.owntv.mobile.ui.screens.home.HomeViewModel
 import tv.own.owntv.mobile.ui.screens.home.SubscriptionExpiry
@@ -36,5 +40,25 @@ val homeModule = module {
     // playlist for its expiry and caches the answer for hours, so one instance for the process.
     single { SubscriptionExpiry(get()) }
     single { SubscriptionNoticeStore(androidContext()) }
+    // Settings → Layout → Home → MDBList: the feature's own DataStore (MdbListSettings — app-level, and
+    // where the user's API key lives), its client riding the app's shared OkHttp client, and the cache +
+    // matcher that turn a public list into a Home rail (MdbListRepository, see its header). Named
+    // arguments: the repository takes nine dependencies, two of them DAOs of the same shape.
+    single { MdbListSettings(androidContext()) }
+    single { MdbListApi(get()) }
+    single {
+        MdbListRepository(
+            context = androidContext(),
+            settings = get(),
+            api = get(),
+            appSettings = get(),
+            sourceDao = get(),
+            movieDao = get(),
+            seriesDao = get(),
+            profileDao = get(),
+            categoryDao = get(),
+        )
+    }
+    viewModelOf(::MdbListSettingsViewModel)
     viewModelOf(::HomeViewModel)
 }

@@ -88,6 +88,14 @@ android {
             ?: localSigningProps.getProperty("owntv.oddsApiKey")
             ?: ""
         buildConfigField("String", "ODDS_API_KEY", "\"${oddsApiKey.replace("\\", "\\\\").replace("\"", "\\\"")}\"")
+        // The MDBList key the curated Home rows and ratings line (Settings → Layout → Home → MDBList) can ship
+        // with, resolved the same way (CI injects the MDBLIST_API_KEY secret); "" is a working configuration —
+        // a key typed in Settings always wins (MdbListSettings).
+        val mdbListApiKey = System.getenv("MDBLIST_API_KEY")
+            ?: providers.gradleProperty("owntv.mdbListApiKey").orNull
+            ?: localSigningProps.getProperty("owntv.mdbListApiKey")
+            ?: ""
+        buildConfigField("String", "MDBLIST_API_KEY", "\"${mdbListApiKey.replace("\\", "\\\\").replace("\"", "\\\"")}\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

@@ -219,4 +219,50 @@
     <string name="diagnostics_report_none">Run checks first</string>
     <string name="diagnostics_resync_queued">Re-sync started</string>
     <string name="diagnostics_share_unavailable">Nothing on this device can receive the report — copy it instead</string>
+    <!-- MDBList (Settings → Layout → Home → MDBList): curated rows on Home and ratings on details pages -->
+    <string name="mdblist_title">MDBList</string>
+    <string name="mdblist_curated_rows">Curated rows on Home</string>
+    <string name="mdblist_curated_rows_description">Popular MDBList lists, showing only the titles your playlists have. Up to 5 lists, under Now trending.</string>
+    <string name="mdblist_ratings">Ratings from MDBList</string>
+    <string name="mdblist_ratings_description">IMDb, Rotten Tomatoes, Metacritic and Letterboxd scores on a film\'s or show\'s details page.</string>
+    <string name="mdblist_needs_key">Needs an MDBList API key (free at mdblist.com → Preferences).</string>
+    <string name="mdblist_api_key">MDBList API key</string>
+    <string name="mdblist_api_key_description">Your own key from mdblist.com → Preferences → API Access. Stored only on this device; it always wins over a key built into the app.</string>
+    <string name="mdblist_api_key_hint">Paste your key</string>
+    <string name="mdblist_api_key_built_in">Built-in key</string>
+    <string name="mdblist_lists">Lists</string>
+    <string name="mdblist_lists_description">Pick up to 5 lists. With none picked, the three most popular lists are shown.</string>
+    <plurals name="mdblist_list_titles">
+        <item quantity="one">%d title</item>
+        <item quantity="other">%d titles</item>
+    </plurals>
+    <string name="mdblist_add_list">Add a list</string>
+    <string name="mdblist_add_list_hint">user/list-name, or its mdblist.com address</string>
+    <string name="mdblist_add_list_description">Type a list\'s address from mdblist.com (mdblist.com/lists/user/list-name), its user/list-name, or its number.</string>
+    <string name="mdblist_remove">Remove</string>
+    <string name="mdblist_test_key">Test key</string>
+    <string name="mdblist_test_now">Test now</string>
+    <string name="mdblist_test_key_description">Asks MDBList for its top lists with the current key.</string>
+    <string name="mdblist_testing">Testing…</string>
+    <plurals name="mdblist_test_ok">
+        <item quantity="one">Key accepted · %d list found</item>
+        <item quantity="other">Key accepted · %d lists found</item>
+    </plurals>
+    <string name="mdblist_test_failed">Failed · HTTP %1$d</string>
+    <string name="mdblist_status">Status</string>
+    <string name="mdblist_status_no_key">No key. Add one above, or build the app with one.</string>
+    <string name="mdblist_status_off">Off</string>
+    <string name="mdblist_status_ready">Ready</string>
+    <string name="mdblist_status_key_rejected">Key rejected by MDBList. Check it at mdblist.com → Preferences.</string>
+    <string name="mdblist_status_quota">Today\'s request limit reached; back tomorrow.</string>
+    <string name="mdblist_status_http">MDBList answered HTTP %1$d</string>
+    <string name="mdblist_status_unreachable">MDBList unreachable</string>
+    <string name="mdblist_status_no_matches">Lists fetched, but your playlists have too few of their titles for a row.</string>
+    <string name="mdblist_status_shown">Showing %1$d rows with %2$d titles</string>
+    <string name="mdblist_rating_imdb">IMDb %1$s</string>
+    <string name="mdblist_rating_rt">RT %1$d%%</string>
+    <string name="mdblist_rating_mc">MC %1$d</string>
+    <string name="mdblist_rating_lb">LB %1$s</string>
+    <string name="mdblist_lists_default">Top 3</string>
+    <string name="mdblist_add_list_invalid">Not a list: type user/list-name, its mdblist.com address or its number — five lists at most</string>
 </resources>

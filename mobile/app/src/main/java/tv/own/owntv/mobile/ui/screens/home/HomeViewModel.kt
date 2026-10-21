@@ -76,6 +76,7 @@ class HomeViewModel(
     private val homeContentFilter: HomeContentFilterSettings,
     private val subscriptionExpiry: SubscriptionExpiry,
     private val noticeStore: SubscriptionNoticeStore,
+    private val mdbList: tv.own.owntv.mobile.mdblist.MdbListRepository,
 ) : ViewModel() {
 
     private val profileId: StateFlow<Long> = settings.activeProfileId
@@ -102,6 +103,37 @@ class HomeViewModel(
     fun dismissSubscriptionWarning() {
         viewModelScope.launch { noticeStore.dismissForToday() }
     }
+
+    /** Bumped after each Home load, so the curated rails re-match against a catalog a sync may just have changed. */
+    private val railsRefresh = MutableStateFlow(0)
+
+    /**
+     * MDBList's curated rails (Settings → Layout → Home → MDBList): the chosen lists cut down to what
+     * this profile's playlists hold, under Now trending. Re-run when the profile, the MDBList settings
+     * or the adult filter change, and after every Home load; the list items themselves come from the
+     * repository's cache, so a reload is local work. Empty while the rows are off.
+     */
+    val curatedRails: StateFlow<List<tv.own.owntv.mobile.mdblist.CuratedRail>> = combine(
+        profileId, mdbList.config, homeContentFilter.hideAdultCategories, railsRefresh,
+    ) { pid, config, hideAdult, _ -> Triple(pid, config, hideAdult) }
+        .flatMapLatest { (pid, config, hideAdult) ->
+            kotlinx.coroutines.flow.flow {
+                val rails: List<tv.own.owntv.mobile.mdblist.CuratedRail> = if (pid < 0 || !config.rowsOn) {
+                    emptyList()
+                } else {
+                    try {
+                        mdbList.rails(pid, hideAdult)
+                    } catch (e: kotlinx.coroutines.CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        emptyList()
+                    }
+                }
+                emit(rails)
+            }
+        }
+        .flowOn(Dispatchers.IO)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     /**
      * One conflated request to rebuild. The screen asks on every entry, because coming back from a
@@ -138,6 +170,7 @@ class HomeViewModel(
                     loaded
                 }
                 _feed.value = feed
+                railsRefresh.value = railsRefresh.value + 1
                 resolveHeroBackdrops(feed.heroItems)
             }
         }

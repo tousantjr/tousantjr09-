@@ -70,6 +70,7 @@ import tv.own.owntv.core.model.MediaType
 import tv.own.owntv.mobile.R
 import tv.own.owntv.mobile.ui.components.ChannelLogoImage
 import tv.own.owntv.mobile.ui.components.ContentActionsMenu
+import tv.own.owntv.mobile.mdblist.CuratedItem
 import tv.own.owntv.mobile.ui.components.ContentTarget
 import tv.own.owntv.mobile.ui.components.MobileIcons
 import tv.own.owntv.mobile.ui.components.rememberClockTick
@@ -118,6 +119,8 @@ fun HomeScreen(
     val seriesProgress by vm.seriesProgress.collectAsStateWithLifecycle()
     val resume by vm.resume.collectAsStateWithLifecycle()
     val subscriptionWarning by vm.subscriptionWarning.collectAsStateWithLifecycle()
+    // MDBList's curated rails (Settings → Layout → Home → MDBList), drawn under Now trending.
+    val curatedRails by vm.curatedRails.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val density = LocalDensity.current
     val homeChrome = LocalHomeChrome.current
@@ -185,8 +188,15 @@ fun HomeScreen(
     val sportsOdds = if (HomeRow.LIVE_SPORTS in state.config.visibleOrder) sportsVm.featuredOdds.collectAsStateWithLifecycle().value else null
     val sportsConfig by sportsVm.sportsConfig.collectAsStateWithLifecycle()
     // The Sports row shows with its cards or with a featured game, which can be there hours before any card.
-    val rows = remember(state, sportsCards.isEmpty(), sportsFeatured?.key) {
-        state.config.visibleOrder.filter { if (it == HomeRow.LIVE_SPORTS) sportsCards.isNotEmpty() || sportsFeatured != null else state.hasContent(it) }
+    // Trending's item also carries MDBList's curated rails, so it is drawn for them alone.
+    val rows = remember(state, sportsCards.isEmpty(), sportsFeatured?.key, curatedRails.isEmpty()) {
+        state.config.visibleOrder.filter {
+            when (it) {
+                HomeRow.LIVE_SPORTS -> sportsCards.isNotEmpty() || sportsFeatured != null
+                HomeRow.TRENDING -> state.hasContent(it) || curatedRails.isNotEmpty()
+                else -> state.hasContent(it)
+            }
+        }
     }
 
     // The television's three states, in its order. None offers "add a playlist": a user with none is in
@@ -202,11 +212,13 @@ fun HomeScreen(
 
     val trending = state.trendingItems
     val trendingFirst = rows.firstOrNull() == HomeRow.TRENDING
+    // Trending's own titles decide the hero; curated rails alone leave Home in its plain rows layout.
+    val trendingDrawn = trending.size >= TrendingDao.MIN_ELIGIBLE_ITEMS
     // The subscription notice rides inside a row's item, above it: under the Trending hero when it
     // leads (the backdrop and the first-item scroll maths assume the hero is item 0), else first.
-    val noticeRow = if (trendingFirst) rows.getOrNull(1) ?: rows.first() else rows.first()
-    val fullBleed = trendingFirst && state.config.trendingStyle == HomeTrendingStyle.HERO
-    val posterHero = trendingFirst && state.config.trendingStyle == HomeTrendingStyle.POSTERS
+    val noticeRow = if (trendingFirst && trendingDrawn) rows.getOrNull(1) ?: rows.first() else rows.first()
+    val fullBleed = trendingFirst && trendingDrawn && state.config.trendingStyle == HomeTrendingStyle.HERO
+    val posterHero = trendingFirst && trendingDrawn && state.config.trendingStyle == HomeTrendingStyle.POSTERS
     var activeIndex by rememberSaveable(trending.size) { mutableIntStateOf(0) }
     var posterShown by remember { mutableIntStateOf(0) }
     LaunchedEffect(activeIndex) { unavailable = false }
@@ -266,7 +278,7 @@ fun HomeScreen(
                     contentTop = with(density) { coords.positionInWindow().y.toDp() }
                 }
             },
-        contentPadding = PaddingValues(top = if (trendingFirst) 0.dp else 8.dp, bottom = 22.dp),
+        contentPadding = PaddingValues(top = if (trendingFirst && trendingDrawn) 0.dp else 8.dp, bottom = 22.dp),
         verticalArrangement = Arrangement.spacedBy(22.dp),
     ) {
         rows.forEach { row ->
@@ -276,7 +288,8 @@ fun HomeScreen(
                     Spacer(Modifier.height(22.dp))
                 }
                 when (row) {
-                    HomeRow.TRENDING -> when {
+                    HomeRow.TRENDING -> {
+                    when {
                         fullBleed -> {
                             val item = trending[activeIndex.coerceIn(0, trending.lastIndex)]
                             TrendingHero(
@@ -296,7 +309,7 @@ fun HomeScreen(
                                 onMenu = { trendingMenu = item },
                             )
                         }
-                        else -> TrendingPosters(
+                        trendingDrawn -> TrendingPosters(
                             items = trending,
                             topGap = if (posterHero) topGap else 0.dp,
                             withTitle = posterHero,
@@ -304,6 +317,29 @@ fun HomeScreen(
                             onActivate = activate,
                             onMenu = { trendingMenu = it },
                         )
+                    }
+                    // MDBList's curated rails ride in Trending's item, under the hero or the posters (or alone,
+                    // when Trending has too few titles): a list each, cut down to what the playlists hold.
+                    curatedRails.forEachIndexed { index, rail ->
+                        if (index > 0 || trendingDrawn) Spacer(Modifier.height(22.dp))
+                        PosterRow(
+                            title = rail.title,
+                            posters = rail.items.map { item ->
+                                when (item) {
+                                    is CuratedItem.Movie -> HomePoster(
+                                        ContentTarget(MediaType.MOVIE, item.movie.id, item.movie.name, item.movie.posterUrl),
+                                        item.movie.posterUrl, item.movie.rating, progress = movieProgress[item.movie.id],
+                                    )
+                                    is CuratedItem.Series -> HomePoster(
+                                        ContentTarget(MediaType.SERIES, item.series.id, item.series.name, item.series.posterUrl),
+                                        item.series.posterUrl, item.series.rating, progress = seriesProgress[item.series.id],
+                                    )
+                                }
+                            },
+                            onOpen = { target -> if (target.type == MediaType.MOVIE) onOpenMovie(target.id) else onOpenSeries(target.id) },
+                            onMenu = { menuFor = it },
+                        )
+                    }
                     }
                     HomeRow.HERO -> KeepWatchingRow(
                         title = stringResource(R.string.home_row_keep_watching),
@@ -572,7 +608,8 @@ private fun PosterRow(
     Column {
         RowHeading(title, count = posters.size)
         LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp), contentPadding = PaddingValues(horizontal = 18.dp)) {
-            items(posters, key = { it.target.id }) { poster ->
+            // A curated rail mixes films and shows, whose ids can coincide: the key carries the type.
+            items(posters, key = { it.target.type.name + ":" + it.target.id }) { poster ->
                 val watched = (poster.progress ?: 0f) >= WATCHED_FRACTION
                 StagePoster(
                     imageUrl = poster.posterUrl,

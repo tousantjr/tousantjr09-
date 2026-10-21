@@ -55,6 +55,7 @@ import tv.own.owntv.mobile.R
 import tv.own.owntv.mobile.ui.components.MobileIcons
 import tv.own.owntv.mobile.ui.components.downloadActionFor
 import tv.own.owntv.mobile.ui.components.icon
+import tv.own.owntv.mobile.mdblist.MdbRatingsLine
 import tv.own.owntv.mobile.ui.components.jsonList
 import tv.own.owntv.mobile.ui.components.label
 import tv.own.owntv.mobile.ui.components.onTap
@@ -191,6 +192,8 @@ internal fun MoviePage(
             rating = rating?.let(::formatRating),
             tags = ProviderVariantParser.displaySignals(film.name).let { listOfNotNull(it.quality.label) + it.capabilities },
         )
+        // MDBList's IMDb · RT · MC · LB line (Settings → Layout → Home → MDBList), once it has arrived.
+        MdbRatingsLine(meta, Modifier.padding(top = 6.dp))
         plot?.let {
             Text(it, style = stageText(13f, 500, lineHeight = 1.5f), color = palette.body, modifier = Modifier.padding(top = 10.dp))
         }

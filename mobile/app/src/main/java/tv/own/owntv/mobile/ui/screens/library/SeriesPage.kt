@@ -84,6 +84,7 @@ import tv.own.owntv.mobile.ui.components.TmdbDetailsSheet
 import tv.own.owntv.mobile.ui.components.downloadActionFor
 import tv.own.owntv.mobile.ui.components.episodeDetails
 import tv.own.owntv.mobile.ui.components.icon
+import tv.own.owntv.mobile.mdblist.MdbRatingsLine
 import tv.own.owntv.mobile.ui.components.jsonList
 import tv.own.owntv.mobile.ui.components.label
 import tv.own.owntv.mobile.ui.components.onTap
@@ -430,7 +431,7 @@ private fun SeriesHeader(series: SeriesEntity, page: DetailViewModel.TitlePage, 
     )
     // Specials are not counted as a season, as on Home and the TV.
     val numbered = seasons.count { it > 0 }
-    Box(Modifier.padding(top = 8.dp)) {
+    Column(Modifier.padding(top = 8.dp)) {
         MovieMeta(
             parts = listOfNotNull(
                 (series.year ?: meta?.year)?.takeIf { it > 0 }?.let(::formatYear),
@@ -442,6 +443,8 @@ private fun SeriesHeader(series: SeriesEntity, page: DetailViewModel.TitlePage, 
             tags = ProviderVariantParser.displaySignals(series.name).let { listOfNotNull(it.quality.label) + it.capabilities },
             size = 12.5f,
         )
+        // MDBList's IMDb · RT · MC · LB line (Settings → Layout → Home → MDBList), once it has arrived.
+        MdbRatingsLine(meta, Modifier.padding(top = 4.dp))
     }
     listOf(meta?.overview, series.plot).let { if (tmdbWins) it else it.reversed() }.firstOrNull { !it.isNullOrBlank() }?.let {
         Text(
