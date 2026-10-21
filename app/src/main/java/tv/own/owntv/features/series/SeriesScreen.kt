@@ -1168,7 +1168,12 @@ private fun buildSeriesDetails(
     val year = if (tmdbWins) meta?.year ?: s.year else s.year ?: meta?.year
     val rating = if (tmdbWins) meta?.rating?.takeIf { it > 0 } ?: s.rating?.takeIf { it > 0 }
         else s.rating?.takeIf { it > 0 } ?: meta?.rating?.takeIf { it > 0 }
-    val metaLine = listOfNotNull(year?.let { localizedInteger(it, grouping = false) }, rating?.let { stringResource(R.string.content_rating, it) }).joinToString(stringResource(R.string.content_metadata_separator))
+    val metaLine = listOfNotNull(
+        year?.let { localizedInteger(it, grouping = false) },
+        rating?.let { stringResource(R.string.content_rating, it) },
+        // MDBList's IMDb · RT · MC · LB line (Settings › Layout › Home › MDBList), once it has arrived.
+        tv.own.owntv.features.mdblist.mdbRatingsLine(meta),
+    ).joinToString(stringResource(R.string.content_metadata_separator))
     return tv.own.owntv.features.shell.components.MediaDetailsUi(
         title = s.name,
         backdropUrl = backdrop,

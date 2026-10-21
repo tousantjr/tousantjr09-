@@ -143,6 +143,7 @@ class HomeViewModel(
     private val homeContentFilter: HomeContentFilterSettings,
     private val subscriptionExpiry: SubscriptionExpiry,
     private val homeTrailers: HomeTrailerSettings,
+    private val mdbList: tv.own.owntv.features.mdblist.MdbListRepository,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
@@ -150,6 +151,38 @@ class HomeViewModel(
     /** Settings › Layout › Home › Play trailers on Home: the focused Trending title's trailer in the hero. */
     val trailersOnHome: StateFlow<Boolean> = homeTrailers.playTrailers(settings.heroPreviewDefault)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
+
+    /** Bumped after each Home load, so the curated rails re-match against a catalog a sync may just have changed. */
+    private val railsRefresh = MutableStateFlow(0)
+
+    /**
+     * MDBList's curated rails (Settings › Layout › Home › MDBList): the chosen lists cut down to what
+     * this profile's playlists hold, under Now trending. Re-run when the profile, the MDBList settings
+     * or the adult filter change, and after every Home load; the list items themselves come from the
+     * repository's cache, so a reload is local work. Empty while the rows are off.
+     */
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    val curatedRails: StateFlow<List<tv.own.owntv.features.mdblist.CuratedRail>> = combine(
+        settings.activeProfileId, mdbList.config, homeContentFilter.hideAdultCategories, railsRefresh,
+    ) { pid, config, hideAdult, _ -> Triple(pid, config, hideAdult) }
+        .flatMapLatest { (pid, config, hideAdult) ->
+            kotlinx.coroutines.flow.flow {
+                val rails: List<tv.own.owntv.features.mdblist.CuratedRail> = if (pid < 0 || !config.rowsOn) {
+                    emptyList()
+                } else {
+                    try {
+                        mdbList.rails(profileDao.resolveExistingProfileId(pid) ?: -1L, hideAdult)
+                    } catch (e: kotlinx.coroutines.CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        emptyList()
+                    }
+                }
+                emit(rails)
+            }
+        }
+        .flowOn(Dispatchers.IO)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     /**
      * The soonest-ending Xtream subscription among this profile's playlists, once it is within a
@@ -437,6 +470,7 @@ class HomeViewModel(
             isLoading = false,
         )
         tv.own.owntv.core.util.Perf.stamp("home-data")
+        railsRefresh.value = railsRefresh.value + 1
         _uiState.value.trendingItems.getOrNull(_uiState.value.activeTrendingIndex)?.let(::resolveTrendingExtras)
         // Keep watching shows every card as a still, so each needs its artwork up front, not on focus.
         _uiState.value.heroItems.indices.forEach { resolveHeroMetadata(it) }

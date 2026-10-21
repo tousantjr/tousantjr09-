@@ -193,9 +193,12 @@ jobs:
           # The Odds API key the app ships with (Settings → Sports → Betting odds). Optional: without
           # the secret this is "" and the app builds the same, the user typing their own key instead.
           ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+          # The MDBList key the app ships with (Settings → Layout → Home → MDBList). Optional, the same way.
+          MDBLIST_API_KEY: ${{ secrets.MDBLIST_API_KEY }}
         run: |
           chmod +x ./gradlew
           if [ -n "$ODDS_API_KEY" ]; then echo "::add-mask::$ODDS_API_KEY"; fi
+          if [ -n "$MDBLIST_API_KEY" ]; then echo "::add-mask::$MDBLIST_API_KEY"; fi
           if [ -n "$KEYSTORE_FILE" ]; then
             echo "Building signed release APKs (both ABI flavors)"
             ./gradlew assembleRelease --stacktrace

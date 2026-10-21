@@ -163,6 +163,8 @@ fun HomeScreen(
     sportsVm: tv.own.owntv.features.sports.SportsViewModel = org.koin.androidx.compose.koinViewModel(),
 ) {
     val state by vm.uiState.collectAsStateWithLifecycle()
+    // MDBList's curated rails (Settings › Layout › Home › MDBList), drawn under Now trending.
+    val curatedRails by vm.curatedRails.collectAsStateWithLifecycle()
     val subscriptionWarning by vm.subscriptionWarning.collectAsStateWithLifecycle()
     // Asked for only while the row is switched on (Layout → Home rows); off costs nothing.
     val sportsCards = if (HomeRow.LIVE_SPORTS in state.config.visibleOrder) {
@@ -220,16 +222,18 @@ fun HomeScreen(
     var focusedHeroIndex by remember { mutableStateOf(-1) }
     val orderedRows = state.config.visibleOrder
     val heroVisible = HomeRow.HERO in orderedRows
-    val hasNonHeroContent = orderedRows.any { it != HomeRow.HERO && rowHasData(it, state, sportsCount) }
+    val hasNonHeroContent = orderedRows.any { it != HomeRow.HERO && rowHasData(it, state, sportsCount, curatedRails.size) }
     val showHeroFallback = heroVisible && state.heroItems.isEmpty() && !hasNonHeroContent
-    val renderRows = orderedRows.filter { rowCanRender(it, state, showHeroFallback, sportsCount) }
-    val firstDataRow = renderRows.firstOrNull { it != HomeRow.HERO && rowHasData(it, state, sportsCount) }
+    val renderRows = orderedRows.filter { rowCanRender(it, state, showHeroFallback, sportsCount, curatedRails.size) }
+    val firstDataRow = renderRows.firstOrNull { it != HomeRow.HERO && rowHasData(it, state, sportsCount, curatedRails.size) }
     val showAllHiddenState = orderedRows.isEmpty()
     val showEmptyState = orderedRows.isNotEmpty() && renderRows.isEmpty()
-    val fullBleed = renderRows.firstOrNull() == HomeRow.TRENDING &&
+    // Trending's own titles decide the hero; curated rails alone leave Home in its plain rows layout.
+    val trendingDrawn = state.trendingItems.size >= TrendingDao.MIN_ELIGIBLE_ITEMS
+    val fullBleed = renderRows.firstOrNull() == HomeRow.TRENDING && trendingDrawn &&
         state.config.trendingStyle == HomeTrendingStyle.HERO
     // Trending layout = Posters only: the folded line on top follows the focused poster.
-    val posterHero = renderRows.firstOrNull() == HomeRow.TRENDING &&
+    val posterHero = renderRows.firstOrNull() == HomeRow.TRENDING && trendingDrawn &&
         state.config.trendingStyle == HomeTrendingStyle.POSTERS
     var posterIndex by remember { mutableIntStateOf(0) }
     val rowFocusRequester: (HomeRow) -> FocusRequester? = { row ->
@@ -443,7 +447,8 @@ fun HomeScreen(
                         Spacer(Modifier.height(RowGap))
                     }
                     when (row) {
-                        HomeRow.TRENDING -> if (state.trendingItems.size < TrendingDao.MIN_ELIGIBLE_ITEMS) {
+                        HomeRow.TRENDING -> {
+                        if (!trendingDrawn) {
                             // Too few titles to be a "trending" row at all, so the row is not drawn.
                         } else if (!fullBleed || trendingItem == null) {
                             posterItem?.let { FoldedHeroLine(it, contentStart, height = CompactHeroHeight + RowGap) }
@@ -523,6 +528,19 @@ fun HomeScreen(
                                     }
                                 },
                             )
+                        }
+                        // MDBList's curated rails ride in Trending's item, under the hero or the posters (or alone,
+                        // when Trending has too few titles): a list each, cut down to what the playlists hold.
+                        CuratedRails(
+                            rails = curatedRails,
+                            start = contentStart,
+                            gapAbove = trendingDrawn,
+                            onOpenMovie = onOpenMovie,
+                            onOpenSeries = onOpenSeries,
+                            onFocus = onNonHeroFocused,
+                            firstItemFocusRequester = if (trendingDrawn) null else firstItemFocusRequester ?: trendingPrimaryFocus,
+                            track = track,
+                        )
                         }
 
                         HomeRow.HERO -> if (state.heroItems.isNotEmpty()) {
@@ -712,8 +730,9 @@ fun HomeScreen(
     InAppToast(trendingToast)
 }
 
-private fun rowHasData(row: HomeRow, state: HomeUiState, sportsCards: Int): Boolean = when (row) {
-    HomeRow.TRENDING -> state.trendingItems.size >= TrendingDao.MIN_ELIGIBLE_ITEMS
+private fun rowHasData(row: HomeRow, state: HomeUiState, sportsCards: Int, curatedRails: Int = 0): Boolean = when (row) {
+    // Trending's item also carries MDBList's curated rails, so it is drawn for them alone.
+    HomeRow.TRENDING -> state.trendingItems.size >= TrendingDao.MIN_ELIGIBLE_ITEMS || curatedRails > 0
     HomeRow.LIVE_SPORTS -> sportsCards > 0
     HomeRow.HERO -> state.heroItems.isNotEmpty()
     HomeRow.RECENT_CHANNELS -> when (state.config.recentLiveMode) {
@@ -730,10 +749,10 @@ private fun rowHasData(row: HomeRow, state: HomeUiState, sportsCards: Int): Bool
     HomeRow.CONTINUE_SERIES -> state.continueSeries.isNotEmpty()
 }
 
-private fun rowCanRender(row: HomeRow, state: HomeUiState, showHeroFallback: Boolean, sportsCards: Int): Boolean =
+private fun rowCanRender(row: HomeRow, state: HomeUiState, showHeroFallback: Boolean, sportsCards: Int, curatedRails: Int = 0): Boolean =
     when (row) {
         HomeRow.HERO -> state.heroItems.isNotEmpty() || showHeroFallback
-        else -> rowHasData(row, state, sportsCards)
+        else -> rowHasData(row, state, sportsCards, curatedRails)
     }
 
 private fun HeroItem.heroKey(): String = when (this) {
@@ -1281,7 +1300,7 @@ private fun ContinuePosterRow(
 private fun <T> FavoritePosterRow(
     title: String,
     items: List<T>,
-    key: (T) -> Long,
+    key: (T) -> Any,
     name: (T) -> String,
     poster: (T) -> String?,
     start: Dp,
@@ -1313,6 +1332,45 @@ private fun <T> FavoritePosterRow(
                 }
             }
         }
+    }
+}
+
+/**
+ * MDBList's curated rails (Settings › Layout › Home › MDBList): one poster row per list, in the list's
+ * order, each title the playlist's own entry — OK opens its page, as on the favourites rows. Drawn
+ * inside Trending's item, so [gapAbove] puts the usual row gap between the hero (or the posters) and the
+ * first rail; the first rail's first poster takes [firstItemFocusRequester] when Trending drew nothing.
+ */
+@Composable
+private fun CuratedRails(
+    rails: List<tv.own.owntv.features.mdblist.CuratedRail>,
+    start: Dp,
+    gapAbove: Boolean,
+    onOpenMovie: (MovieEntity) -> Unit,
+    onOpenSeries: (SeriesEntity) -> Unit,
+    onFocus: () -> Unit,
+    firstItemFocusRequester: FocusRequester?,
+    track: (FocusRequester) -> Unit,
+) {
+    rails.forEachIndexed { index, rail ->
+        if (index > 0 || gapAbove) Spacer(Modifier.height(RowGap))
+        FavoritePosterRow(
+            title = rail.title,
+            items = rail.items,
+            key = { it.key },
+            name = { it.name },
+            poster = { it.posterUrl },
+            start = start,
+            onItemClick = { item ->
+                when (item) {
+                    is tv.own.owntv.features.mdblist.CuratedItem.Movie -> onOpenMovie(item.movie)
+                    is tv.own.owntv.features.mdblist.CuratedItem.Series -> onOpenSeries(item.series)
+                }
+            },
+            onFocus = onFocus,
+            firstItemFocusRequester = if (index == 0) firstItemFocusRequester else null,
+            track = track,
+        )
     }
 }
 
@@ -1406,7 +1464,15 @@ private fun TrendingHomeItem.toDetailsUi(meta: MetadataCacheEntity?, tmdbWins: B
         } else {
             providerPoster ?: MetadataImages.poster(meta?.posterPath ?: snapshot.posterPath, size = "w500")
         },
-        metaLine = listOfNotNull(snapshot.year?.toString(), snapshot.rating?.let { stringResource(R.string.content_rating, it) }).joinToString(" · "),
+        metaLine = listOfNotNull(
+            snapshot.year?.toString(),
+            snapshot.rating?.let { stringResource(R.string.content_rating, it) },
+            // MDBList's IMDb · RT · MC · LB line, when Settings › Home › MDBList's ratings are on.
+            tv.own.owntv.features.mdblist.mdbRatingsLine(
+                meta?.tmdbId ?: snapshot.tmdbId,
+                if (this is TrendingHomeItem.Movie) tv.own.owntv.core.metadata.MetadataType.MOVIE else tv.own.owntv.core.metadata.MetadataType.TV,
+            ),
+        ).joinToString(" · "),
         genres = trendingJsonList(meta?.genresJson),
         plot = if (tmdbWins) tmdbPlot ?: providerPlot else providerPlot ?: tmdbPlot,
         cast = tv.own.owntv.core.metadata.MetadataCast.parse(meta?.castJson),

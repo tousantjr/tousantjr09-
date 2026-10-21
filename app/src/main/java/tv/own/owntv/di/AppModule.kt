@@ -24,6 +24,7 @@ import tv.own.owntv.features.home.HomeContentFilterSettings
 import tv.own.owntv.features.home.HomeViewModel
 import org.koin.android.ext.koin.androidContext
 import tv.own.owntv.features.live.LiveViewModel
+import tv.own.owntv.features.mdblist.MdbListSettingsViewModel
 import tv.own.owntv.features.movies.MovieViewModel
 import tv.own.owntv.features.profiles.ProfileGateSessionViewModel
 import tv.own.owntv.features.profiles.ProfilesViewModel
@@ -70,6 +71,26 @@ val appModule = module {
     // Home's "Play trailers on Home" toggle (Settings → Layout → Home): app-level, its own DataStore for
     // the same reason — see HomeTrailerSettings.
     single { tv.own.owntv.features.home.HomeTrailerSettings(androidContext()) }
+    // Settings → Layout → Home → MDBList: the feature's own DataStore (MdbListSettings — app-level, and
+    // where the user's API key lives), its client riding the app's shared OkHttp client, and the cache +
+    // matcher that turn a public list into a Home rail (MdbListRepository, see its header). Named
+    // arguments: the repository takes nine dependencies, two of them DAOs of the same shape.
+    single { tv.own.owntv.features.mdblist.MdbListSettings(androidContext()) }
+    single { tv.own.owntv.features.mdblist.MdbListApi(get()) }
+    single {
+        tv.own.owntv.features.mdblist.MdbListRepository(
+            context = androidContext(),
+            settings = get(),
+            api = get(),
+            appSettings = get(),
+            sourceDao = get(),
+            movieDao = get(),
+            seriesDao = get(),
+            profileDao = get(),
+            categoryDao = get(),
+        )
+    }
+    viewModelOf(::MdbListSettingsViewModel)
     // Home's subscription notice: asks each Xtream playlist for its expiry and caches the answer for
     // hours, so one instance for the process — see SubscriptionExpiry.
     single { tv.own.owntv.features.home.SubscriptionExpiry(get()) }

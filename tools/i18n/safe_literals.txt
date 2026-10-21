@@ -158,6 +158,75 @@
 1	log	app/src/main/java/tv/own/owntv/features/live/ZapTuneDelay.kt	(single-connection)
 1	log	app/src/main/java/tv/own/owntv/features/live/ZapTuneDelay.kt	isolated$panel
 1	log	app/src/main/java/tv/own/owntv/features/live/ZapTuneDelay.kt	rapid (previous press ${nowMs - (lastPressMs ?: nowMs)}ms ago)$panel
+1	url	app/src/main/java/tv/own/owntv/features/mdblist/MdbListApi.kt	$API/$path?apikey=${encode(apiKey)}&limit=$LIMIT
+1	url	app/src/main/java/tv/own/owntv/features/mdblist/MdbListApi.kt	$API/lists/top?apikey=${encode(apiKey)}
+1	url	app/src/main/java/tv/own/owntv/features/mdblist/MdbListApi.kt	$API/tmdb/$kind/$tmdbId?apikey=$key
+1	url	app/src/main/java/tv/own/owntv/features/mdblist/MdbListApi.kt	$LEGACY?apikey=$key&tm=$tmdbId&m=$kind
+1	log	app/src/main/java/tv/own/owntv/features/mdblist/MdbListApi.kt	MDBList unreachable: ${e.javaClass.simpleName}
+1	log	app/src/main/java/tv/own/owntv/features/mdblist/MdbListApi.kt	OwnTV-MDBList
+1	url	app/src/main/java/tv/own/owntv/features/mdblist/MdbListApi.kt	https://api.mdblist.com
+1	url	app/src/main/java/tv/own/owntv/features/mdblist/MdbListApi.kt	https://mdblist.com/api/
+2	json	app/src/main/java/tv/own/owntv/features/mdblist/MdbListApi.kt	id
+1	json	app/src/main/java/tv/own/owntv/features/mdblist/MdbListApi.kt	imdb
+1	json	app/src/main/java/tv/own/owntv/features/mdblist/MdbListApi.kt	imdb_id
+1	json	app/src/main/java/tv/own/owntv/features/mdblist/MdbListApi.kt	imdbid
+1	json	app/src/main/java/tv/own/owntv/features/mdblist/MdbListApi.kt	items
+1	json	app/src/main/java/tv/own/owntv/features/mdblist/MdbListApi.kt	letterboxd
+1	json	app/src/main/java/tv/own/owntv/features/mdblist/MdbListApi.kt	lists
+1	url	app/src/main/java/tv/own/owntv/features/mdblist/MdbListApi.kt	lists/$it/items
+1	url	app/src/main/java/tv/own/owntv/features/mdblist/MdbListApi.kt	lists/${encode(parts[0])}/${encode(parts[1])}/items
+2	json	app/src/main/java/tv/own/owntv/features/mdblist/MdbListApi.kt	mediatype
+1	json	app/src/main/java/tv/own/owntv/features/mdblist/MdbListApi.kt	metacritic
+2	json	app/src/main/java/tv/own/owntv/features/mdblist/MdbListApi.kt	movie
+1	json	app/src/main/java/tv/own/owntv/features/mdblist/MdbListApi.kt	movies
+1	json	app/src/main/java/tv/own/owntv/features/mdblist/MdbListApi.kt	name
+1	json	app/src/main/java/tv/own/owntv/features/mdblist/MdbListApi.kt	rank
+1	json	app/src/main/java/tv/own/owntv/features/mdblist/MdbListApi.kt	ratings
+1	json	app/src/main/java/tv/own/owntv/features/mdblist/MdbListApi.kt	release_year
+2	json	app/src/main/java/tv/own/owntv/features/mdblist/MdbListApi.kt	response
+1	json	app/src/main/java/tv/own/owntv/features/mdblist/MdbListApi.kt	score
+2	json	app/src/main/java/tv/own/owntv/features/mdblist/MdbListApi.kt	show
+1	json	app/src/main/java/tv/own/owntv/features/mdblist/MdbListApi.kt	shows
+1	json	app/src/main/java/tv/own/owntv/features/mdblist/MdbListApi.kt	slug
+1	json	app/src/main/java/tv/own/owntv/features/mdblist/MdbListApi.kt	source
+1	json	app/src/main/java/tv/own/owntv/features/mdblist/MdbListApi.kt	title
+1	json	app/src/main/java/tv/own/owntv/features/mdblist/MdbListApi.kt	tmdb
+1	json	app/src/main/java/tv/own/owntv/features/mdblist/MdbListApi.kt	tmdb_id
+1	json	app/src/main/java/tv/own/owntv/features/mdblist/MdbListApi.kt	tmdbid
+1	json	app/src/main/java/tv/own/owntv/features/mdblist/MdbListApi.kt	tomatoes
+1	json	app/src/main/java/tv/own/owntv/features/mdblist/MdbListApi.kt	tomatoesaudience
+1	json	app/src/main/java/tv/own/owntv/features/mdblist/MdbListApi.kt	trakt
+1	json	app/src/main/java/tv/own/owntv/features/mdblist/MdbListApi.kt	tv
+1	json	app/src/main/java/tv/own/owntv/features/mdblist/MdbListApi.kt	user_name
+1	json	app/src/main/java/tv/own/owntv/features/mdblist/MdbListApi.kt	value
+1	json	app/src/main/java/tv/own/owntv/features/mdblist/MdbListApi.kt	votes
+1	json	app/src/main/java/tv/own/owntv/features/mdblist/MdbListApi.kt	year
+1	empty	app/src/main/java/tv/own/owntv/features/mdblist/MdbListRepository.kt	\0
+1	technical	app/src/main/java/tv/own/owntv/features/mdblist/MdbListRepository.kt	:
+1	log	app/src/main/java/tv/own/owntv/features/mdblist/MdbListRepository.kt	MDBList unreachable: ${e.javaClass.simpleName}
+1	log	app/src/main/java/tv/own/owntv/features/mdblist/MdbListRepository.kt	OwnTV-MDBList
+1	json	app/src/main/java/tv/own/owntv/features/mdblist/MdbListRepository.kt	at
+1	json	app/src/main/java/tv/own/owntv/features/mdblist/MdbListRepository.kt	body
+1	log	app/src/main/java/tv/own/owntv/features/mdblist/MdbListRepository.kt	cache not written: ${it.javaClass.simpleName}
+1	locale	app/src/main/java/tv/own/owntv/features/mdblist/MdbListRepository.kt	en
+1	json	app/src/main/java/tv/own/owntv/features/mdblist/MdbListRepository.kt	items
+1	log	app/src/main/java/tv/own/owntv/features/mdblist/MdbListRepository.kt	list items did not parse as expected: ${it.javaClass.simpleName}
+1	file-path	app/src/main/java/tv/own/owntv/features/mdblist/MdbListRepository.kt	mdblist_cache.json
+1	technical	app/src/main/java/tv/own/owntv/features/mdblist/MdbListRepository.kt	movie:
+1	json	app/src/main/java/tv/own/owntv/features/mdblist/MdbListRepository.kt	ratings
+1	log	app/src/main/java/tv/own/owntv/features/mdblist/MdbListRepository.kt	ratings did not parse as expected: ${it.javaClass.simpleName}
+1	technical	app/src/main/java/tv/own/owntv/features/mdblist/MdbListRepository.kt	series:
+2	json	app/src/main/java/tv/own/owntv/features/mdblist/MdbListRepository.kt	top
+1	log	app/src/main/java/tv/own/owntv/features/mdblist/MdbListRepository.kt	top lists did not parse as expected: ${it.javaClass.simpleName}
+2	empty	app/src/main/java/tv/own/owntv/features/mdblist/MdbListSettings.kt	\0
+1	preference-key	app/src/main/java/tv/own/owntv/features/mdblist/MdbListSettings.kt	mdblist
+1	preference-key	app/src/main/java/tv/own/owntv/features/mdblist/MdbListSettings.kt	mdblist_api_key
+1	preference-key	app/src/main/java/tv/own/owntv/features/mdblist/MdbListSettings.kt	mdblist_curated_rows
+1	preference-key	app/src/main/java/tv/own/owntv/features/mdblist/MdbListSettings.kt	mdblist_lists
+1	preference-key	app/src/main/java/tv/own/owntv/features/mdblist/MdbListSettings.kt	mdblist_ratings
+1	technical	app/src/main/java/tv/own/owntv/features/mdblist/MdbListSettingsViewModel.kt	/
+1	uri	app/src/main/java/tv/own/owntv/features/mdblist/MdbListSettingsViewModel.kt	/lists/
+1	technical	app/src/main/java/tv/own/owntv/features/mdblist/MdbRatingsText.kt	%.1f
 2	technical	app/src/main/java/tv/own/owntv/features/more/MorePages.kt	\0
 1	technical	app/src/main/java/tv/own/owntv/features/more/MorePages.kt	$it
 1	technical	app/src/main/java/tv/own/owntv/features/more/MorePages.kt	%d:%02d
@@ -291,7 +360,7 @@
 1	technical	app/src/main/java/tv/own/owntv/features/settings/EpgSourcesViewModel.kt	manual_resync
 1	technical	app/src/main/java/tv/own/owntv/features/settings/EpgSourcesViewModel.kt	update
 1	technical	app/src/main/java/tv/own/owntv/features/settings/FontSettingsScreen.kt	fonts
-1	empty	app/src/main/java/tv/own/owntv/features/settings/HomeSettingsScreen.kt	\0
+3	empty	app/src/main/java/tv/own/owntv/features/settings/HomeSettingsScreen.kt	\0
 1	technical	app/src/main/java/tv/own/owntv/features/settings/HomeSettingsScreen.kt	▲ ▼
 1	technical	app/src/main/java/tv/own/owntv/features/settings/HomeSettingsScreen.kt	▶
 1	technical	app/src/main/java/tv/own/owntv/features/settings/LanguageSettingsScreen.kt	https://

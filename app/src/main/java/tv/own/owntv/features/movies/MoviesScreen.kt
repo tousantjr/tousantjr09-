@@ -1159,6 +1159,8 @@ private fun metaLine(movie: MovieEntity, meta: tv.own.owntv.core.database.entity
         val m = (secs % 3600) / 60
         parts.add(if (h > 0) stringResource(R.string.content_duration_hours, h, m) else stringResource(R.string.content_duration_minutes, m))
     }
+    // MDBList's IMDb · RT · MC · LB line (Settings › Layout › Home › MDBList), once it has arrived.
+    tv.own.owntv.features.mdblist.mdbRatingsLine(meta)?.let { parts.add(it) }
     return parts.joinToString(stringResource(R.string.content_metadata_separator))
 }
 

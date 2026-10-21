@@ -101,6 +101,16 @@ android {
             ?: ""
         buildConfigField("String", "ODDS_API_KEY", "\"${oddsApiKey.replace("\\", "\\\\").replace("\"", "\\\"")}\"")
 
+        // The MDBList key the curated Home rows and ratings line (Settings → Layout → Home → MDBList) can ship
+        // with, resolved the same way: env var (how CI injects the MDBLIST_API_KEY secret) > Gradle property >
+        // the out-of-repo properties file > "". A blank key is a working configuration — the user can still
+        // enter their own in Settings, and a typed key always wins over this one (see MdbListSettings).
+        val mdbListApiKey = System.getenv("MDBLIST_API_KEY")
+            ?: providers.gradleProperty("owntv.mdbListApiKey").orNull
+            ?: localSigningProps.getProperty("owntv.mdbListApiKey")
+            ?: ""
+        buildConfigField("String", "MDBLIST_API_KEY", "\"${mdbListApiKey.replace("\\", "\\\\").replace("\"", "\\\"")}\"")
+
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
