@@ -36,6 +36,10 @@ import tv.own.owntv.features.mdblist.MdbListConfig
 import tv.own.owntv.features.mdblist.MdbListRepository
 import tv.own.owntv.features.mdblist.MdbListSettings
 import tv.own.owntv.features.mdblist.MdbListSettingsViewModel
+import tv.own.owntv.features.trakt.TraktConfig
+import tv.own.owntv.features.trakt.TraktLogin
+import tv.own.owntv.features.trakt.TraktRepository
+import tv.own.owntv.features.trakt.TraktSettingsViewModel
 import tv.own.owntv.ui.components.OwnTVIcon
 import tv.own.owntv.ui.theme.StageColors
 import tv.own.owntv.ui.theme.stageAccent
@@ -72,7 +76,7 @@ fun HomeSettingsScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
     val ok = stringResource(R.string.common_ok)
     val back = stringResource(R.string.common_back)
     val layout = stringResource(R.string.settings_group_layout)
-    val rowCount = (if (trendingEnabled) 2 else 1) + MDBLIST_ROWS + config.settingsRows.size + 1
+    val rowCount = (if (trendingEnabled) 2 else 1) + MDBLIST_ROWS + TRAKT_ROWS + config.settingsRows.size + 1
     StageFullPage(
         parents = listOf(layout),
         title = stringResource(R.string.settings_home_screen),
@@ -139,6 +143,7 @@ fun HomeSettingsScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
         )
 
         MdbListRows()
+        TraktRows()
 
         StageSettingsHeading(stringResource(R.string.settings_sections), config.settingsRows.size)
         val hiddenNote = stringResource(R.string.settings_hidden_sections)
@@ -443,4 +448,145 @@ private fun mdbStatusText(c: MdbListConfig, status: MdbListRepository.Status): S
         MdbListRepository.Status.NoMatches -> stringResource(R.string.mdblist_status_no_matches)
         is MdbListRepository.Status.Shown -> pluralStringResource(R.plurals.mdblist_status_shown, status.rails, status.rails, status.titles)
     }
+}
+
+/** Rows the Trakt group adds to the page's count: Connect, the two switches, the client id and secret, and Status. */
+private const val TRAKT_ROWS = 6
+
+/**
+ * Trakt (Settings › Layout › Home): Connect / Disconnect (the device-code login runs on the Connect
+ * row itself — it shows the code to type at trakt.tv/activate until Trakt answers), the scrobble and
+ * watchlist switches (off, and not switchable, until connected), the API app's client id and its
+ * optional secret, and a status line that says which configuration is in use. App-level like the
+ * store behind them (TraktSettings): the account connected here scrobbles for every profile.
+ */
+@Composable
+private fun TraktRows() {
+    val vm: TraktSettingsViewModel = koinViewModel()
+    val c by vm.config.collectAsStateWithLifecycle()
+    val status by vm.status.collectAsStateWithLifecycle()
+    val login by vm.login.collectAsStateWithLifecycle()
+
+    StageSettingsHeading(stringResource(R.string.trakt_title), null)
+    val needsId = stringResource(R.string.trakt_needs_client_id)
+    val notConnected = stringResource(R.string.trakt_needs_connection)
+
+    val l = login
+    val waiting = l?.state == TraktLogin.State.WAITING
+    val connectTitle = stringResource(if (c.connected) R.string.trakt_connected else R.string.trakt_connect)
+    val connectDesc = when {
+        c.connected -> if (c.username.isNotBlank()) stringResource(R.string.trakt_connected_as, c.username) else stringResource(R.string.trakt_status_ready)
+        !c.hasCredentials -> needsId
+        l == null -> stringResource(R.string.trakt_connect_description)
+        l.state == TraktLogin.State.WAITING -> stringResource(R.string.trakt_connect_code, l.verificationUrl, l.userCode)
+        l.state == TraktLogin.State.EXPIRED -> stringResource(R.string.trakt_connect_expired)
+        l.state == TraktLogin.State.DENIED -> stringResource(R.string.trakt_connect_denied)
+        l.code == 0 -> stringResource(R.string.trakt_status_unreachable)
+        else -> stringResource(R.string.trakt_connect_declined, l.code)
+    }
+    val connectValue = SettingValue.Action(
+        stringResource(
+            when {
+                c.connected -> R.string.trakt_disconnect
+                waiting -> R.string.trakt_connect_cancel
+                else -> R.string.trakt_connect_now
+            },
+        ),
+    )
+    StageSettingRow(
+        icon = OwnTVIcon.PERSON, title = connectTitle, desc = connectDesc, value = connectValue, enabled = c.hasCredentials,
+        onClick = {
+            when {
+                c.connected -> vm.disconnect()
+                waiting -> vm.cancelConnect()
+                else -> vm.connect()
+            }
+        },
+        help = settingHelp(null, connectTitle, connectDesc, connectValue, pinnable = false),
+    )
+
+    val scrobbleTitle = stringResource(R.string.trakt_scrobble)
+    val scrobbleDesc = if (c.connected) stringResource(R.string.trakt_scrobble_description) else notConnected
+    val scrobbleValue = SettingValue.Switch(c.scrobbleOn)
+    StageSettingRow(
+        icon = OwnTVIcon.PLAY_CIRCLE, title = scrobbleTitle, desc = scrobbleDesc, value = scrobbleValue, enabled = c.connected,
+        onClick = { vm.setScrobble(!c.scrobble) },
+        help = settingHelp(null, scrobbleTitle, scrobbleDesc, scrobbleValue, pinnable = false),
+    )
+
+    val watchlistTitle = stringResource(R.string.trakt_watchlist_row)
+    val watchlistDesc = if (c.connected) stringResource(R.string.trakt_watchlist_row_description) else notConnected
+    val watchlistValue = SettingValue.Switch(c.watchlistOn)
+    StageSettingRow(
+        icon = OwnTVIcon.LIST, title = watchlistTitle, desc = watchlistDesc, value = watchlistValue, enabled = c.connected,
+        onClick = { vm.setWatchlistRow(!c.watchlistRow) },
+        help = settingHelp(null, watchlistTitle, watchlistDesc, watchlistValue, pinnable = false),
+    )
+
+    // The client id and the optional secret, each saved a moment after typing stops (and on Done), not
+    // per keystroke: the store's echo must not fight the field. With nothing typed and one built in, the
+    // row says so — and never shows it.
+    val idTitle = stringResource(R.string.trakt_client_id)
+    var clientId by remember(c.clientId) { mutableStateOf(c.clientId) }
+    LaunchedEffect(clientId) {
+        if (clientId.trim() != c.clientId) {
+            kotlinx.coroutines.delay(600)
+            vm.setClientId(clientId)
+        }
+    }
+    StageFieldRow(
+        icon = OwnTVIcon.PENCIL, label = idTitle, value = clientId, onValueChange = { clientId = it },
+        help = settingHelp(null, idTitle, stringResource(R.string.trakt_client_id_description), null, pinnable = false),
+        placeholder = stringResource(if (c.usesBuiltInId) R.string.trakt_built_in else R.string.trakt_client_id_hint),
+        password = true, onDone = { vm.setClientId(clientId) },
+    )
+    val secretTitle = stringResource(R.string.trakt_client_secret)
+    var clientSecret by remember(c.clientSecret) { mutableStateOf(c.clientSecret) }
+    LaunchedEffect(clientSecret) {
+        if (clientSecret.trim() != c.clientSecret) {
+            kotlinx.coroutines.delay(600)
+            vm.setClientSecret(clientSecret)
+        }
+    }
+    StageFieldRow(
+        icon = OwnTVIcon.PENCIL, label = secretTitle, value = clientSecret, onValueChange = { clientSecret = it },
+        help = settingHelp(null, secretTitle, stringResource(R.string.trakt_client_secret_description), null, pinnable = false),
+        placeholder = stringResource(if (c.usesBuiltInSecret) R.string.trakt_built_in else R.string.trakt_client_secret_hint),
+        password = true, onDone = { vm.setClientSecret(clientSecret) },
+    )
+
+    val statusTitle = stringResource(R.string.trakt_status)
+    val statusDesc = traktStatusText(c, status)
+    StageSettingRow(
+        icon = OwnTVIcon.INFO, title = statusTitle, desc = statusDesc, value = null, onClick = {},
+        help = settingHelp(null, statusTitle, statusDesc, null, pinnable = false),
+    )
+}
+
+/** The Status row: which credentials are in use, then the connection, then what the last call came to. */
+@Composable
+private fun traktStatusText(c: TraktConfig, status: TraktRepository.Status): String {
+    if (!c.hasCredentials) return stringResource(R.string.trakt_status_no_client_id)
+    val sep = dotSeparator()
+    val setup = listOf(
+        stringResource(if (c.usesBuiltInId) R.string.trakt_status_built_in_id else R.string.trakt_status_typed_id),
+        stringResource(if (c.hasSecret) R.string.trakt_status_with_secret else R.string.trakt_status_no_secret),
+    ).joinToString(sep)
+    val state = when {
+        !c.connected -> stringResource(R.string.trakt_status_not_connected)
+        !c.scrobbleOn && !c.watchlistOn -> stringResource(R.string.trakt_status_off)
+        else -> when (status) {
+            TraktRepository.Status.Idle ->
+                if (c.username.isNotBlank()) stringResource(R.string.trakt_connected_as, c.username) else stringResource(R.string.trakt_status_ready)
+            is TraktRepository.Status.Declined ->
+                if (status.code == 0) stringResource(R.string.trakt_status_unreachable) else stringResource(R.string.trakt_connect_declined, status.code)
+            TraktRepository.Status.TokenRejected -> stringResource(R.string.trakt_status_token_rejected)
+            is TraktRepository.Status.HttpError -> stringResource(R.string.trakt_status_http, status.code)
+            TraktRepository.Status.Unreachable -> stringResource(R.string.trakt_status_unreachable)
+            TraktRepository.Status.NoMatches -> stringResource(R.string.trakt_status_no_matches)
+            is TraktRepository.Status.Shown -> pluralStringResource(R.plurals.trakt_status_shown, status.titles, status.titles)
+            is TraktRepository.Status.Scrobbled -> stringResource(R.string.trakt_status_scrobbled, status.title)
+        }
+    }
+    return listOf(setup, state).joinToString(sep)
 }

@@ -266,6 +266,9 @@ fun OwnTVShell(
     val homeVm = org.koin.androidx.compose.koinViewModel<HomeViewModel>()
     val movieVm = org.koin.androidx.compose.koinViewModel<MovieViewModel>()
     val seriesVm = org.koin.androidx.compose.koinViewModel<SeriesViewModel>()
+    // Trakt scrobbling follows what these two hand the engine; exitPlayer tells it the position is about to go.
+    val traktScrobbler = koinInject<tv.own.owntv.features.trakt.TraktScrobbler>()
+    tv.own.owntv.features.trakt.TraktPlayerBinder(movieVm, seriesVm)
     val searchVm = org.koin.androidx.compose.koinViewModel<SearchViewModel>()
     // Same activity-scoped instances the Live/Guide screens use — lets the fullscreen HUD zap channels
     // up/down (CH+/CH-). Guide tunes start through LiveViewModel too (they set zapSource = LIVE_TV), so
@@ -551,6 +554,7 @@ fun OwnTVShell(
         // no-ops unless the player is on that section's item.
         movieVm.saveProgressNow()
         seriesVm.saveEpisodeProgressNow()
+        traktScrobbler.stop()
         resumeVideo() // restore mpv `vid=auto` before stop so the next played item isn't left video-less
         playerMode = PlayerMode.NONE
         showChannelList = false

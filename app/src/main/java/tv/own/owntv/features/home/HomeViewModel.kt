@@ -146,6 +146,7 @@ class HomeViewModel(
     private val homeTrailers: HomeTrailerSettings,
     private val mdbList: tv.own.owntv.features.mdblist.MdbListRepository,
     private val customize: tv.own.owntv.core.customize.CustomizationStore,
+    private val trakt: tv.own.owntv.features.trakt.TraktRepository,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
@@ -165,7 +166,7 @@ class HomeViewModel(
      * while the rows are off.
      */
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-    val curatedRails: StateFlow<List<tv.own.owntv.features.mdblist.CuratedRail>> = combine(
+    private val mdbRails: StateFlow<List<tv.own.owntv.features.mdblist.CuratedRail>> = combine(
         settings.activeProfileId, mdbList.config, homeContentFilter.hideAdultCategories, railsRefresh,
     ) { pid, config, hideAdult, _ -> Triple(pid, config, hideAdult) }
         .flatMapLatest { (pid, config, hideAdult) ->
@@ -188,6 +189,37 @@ class HomeViewModel(
             }
         }
         .flowOn(Dispatchers.IO)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    /**
+     * Trakt's watchlist rail (Settings › Layout › Home › Trakt): the user's watchlist cut down to what
+     * this profile's playlists hold, under the MDBList rails. Re-run on the same triggers; the
+     * watchlist itself comes from the repository's cache. Empty while the row is off or not connected.
+     */
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    private val traktRails: kotlinx.coroutines.flow.Flow<List<tv.own.owntv.features.mdblist.CuratedRail>> = combine(
+        settings.activeProfileId, trakt.config, homeContentFilter.hideAdultCategories, railsRefresh,
+    ) { pid, config, hideAdult, _ -> Triple(pid, config, hideAdult) }
+        .flatMapLatest { (pid, config, hideAdult) ->
+            kotlinx.coroutines.flow.flow {
+                val rails: List<tv.own.owntv.features.mdblist.CuratedRail> = if (pid < 0 || !config.watchlistOn) {
+                    emptyList()
+                } else {
+                    try {
+                        listOfNotNull(trakt.watchlistRail(profileDao.resolveExistingProfileId(pid) ?: -1L, hideAdult))
+                    } catch (e: kotlinx.coroutines.CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        emptyList()
+                    }
+                }
+                emit(rails)
+            }
+        }
+        .flowOn(Dispatchers.IO)
+
+    /** The curated rails under Now trending: MDBList's lists, then the Trakt watchlist. */
+    val curatedRails: StateFlow<List<tv.own.owntv.features.mdblist.CuratedRail>> = combine(mdbRails, traktRails) { m, t -> m + t }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     /**

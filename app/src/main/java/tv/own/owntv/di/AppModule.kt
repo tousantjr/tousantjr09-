@@ -25,6 +25,7 @@ import tv.own.owntv.features.home.HomeViewModel
 import org.koin.android.ext.koin.androidContext
 import tv.own.owntv.features.live.LiveViewModel
 import tv.own.owntv.features.mdblist.MdbListSettingsViewModel
+import tv.own.owntv.features.trakt.TraktSettingsViewModel
 import tv.own.owntv.features.movies.MovieViewModel
 import tv.own.owntv.features.profiles.ProfileGateSessionViewModel
 import tv.own.owntv.features.profiles.ProfilesViewModel
@@ -92,6 +93,28 @@ val appModule = module {
         )
     }
     viewModelOf(::MdbListSettingsViewModel)
+    // Settings → Layout → Home → Trakt: the feature's own DataStore (TraktSettings — app-level, where the
+    // client credentials and tokens live), its client on the shared OkHttp client, the repository (login,
+    // scrobbles, the watchlist rail — see its header) and the scrobbler that watches the engine. Named
+    // arguments for the same reason as MDBList's: several DAOs of the same shape.
+    single { tv.own.owntv.features.trakt.TraktSettings(androidContext()) }
+    single { tv.own.owntv.features.trakt.TraktApi(get()) }
+    single {
+        tv.own.owntv.features.trakt.TraktRepository(
+            context = androidContext(),
+            settings = get(),
+            api = get(),
+            appSettings = get(),
+            sourceDao = get(),
+            movieDao = get(),
+            seriesDao = get(),
+            profileDao = get(),
+            categoryDao = get(),
+            customize = get(),
+        )
+    }
+    single { tv.own.owntv.features.trakt.TraktScrobbler(player = get(), repo = get(), metadata = get()) }
+    viewModelOf(::TraktSettingsViewModel)
     // Home's subscription notice: asks each Xtream playlist for its expiry and caches the answer for
     // hours, so one instance for the process — see SubscriptionExpiry.
     single { tv.own.owntv.features.home.SubscriptionExpiry(get()) }
