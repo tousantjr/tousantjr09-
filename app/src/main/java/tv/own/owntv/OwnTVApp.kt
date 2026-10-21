@@ -110,6 +110,12 @@ class OwnTVApp : Application(), SingletonImageLoader.Factory, androidx.work.Conf
         tv.own.owntv.player.SubtitleFontAssets.resourceOf = { it.subtitleFontResource }
         // The six icon colours are MainActivity + a suffix (see MainActivityColours.kt); core switches them.
         tv.own.owntv.core.brand.AppIconSwitcher.mainActivityClass = MainActivity::class.java.name
+        // Sports goal alerts and match reminders may run with the app closed. Core leaves this to the
+        // host because "a TV that is off has nobody to tell" — but a stick is on whenever the TV is, and
+        // sits on the launcher or in another app far more than in this one, which is exactly when a
+        // kick-off reminder is worth a heads-up notification. The permission request is assigned by
+        // MainActivity, which alone can ask (Android 13+ only; Fire OS 8 never does).
+        tv.own.owntv.core.sports.MatchAlertHost.backgroundAllowed = true
         startKoin {
             androidLogger(if (BuildConfig.DEBUG) Level.ERROR else Level.NONE)
             androidContext(this@OwnTVApp)
@@ -132,6 +138,23 @@ class OwnTVApp : Application(), SingletonImageLoader.Factory, androidx.work.Conf
         appScope.launch {
             runCatching {
                 GlobalContext.get().get<tv.own.owntv.core.settings.SettingsRepository>().applyStageDefaults()
+            }
+        }
+        // Programme reminders: a notification while no screen of the app is open (the shell's prompt
+        // covers the rest). Also what creates core's ReminderManager at launch, which re-arms every
+        // reminder after an update — the phone has started it this way all along.
+        tv.own.owntv.features.epg.ReminderNotifier.start(
+            app = this,
+            scope = appScope,
+            reminders = GlobalContext.get().get(),
+            settings = GlobalContext.get().get(),
+        )
+        // "Your teams play today": the daily heads-up's schedule follows its setting (Settings → Sports →
+        // Goal alerts → Game day). Off the main thread: WorkManager's first touch opens its database.
+        appScope.launch {
+            runCatching {
+                val notices = GlobalContext.get().get<tv.own.owntv.features.sports.SportsNoticeSettings>()
+                tv.own.owntv.features.sports.GameDayWorker.sync(this@OwnTVApp, notices.current())
             }
         }
         // Sports: core decides from Auto rebuild whether the stored board is due ("on every app start",

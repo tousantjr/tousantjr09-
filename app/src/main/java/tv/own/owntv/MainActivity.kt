@@ -93,6 +93,38 @@ open class MainActivity : ComponentActivity() {
     private val engines: tv.own.owntv.player.PlaybackEngines by inject()
     // Activity-scoped: the same instance Compose retrieves via koinViewModel() inside setContent.
     private val shellViewModel: ShellViewModel by viewModel()
+
+    /**
+     * Android 13+ asks before the first notification; a television seldom gets that far (Fire OS 8 is
+     * Android 11), but core's hook needs an answer from the one thing that can ask — an activity.
+     */
+    private val notificationPermission =
+        registerForActivityResult(androidx.activity.result.contract.ActivityResultContracts.RequestPermission()) { }
+
+    /** This activity's answer to core's permission hook, kept so only this one is taken away again. */
+    private val askPermission: () -> Unit = {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU &&
+            androidx.core.content.ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS) !=
+            android.content.pm.PackageManager.PERMISSION_GRANTED
+        ) {
+            runCatching { notificationPermission.launch(android.Manifest.permission.POST_NOTIFICATIONS) }
+        }
+    }
+
+    /** A sports alert, reminder or the game-day heads-up was tapped: the shell opens that match's page. */
+    private fun readMatchRequest(intent: Intent?) {
+        val key = intent?.getStringExtra(tv.own.owntv.core.sports.MatchNotifications.EXTRA_MATCH_KEY) ?: return
+        intent.removeExtra(tv.own.owntv.core.sports.MatchNotifications.EXTRA_MATCH_KEY)
+        runCatching { get<tv.own.owntv.features.sports.SportsPlayback>().openMatchKey.value = key }
+    }
+
+    /** The permission hook holds this activity; let it go unless a newer activity has already set its own. */
+    override fun onDestroy() {
+        if (tv.own.owntv.core.sports.MatchAlertHost.requestNotificationPermission === askPermission) {
+            tv.own.owntv.core.sports.MatchAlertHost.requestNotificationPermission = null
+        }
+        super.onDestroy()
+    }
     // The sole locale authority (SharedPreferences-backed; see docs/internationalization.md 0b).
     private val localeStore: tv.own.owntv.core.i18n.LocaleStore by inject()
     private var pendingDeepLink by mutableStateOf<LauncherDeepLink?>(null)
@@ -113,6 +145,7 @@ open class MainActivity : ComponentActivity() {
         setIntent(intent)
         pendingDeepLink = LauncherDeepLink.parse(intent.data)
         Log.d(TAG, "onNewIntent deepLinkHost=${intent.data?.host} deepLinkType=${pendingDeepLink?.javaClass?.simpleName ?: "none"}")
+        readMatchRequest(intent)
     }
 
     override fun onStop() {
@@ -172,6 +205,9 @@ open class MainActivity : ComponentActivity() {
         splash.setKeepOnScreenCondition { !contentReady && SystemClock.uptimeMillis() < splashDeadline }
         pendingDeepLink = LauncherDeepLink.parse(intent.data)
         Log.d(TAG, "onCreate deepLinkHost=${intent.data?.host} deepLinkType=${pendingDeepLink?.javaClass?.simpleName ?: "none"}")
+        // Turning Sports goal alerts (or the game-day heads-up) on asks here; core calls the hook.
+        tv.own.owntv.core.sports.MatchAlertHost.requestNotificationPermission = askPermission
+        readMatchRequest(intent)
         val dbError = probeDatabase()
         if (dbError != null) {
             contentReady = true // the recovery screen IS the destination — don't hold the splash over it

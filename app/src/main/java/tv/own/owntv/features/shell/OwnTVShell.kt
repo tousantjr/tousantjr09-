@@ -222,6 +222,17 @@ fun OwnTVShell(
     var sportsEntry by remember { mutableStateOf<(() -> Boolean)?>(null) }
     // Home's Live sports row opens a match page through the same request the player's Match button uses.
     val sportsMatchRequests = koinInject<tv.own.owntv.features.sports.SportsPlayback>()
+    // A sports notification was tapped (MainActivity read its match key): the match's page when the
+    // stored board still has it, else the hub — the same request, then the Sports section.
+    val sportsBoardRepository = koinInject<tv.own.owntv.core.sports.SportsRepository>()
+    LaunchedEffect(sportsMatchRequests) {
+        sportsMatchRequests.openMatchKey.collect { key ->
+            if (key == null) return@collect
+            sportsMatchRequests.openMatchKey.value = null
+            sportsBoardRepository.board.value.match(key)?.let { m -> sportsMatchRequests.pendingMatch.value = m to null }
+            onSelectSection(MainSection.SPORTS)
+        }
+    }
     // More › Settings opens Settings at a group, or with its search open.
     var settingsStart by remember { mutableStateOf<tv.own.owntv.features.shell.components.SettingsStart?>(null) }
     // The playlist pill's place on screen, where the playlist menu redraws it above its scrim.
@@ -1593,6 +1604,9 @@ fun OwnTVShell(
                 var showOtherChannels by remember { mutableStateOf(false) }
                 var goalToast by remember { mutableStateOf<tv.own.owntv.core.sports.MatchAlert?>(null) }
                 LaunchedEffect(isTunedLive) { if (isTunedLive) sportsPlayback.goals().collect { goalToast = it } }
+                // Settings → Sports → Score ticker: the other followed games' scores, cycling at the top edge.
+                val sportsNotices by koinInject<tv.own.owntv.features.sports.SportsNoticeSettings>().config
+                    .collectAsStateWithLifecycle(tv.own.owntv.features.sports.SportsNoticeConfig())
                 LaunchedEffect(goalToast) { if (goalToast != null) { kotlinx.coroutines.delay(GOAL_TOAST_MS); goalToast = null } }
                 // A goal elsewhere: play that match's best channel if Find channels already found one,
                 // else open its match page, where they can be found.
@@ -1720,6 +1734,9 @@ fun OwnTVShell(
                     onOtherChannels = matchSession?.takeIf { it.options.size > 1 }?.let { { showOtherChannels = true } },
                     otherChannelsCount = (matchSession?.options?.size ?: 1) - 1,
                     onToastOk = goalToast?.let { a -> { switchToMatch(a.match) } },
+                    ticker = if (sportsNotices.scoreTicker) {
+                        { tv.own.owntv.features.sports.ScoreTickerPill(sportsPlayback, matchSession?.match?.key, sportsConfig.spoilerFree) }
+                    } else null,
                     modifier = Modifier.fillMaxSize(),
                 )
                 goalToast?.let { a ->
@@ -1770,9 +1787,12 @@ fun OwnTVShell(
                 val dueReminders by reminderManager.due.collectAsStateWithLifecycle()
                 val reminderMode by settingsRepo.reminderMode.collectAsStateWithLifecycle(tv.own.owntv.core.settings.SettingsRepository.ReminderMode.ASK)
                 val dueReminder = dueReminders.firstOrNull { it.profileId == activeProfileId }
+                // Answered here, the reminder's notification (posted while no screen was open) goes too.
+                val reminderAppContext = androidx.compose.ui.platform.LocalContext.current.applicationContext
                 val watchReminder: (tv.own.owntv.core.database.entity.ReminderEntity) -> Unit = { r ->
                     scope.launch {
                         reminderManager.dismiss(r.id)
+                        tv.own.owntv.features.epg.ReminderNotifier.cancel(reminderAppContext, r.id)
                         if (liveVm.ensurePlayingByIdAsync(r.channelId)) openFullscreen(MainSection.LIVE_TV)
                     }
                 }
@@ -1792,7 +1812,12 @@ fun OwnTVShell(
                     tv.own.owntv.features.epg.ReminderPrompt(
                         reminder = dueReminder,
                         onWatch = { watchReminder(dueReminder) },
-                        onDismiss = { scope.launch { reminderManager.dismiss(dueReminder.id) } },
+                        onDismiss = {
+                            scope.launch {
+                                reminderManager.dismiss(dueReminder.id)
+                                tv.own.owntv.features.epg.ReminderNotifier.cancel(reminderAppContext, dueReminder.id)
+                            }
+                        },
                     )
                 }
                 // A catch-up pick that could not be resolved. Raised from Live TV wherever an archive

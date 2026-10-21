@@ -155,6 +155,9 @@ val appModule = module {
     // where the user's API key lives), the two read-only sources riding the app's shared OkHttp client
     // like BoxingSource, and the cache that keeps The Odds API's free quota intact (OddsRepository).
     single { tv.own.owntv.features.sports.odds.OddsSettings(androidContext()) }
+    // Settings → Sports → the game-day heads-up and the score ticker: app-level too (SportsNoticeSettings),
+    // core's SportsConfig being compiled; the store also keeps GameDayWorker's schedule in step.
+    single { tv.own.owntv.features.sports.SportsNoticeSettings(androidContext()) }
     single { tv.own.owntv.features.sports.odds.EspnOddsSource(get()) }
     single { tv.own.owntv.features.sports.odds.TheOddsApiSource(get()) }
     single { tv.own.owntv.features.sports.odds.OddsRepository(get(), get(), get()) }

@@ -222,6 +222,10 @@ fun PlayerHud(
     // The match page.
     // A goal toast for another followed match is up: OK switches to it instead of showing the controls.
     onToastOk: (() -> Unit)? = null,
+    // Settings → Sports → Score ticker: the other followed games' scores, drawn at the top edge while the
+    // controls are hidden (the top strip, with the match's own score line, takes that edge when they are
+    // up) and over nothing but the picture. Informational, never focusable.
+    ticker: (@Composable () -> Unit)? = null,
     // The playlist the playing item came from, so a failed stream can be explained with the account's
     // own connection count (ConnectionLimitNotices). Null = unknown, no explanation.
     playingSourceId: Long? = null,
@@ -607,6 +611,12 @@ fun PlayerHud(
                 Modifier.fillMaxSize().focusRequester(catchFocus).focusable()
                     .onKeyEvent { e -> if (e.type == KeyEventType.KeyDown && e.key != Key.Back) { controlsVisible = true; true } else false },
             )
+        }
+
+        // The score ticker: top centre, between the OSD stack (top start) and the goal toast (top end),
+        // only with the controls down and no error up — an error overlay owns the screen.
+        if (ticker != null && !controlsVisible && error == null) {
+            Box(Modifier.align(Alignment.TopCenter).padding(top = 28.dp)) { ticker() }
         }
 
         // Stream technical info — drawn over everything (and kept up even when the controls auto-hide), so

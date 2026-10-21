@@ -24,8 +24,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.koin.androidx.compose.koinViewModel
 import tv.own.owntv.R
+import tv.own.owntv.core.sports.AlertKind
 import tv.own.owntv.core.sports.AutoRebuild
 import tv.own.owntv.core.sports.FollowedTeam
+import tv.own.owntv.core.sports.MatchAlertHost
 import tv.own.owntv.core.sports.MinQuality
 import tv.own.owntv.core.sports.SportsCatalog
 import tv.own.owntv.core.sports.SportsConfig
@@ -56,8 +58,9 @@ private val COUNTRIES = listOf("DE", "AT", "CH", "UK", "US", "FR", "BE", "ES", "
 /**
  * Settings → Sports, drawn as every Settings page is, with its sub-pages: Sports
  * and leagues (two panes: sports, then the chosen sport's leagues), My teams (search + suggested), Goal
- * alerts (the TV's in-player toast only), languages, countries, playlists, Remembered channels and About
- * sports data. Every value is the profile's; backups carry it.
+ * alerts (the in-player toast, notifications with the app closed, the game-day heads-up), languages,
+ * countries, playlists, Remembered channels and About sports data. Every value is the profile's and
+ * backups carry it — but for the game-day heads-up and the score ticker, which are this device's.
  */
 @Composable
 fun SportsSettingsScreen(onBack: () -> Unit, modifier: Modifier = Modifier, vm: SportsSettingsViewModel = koinViewModel()) {
@@ -134,8 +137,8 @@ private fun Row(icon: OwnTVIcon, title: String, desc: String?, value: SettingVal
     )
 }
 
-/** Rows on the main page (the "N settings" beside its title): 5 + 6 + 3 + 2 + 6 + 4. */
-private const val MAIN_ROWS = 26
+/** Rows on the main page (the "N settings" beside its title): 5 + 6 + 4 + 2 + 6 + 4. */
+private const val MAIN_ROWS = 27
 
 /** The main page: What to show · Watching · While watching · Channels · Betting odds · Data. */
 @Composable
@@ -182,9 +185,14 @@ private fun MainRows(vm: SportsSettingsViewModel, c: SportsConfig, shown: Boolea
         vm.update { it.copy(strictFilter = !it.strictFilter) }
     }
 
-    StageSettingsHeading(stringResource(R.string.sports_settings_while_watching), 3)
+    StageSettingsHeading(stringResource(R.string.sports_settings_while_watching), 4)
     Row(OwnTVIcon.LIVE_TV, stringResource(R.string.sports_score_info_bar), stringResource(R.string.sports_score_info_bar_description), SettingValue.Switch(c.scoreInInfoBar)) {
         vm.update { it.copy(scoreInInfoBar = !it.scoreInInfoBar) }
+    }
+    // The score ticker is this device's, not the profile's (SportsNoticeSettings), like the odds below.
+    val notices by vm.noticeConfig.collectAsStateWithLifecycle()
+    Row(OwnTVIcon.TREND, stringResource(R.string.sports_score_ticker), stringResource(R.string.sports_score_ticker_description), SettingValue.Switch(notices.scoreTicker)) {
+        vm.setScoreTicker(!notices.scoreTicker)
     }
     Row(OwnTVIcon.BELL, stringResource(R.string.sports_channel_goal_alerts), stringResource(R.string.sports_goal_alerts_description), SettingValue.Opens(alertsSummary(c))) { open(SportsSettingsPage.ALERTS) }
     val leads = SportsConfig.REMINDER_LEAD_CHOICES
@@ -208,7 +216,7 @@ private fun MainRows(vm: SportsSettingsViewModel, c: SportsConfig, shown: Boolea
     // profile's: the key is this device's, and so is the quota it spends.
     val o by vm.oddsConfig.collectAsStateWithLifecycle()
     val oddsStatus by vm.oddsStatus.collectAsStateWithLifecycle()
-    StageSettingsHeading(stringResource(R.string.sports_odds_title), 5)
+    StageSettingsHeading(stringResource(R.string.sports_odds_title), 6)
     Row(OwnTVIcon.TREND, stringResource(R.string.sports_odds_show), stringResource(R.string.sports_odds_show_description), SettingValue.Switch(o.enabled)) {
         vm.setOddsEnabled(!o.enabled)
     }
@@ -515,13 +523,29 @@ private fun TeamRows(vm: SportsSettingsViewModel, c: SportsConfig) {
     }
 }
 
-/** Goal alerts on the TV: the in-player toast only (no background alerts on a television). */
+/**
+ * Goal alerts on the TV: the in-player toast, and — the television staying on with the screen —
+ * notifications with the app closed, as on the phone (OwnTVApp turns core's background path on).
+ * Then the daily game-day heads-up, which is this device's rather than the profile's.
+ */
 @Composable
 private fun AlertRows(vm: SportsSettingsViewModel, c: SportsConfig) {
     val a = c.alerts
+    val notices by vm.noticeConfig.collectAsStateWithLifecycle()
+    fun kind(k: AlertKind) = vm.update { it.copy(alerts = it.alerts.copy(kinds = if (k in it.alerts.kinds) it.alerts.kinds - k else it.alerts.kinds + k)) }
     Row(OwnTVIcon.BELL, stringResource(R.string.sports_channel_goal_alerts), stringResource(R.string.sports_goal_alerts_description), SettingValue.Switch(a.enabled)) {
+        if (!a.enabled) MatchAlertHost.requestNotificationPermission?.invoke()
         vm.update { it.copy(alerts = it.alerts.copy(enabled = !it.alerts.enabled)) }
     }
+    Row(OwnTVIcon.BELL, stringResource(R.string.sports_alerts_when_closed), stringResource(R.string.sports_alerts_when_closed_description), SettingValue.Switch(a.whenClosed), enabled = a.enabled) {
+        if (!a.whenClosed) MatchAlertHost.requestNotificationPermission?.invoke()
+        vm.update { it.copy(alerts = it.alerts.copy(whenClosed = !it.alerts.whenClosed)) }
+    }
+    StageSettingsHeading(stringResource(R.string.sports_alert_me_about), 4)
+    Row(OwnTVIcon.SPORTS, stringResource(R.string.sports_kind_goals), null, SettingValue.Switch(AlertKind.GOALS in a.kinds)) { kind(AlertKind.GOALS) }
+    Row(OwnTVIcon.CLOCK, stringResource(R.string.sports_kind_kickoff_full_time), null, SettingValue.Switch(AlertKind.KICKOFF_FULL_TIME in a.kinds)) { kind(AlertKind.KICKOFF_FULL_TIME) }
+    Row(OwnTVIcon.CLOCK, stringResource(R.string.sports_event_half_time), null, SettingValue.Switch(AlertKind.HALF_TIME in a.kinds)) { kind(AlertKind.HALF_TIME) }
+    Row(OwnTVIcon.WARNING, stringResource(R.string.sports_stat_red_cards), null, SettingValue.Switch(AlertKind.RED_CARDS in a.kinds)) { kind(AlertKind.RED_CARDS) }
     StageSettingsHeading(stringResource(R.string.sports_alerts_for), 2)
     Row(OwnTVIcon.STAR, stringResource(R.string.sports_my_teams), null, SettingValue.Switch(a.myTeams)) {
         vm.update { it.copy(alerts = it.alerts.copy(myTeams = !it.alerts.myTeams)) }
@@ -529,7 +553,21 @@ private fun AlertRows(vm: SportsSettingsViewModel, c: SportsConfig) {
     Row(OwnTVIcon.LAYERS, stringResource(R.string.sports_followed_leagues), stringResource(R.string.sports_followed_leagues_description), SettingValue.Switch(a.followedLeagues)) {
         vm.update { it.copy(alerts = it.alerts.copy(followedLeagues = !it.alerts.followedLeagues)) }
     }
+    StageSettingsHeading(stringResource(R.string.sports_game_day_heading), 2)
+    Row(OwnTVIcon.CLOCK, stringResource(R.string.sports_game_day), stringResource(R.string.sports_game_day_description), SettingValue.Switch(notices.gameDay)) {
+        if (!notices.gameDay) MatchAlertHost.requestNotificationPermission?.invoke()
+        vm.setGameDay(!notices.gameDay)
+    }
+    val hours = SportsNoticeConfig.GAME_DAY_HOURS
+    val stepHour: (Int) -> Unit = { d -> vm.setGameDayHour(hours[(hours.indexOf(notices.gameDayHour).coerceAtLeast(0) + d).mod(hours.size)]) }
+    Row(OwnTVIcon.CLOCK, stringResource(R.string.sports_game_day_time), stringResource(R.string.sports_game_day_time_description),
+        SettingValue.Stepper(hourText(notices.gameDayHour)), onStep = stepHour, enabled = notices.gameDay) { stepHour(1) }
 }
+
+/** "9:00 AM" / "09:00": an hour of the day in the clock format the rest of the app uses. */
+@Composable
+private fun hourText(hour: Int): String =
+    timeText(java.time.LocalDate.now().atTime(hour.coerceIn(0, 23), 0).atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli())
 
 /** A list of codes, each a switch: the commentary languages or the countries. */
 @Composable

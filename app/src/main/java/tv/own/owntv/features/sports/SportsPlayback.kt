@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.first
@@ -18,6 +19,7 @@ import tv.own.owntv.core.settings.SettingsRepository
 import tv.own.owntv.core.sports.AlertKind
 import tv.own.owntv.core.sports.AlertSnapshot
 import tv.own.owntv.core.sports.Demand
+import tv.own.owntv.core.sports.FollowedTeam
 import tv.own.owntv.core.sports.MatchAlert
 import tv.own.owntv.core.sports.MatchAlertDiff
 import tv.own.owntv.core.sports.SportsMemory
@@ -49,6 +51,9 @@ class SportsPlayback(
 
     /** The match page the player's *Match* button asked for, and the channel Back from it returns to. */
     val pendingMatch = MutableStateFlow<Pair<Match, ChannelEntity?>?>(null)
+
+    /** A match an alert's tap asked for ([tv.own.owntv.core.sports.MatchNotifications.EXTRA_MATCH_KEY]); the shell opens it. */
+    val openMatchKey = MutableStateFlow<String?>(null)
 
     /** The hub's chosen sport and league chips: kept while the app runs, back to All on a fresh start. */
     var hubChip: Any? = null
@@ -88,6 +93,24 @@ class SportsPlayback(
             }
         }
     }
+
+    /**
+     * The *other* followed games under way, for the score ticker: the profile's teams first, then its
+     * leagues in its order, then kick-off — the Home row's board (live ones every 60 s), minus
+     * [excludeKey], the match on screen. Empty with nothing on, so the ticker draws nothing.
+     */
+    fun otherLiveFollowed(excludeKey: String?): Flow<List<Match>> =
+        combine(repository.observe(Demand.HomeRow), settings.activeSportsConfig) { board, config ->
+            val teamKeys = config.teams.map { it.key }.toSet()
+            val leagues = config.leagues.toSet()
+            fun mine(m: Match) = m.competitors.any { FollowedTeam(m.sport, it.team.id, "").key in teamKeys }
+            board.matches
+                .filter { m -> m.isLive && m.key != excludeKey && (mine(m) || m.feed in leagues) }
+                .distinctBy { it.key }
+                .sortedWith(
+                    compareBy({ !mine(it) }, { config.rankOf(it.sport, it.feed).first }, { config.rankOf(it.sport, it.feed).second }, { it.startMs }),
+                )
+        }.distinctUntilChanged()
 
     /**
      * [match]'s channels as "Watch live" lists them by default (the profile's filter) — only if Find

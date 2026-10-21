@@ -92,6 +92,7 @@
 1	technical	app/src/main/java/tv/own/owntv/features/epg/GuideStage.kt	· $nowTitle
 1	technical	app/src/main/java/tv/own/owntv/features/epg/GuideStage.kt	…
 1	technical	app/src/main/java/tv/own/owntv/features/epg/GuideStage.kt	→
+1	technical	app/src/main/java/tv/own/owntv/features/epg/ReminderNotifier.kt	mptv_reminders
 1	preference-key	app/src/main/java/tv/own/owntv/features/home/HomeContentFilterSettings.kt	hide_adult_categories_home
 1	preference-key	app/src/main/java/tv/own/owntv/features/home/HomeContentFilterSettings.kt	home_content_filter
 1	technical	app/src/main/java/tv/own/owntv/features/home/HomeScreen.kt	%.1f
@@ -818,7 +819,11 @@
 1	empty	app/src/main/java/tv/own/owntv/features/sports/FeaturedMatch.kt	\0
 1	technical	app/src/main/java/tv/own/owntv/features/sports/FeaturedMatchHero.kt	${scoreText(m.sport, home.score)} – ${scoreText(m.sport, away.score)}
 1	technical	app/src/main/java/tv/own/owntv/features/sports/FeaturedMatchHero.kt	– : –
+2	empty	app/src/main/java/tv/own/owntv/features/sports/GameDayWorker.kt	\0
+1	technical	app/src/main/java/tv/own/owntv/features/sports/GameDayWorker.kt	mptv_game_day
+1	technical	app/src/main/java/tv/own/owntv/features/sports/GameDayWorker.kt	sports_game_day
 1	technical	app/src/main/java/tv/own/owntv/features/sports/LiveSportsRow.kt	featured:
+1	empty	app/src/main/java/tv/own/owntv/features/sports/ScoreTicker.kt	\0
 1	empty	app/src/main/java/tv/own/owntv/features/sports/SportsHubScreen.kt	\0
 1	technical	app/src/main/java/tv/own/owntv/features/sports/SportsHubScreen.kt	${scoreText(m.sport, home.score)} – ${scoreText(m.sport, away.score)}
 1	technical	app/src/main/java/tv/own/owntv/features/sports/SportsHubScreen.kt	${sportEmoji(s)} ${sportLabel(s)}
@@ -852,6 +857,11 @@
 1	technical	app/src/main/java/tv/own/owntv/features/sports/SportsMatchScreen.kt	▲▼
 1	technical	app/src/main/java/tv/own/owntv/features/sports/SportsMatchScreen.kt	⚽
 1	technical	app/src/main/java/tv/own/owntv/features/sports/SportsMatchScreen.kt	⚽ ${it.players.firstOrNull().orEmpty().substringAfterLast(' ')} ${it.minute}
+1	preference-key	app/src/main/java/tv/own/owntv/features/sports/SportsNoticeSettings.kt	game_day
+1	preference-key	app/src/main/java/tv/own/owntv/features/sports/SportsNoticeSettings.kt	game_day_hour
+1	preference-key	app/src/main/java/tv/own/owntv/features/sports/SportsNoticeSettings.kt	game_day_notified_day
+1	preference-key	app/src/main/java/tv/own/owntv/features/sports/SportsNoticeSettings.kt	score_ticker
+1	preference-key	app/src/main/java/tv/own/owntv/features/sports/SportsNoticeSettings.kt	sports_notices
 2	technical	app/src/main/java/tv/own/owntv/features/sports/SportsParts.kt	\0
 1	technical	app/src/main/java/tv/own/owntv/features/sports/SportsParts.kt	EEE
 1	technical	app/src/main/java/tv/own/owntv/features/sports/SportsParts.kt	EEEd
@@ -868,6 +878,7 @@
 1	technical	app/src/main/java/tv/own/owntv/features/sports/SportsParts.kt	🏒
 1	technical	app/src/main/java/tv/own/owntv/features/sports/SportsParts.kt	🥊
 1	technical	app/src/main/java/tv/own/owntv/features/sports/SportsParts.kt	🥍
+1	empty	app/src/main/java/tv/own/owntv/features/sports/SportsPlayback.kt	\0
 1	technical	app/src/main/java/tv/own/owntv/features/sports/SportsPlayerParts.kt	\0
 1	technical	app/src/main/java/tv/own/owntv/features/sports/SportsPlayerParts.kt	,
 1	technical	app/src/main/java/tv/own/owntv/features/sports/SportsPlayerParts.kt	ESPN
