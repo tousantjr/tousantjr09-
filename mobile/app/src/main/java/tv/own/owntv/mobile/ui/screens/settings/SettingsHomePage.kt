@@ -40,6 +40,12 @@ import tv.own.owntv.mobile.ui.stage.StageMenuItem
 import tv.own.owntv.mobile.ui.stage.StageRowValue
 import tv.own.owntv.mobile.ui.stage.StageSheetHeader
 import tv.own.owntv.mobile.ui.stage.StageTextRow
+import android.content.Intent
+import android.net.Uri
+import tv.own.owntv.mobile.trakt.TraktConfig
+import tv.own.owntv.mobile.trakt.TraktLogin
+import tv.own.owntv.mobile.trakt.TraktRepository
+import tv.own.owntv.mobile.trakt.TraktSettingsViewModel
 
 /**
  * Home, as the profile wants it: which rows appear, in what order, and what the Keep watching row is
@@ -111,6 +117,11 @@ fun SettingsHomePage(
         // (typed, or built in) — see MdbListSettings. App-level: one key and one set of lists per device.
         settingsSection(R.string.mdblist_title)
         settingsGroup(key = "mdblist") { MdbListRows() }
+
+        // Trakt: scrobbling and the watchlist row, behind a device-code login — see TraktSettings.
+        // App-level: one connected account per device, scrobbling for every profile.
+        settingsSection(R.string.trakt_title)
+        settingsGroup(key = "trakt") { TraktRows() }
 
         settingsSection(R.string.settings_sections)
         settingsNote(R.string.settings_hidden_sections)
@@ -387,4 +398,114 @@ private fun mdbStatusText(c: MdbListConfig, status: MdbListRepository.Status): S
         MdbListRepository.Status.NoMatches -> stringResource(R.string.mdblist_status_no_matches)
         is MdbListRepository.Status.Shown -> pluralStringResource(R.plurals.mdblist_status_shown, status.rails, status.rails, status.titles)
     }
+}
+
+/**
+ * Trakt (Settings › Layout › Home): Connect / Disconnect (the device-code login runs on the row — it
+ * shows the code to type at trakt.tv/activate, and a tap opens that page), a Cancel row while it
+ * waits, the scrobble and watchlist switches (off, and not tappable, until connected), the API app's
+ * client id and its optional secret, and a status line. The television's rows, in the phone's shapes.
+ */
+@Composable
+private fun TraktRows() {
+    val vm: TraktSettingsViewModel = koinViewModel()
+    val c by vm.config.collectAsStateWithLifecycle()
+    val status by vm.status.collectAsStateWithLifecycle()
+    val login by vm.login.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val needsId = stringResource(R.string.trakt_needs_client_id)
+    val notConnected = stringResource(R.string.trakt_needs_connection)
+
+    val l = login
+    val waiting = l?.state == TraktLogin.State.WAITING
+    val connectLine = when {
+        c.connected -> if (c.username.isNotBlank()) stringResource(R.string.trakt_connected_as, c.username) else stringResource(R.string.trakt_status_ready)
+        !c.hasCredentials -> needsId
+        l == null -> stringResource(R.string.trakt_connect_description)
+        l.state == TraktLogin.State.WAITING -> stringResource(R.string.trakt_connect_code, l.verificationUrl, l.userCode)
+        l.state == TraktLogin.State.EXPIRED -> stringResource(R.string.trakt_connect_expired)
+        l.state == TraktLogin.State.DENIED -> stringResource(R.string.trakt_connect_denied)
+        l.code == 0 -> stringResource(R.string.trakt_status_unreachable)
+        else -> stringResource(R.string.trakt_connect_declined, l.code)
+    }
+    StageSettingRow(
+        title = stringResource(if (c.connected) R.string.trakt_connected else R.string.trakt_connect),
+        subtitle = connectLine,
+        onClick = if (!c.hasCredentials) null else ({
+            when {
+                c.connected -> vm.disconnect()
+                waiting && l != null -> runCatching {
+                    context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(l.verificationUrl)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                }
+                else -> vm.connect()
+            }
+        }),
+    ) {
+        StageRowValue(
+            stringResource(
+                when {
+                    c.connected -> R.string.trakt_disconnect
+                    waiting -> R.string.trakt_connect_open
+                    else -> R.string.trakt_connect_now
+                },
+            ),
+            plain = true,
+        )
+    }
+    if (waiting) {
+        StageSettingRow(title = stringResource(R.string.trakt_connect_cancel), onClick = { vm.cancelConnect() })
+    }
+    StageSettingRow(
+        title = stringResource(R.string.trakt_scrobble),
+        subtitle = if (c.connected) stringResource(R.string.trakt_scrobble_description) else notConnected,
+        role = Role.Switch,
+        onClick = if (c.connected) ({ vm.setScrobble(!c.scrobble) }) else null,
+    ) { StageSwitch(c.scrobbleOn) }
+    StageSettingRow(
+        title = stringResource(R.string.trakt_watchlist_row),
+        subtitle = if (c.connected) stringResource(R.string.trakt_watchlist_row_description) else notConnected,
+        role = Role.Switch,
+        onClick = if (c.connected) ({ vm.setWatchlistRow(!c.watchlistRow) }) else null,
+    ) { StageSwitch(c.watchlistOn) }
+    // Typed once and saved from their sheets; with nothing typed and one built in, a row says so and
+    // never shows it. The secret is optional: Trakt's newer apps are PKCE apps and have none.
+    StageTextRow(
+        icon = MobileIcons.Lock, label = stringResource(R.string.trakt_client_id), value = c.clientId, onSave = vm::setClientId,
+        placeholder = stringResource(if (c.usesBuiltInId) R.string.trakt_built_in else R.string.trakt_client_id_hint),
+        password = true,
+    )
+    StageTextRow(
+        icon = MobileIcons.Lock, label = stringResource(R.string.trakt_client_secret), value = c.clientSecret, onSave = vm::setClientSecret,
+        placeholder = stringResource(if (c.usesBuiltInSecret) R.string.trakt_built_in else R.string.trakt_client_secret_hint),
+        password = true,
+    )
+    StageSettingRow(title = stringResource(R.string.trakt_status), subtitle = traktStatusText(c, status))
+}
+
+/** The Status row: which credentials are in use, then the connection, then what the last call came to. */
+@Composable
+private fun traktStatusText(c: TraktConfig, status: TraktRepository.Status): String {
+    if (!c.hasCredentials) return stringResource(R.string.trakt_status_no_client_id)
+    val sep = stringResource(R.string.content_epg_bits_separator)
+    val setup = listOf(
+        stringResource(if (c.usesBuiltInId) R.string.trakt_status_built_in_id else R.string.trakt_status_typed_id),
+        stringResource(if (c.hasSecret) R.string.trakt_status_with_secret else R.string.trakt_status_no_secret),
+    ).joinToString(sep)
+    val state = when {
+        !c.connected -> stringResource(R.string.trakt_status_not_connected)
+        !c.scrobbleOn && !c.watchlistOn -> stringResource(R.string.trakt_status_off)
+        else -> when (status) {
+            TraktRepository.Status.Idle ->
+                if (c.username.isNotBlank()) stringResource(R.string.trakt_connected_as, c.username) else stringResource(R.string.trakt_status_ready)
+            is TraktRepository.Status.Declined ->
+                if (status.code == 0) stringResource(R.string.trakt_status_unreachable) else stringResource(R.string.trakt_connect_declined, status.code)
+            TraktRepository.Status.TokenRejected -> stringResource(R.string.trakt_status_token_rejected)
+            is TraktRepository.Status.HttpError -> stringResource(R.string.trakt_status_http, status.code)
+            TraktRepository.Status.Unreachable -> stringResource(R.string.trakt_status_unreachable)
+            TraktRepository.Status.NoMatches -> stringResource(R.string.trakt_status_no_matches)
+            is TraktRepository.Status.Shown -> pluralStringResource(R.plurals.trakt_status_shown, status.titles, status.titles)
+            is TraktRepository.Status.Scrobbled -> stringResource(R.string.trakt_status_scrobbled, status.title)
+        }
+    }
+    return listOf(setup, state).joinToString(sep)
 }

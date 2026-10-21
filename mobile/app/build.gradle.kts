@@ -97,6 +97,20 @@ android {
             ?: ""
         buildConfigField("String", "MDBLIST_API_KEY", "\"${mdbListApiKey.replace("\\", "\\\\").replace("\"", "\\\"")}\"")
 
+        // The Trakt API app the Trakt features (Settings → Layout → Home → Trakt) can ship with, resolved the
+        // same way (CI injects the TRAKT_CLIENT_ID / TRAKT_CLIENT_SECRET secrets). The secret is optional
+        // even with an id: Trakt's newer API apps sign in with PKCE and are issued none (TraktSettings).
+        val traktClientId = System.getenv("TRAKT_CLIENT_ID")
+            ?: providers.gradleProperty("owntv.traktClientId").orNull
+            ?: localSigningProps.getProperty("owntv.traktClientId")
+            ?: ""
+        buildConfigField("String", "TRAKT_CLIENT_ID", "\"${traktClientId.replace("\\", "\\\\").replace("\"", "\\\"")}\"")
+        val traktClientSecret = System.getenv("TRAKT_CLIENT_SECRET")
+            ?: providers.gradleProperty("owntv.traktClientSecret").orNull
+            ?: localSigningProps.getProperty("owntv.traktClientSecret")
+            ?: ""
+        buildConfigField("String", "TRAKT_CLIENT_SECRET", "\"${traktClientSecret.replace("\\", "\\\\").replace("\"", "\\\"")}\"")
+
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 

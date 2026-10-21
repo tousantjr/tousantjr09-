@@ -41,6 +41,8 @@ import tv.own.owntv.mobile.cast.CastHandoff
 import tv.own.owntv.mobile.cast.CastRequest
 import tv.own.owntv.mobile.playback.DataSaverGate
 import tv.own.owntv.mobile.playback.PlaybackService
+import tv.own.owntv.mobile.trakt.ScrobbleTarget
+import tv.own.owntv.mobile.trakt.TraktScrobbler
 import tv.own.owntv.mobile.ui.screens.live.LiveTuner
 import tv.own.owntv.player.MediaMeta
 import tv.own.owntv.player.MpvPlaybackEngine
@@ -99,6 +101,8 @@ class VodTuner(
     val player: OwnTVPlayer,
     /** Lets core's background catalogue drain know a playlist is in use. */
     private val watchSession: tv.own.owntv.core.live.WatchSession,
+    /** Scrobbles what plays here to Trakt, once an account is connected (Settings → Layout → Home → Trakt). */
+    private val trakt: TraktScrobbler,
 ) : CastHandoff {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
@@ -164,6 +168,7 @@ class VodTuner(
                     q.show.id,
                 )
                 playingProfileId = q.profileId
+                trakt.playing(ScrobbleTarget.Episode(q.show, episode.seasonNumber, episode.episodeNumber))
                 subtitleController.setEpisode(q.profileId, q.show, episode, q.parentTmdbId)
                 recordHistory(q.profileId, MediaType.EPISODE, episode.id)
             }
@@ -426,6 +431,8 @@ class VodTuner(
 
     /** Stop playing altogether — the mini player's close button, and nothing else. */
     fun stop() {
+        // The scrobble's final position is read now, while the engine still has it.
+        trakt.stop()
         scope.launch {
             saveProgress()
             clearPlaying()
@@ -438,6 +445,7 @@ class VodTuner(
 
     /** The television is taking the film; the phone keeps only where it had got to. */
     override fun releaseToCast(): Long {
+        trakt.stop()
         val position = player.position.value
         session.attach(null)
         player.stop()
@@ -496,7 +504,21 @@ class VodTuner(
         PlaybackService.start(context)
         playingProfileId = profileId
         _playing.value = what
+        // A cast item plays on the receiver, whose position this engine never sees: not scrobbled.
+        trakt.playing(if (onCast) null else scrobbleTarget(what))
         recordHistory(profileId, what.mediaType, what.itemId)
+    }
+
+    /** What [what] is to Trakt: the film, or the episode's show with its season and number. */
+    private suspend fun scrobbleTarget(what: VodPlayback): ScrobbleTarget? = withContext(Dispatchers.IO) {
+        when (what.mediaType) {
+            MediaType.MOVIE -> movieDao.getById(what.itemId)?.let { ScrobbleTarget.Movie(it) }
+            MediaType.EPISODE -> {
+                val episode = seriesDao.getEpisodeById(what.itemId) ?: return@withContext null
+                seriesDao.getSeriesById(episode.seriesId)?.let { ScrobbleTarget.Episode(it, episode.seasonNumber, episode.episodeNumber) }
+            }
+            else -> null
+        }
     }
 
     private suspend fun recordHistory(profileId: Long, mediaType: MediaType, itemId: Long) {
@@ -508,6 +530,7 @@ class VodTuner(
     }
 
     private fun clearPlaying() {
+        trakt.stop()
         _playing.value = null
         playingProfileId = -1L
         playingQueue = null

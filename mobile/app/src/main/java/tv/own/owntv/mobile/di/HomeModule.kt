@@ -8,6 +8,11 @@ import tv.own.owntv.mobile.mdblist.MdbListApi
 import tv.own.owntv.mobile.mdblist.MdbListRepository
 import tv.own.owntv.mobile.mdblist.MdbListSettings
 import tv.own.owntv.mobile.mdblist.MdbListSettingsViewModel
+import tv.own.owntv.mobile.trakt.TraktApi
+import tv.own.owntv.mobile.trakt.TraktRepository
+import tv.own.owntv.mobile.trakt.TraktScrobbler
+import tv.own.owntv.mobile.trakt.TraktSettings
+import tv.own.owntv.mobile.trakt.TraktSettingsViewModel
 import tv.own.owntv.mobile.ui.screens.home.HomeContentFilterSettings
 import tv.own.owntv.mobile.ui.screens.home.HomeViewModel
 import tv.own.owntv.mobile.ui.screens.home.SubscriptionExpiry
@@ -61,5 +66,27 @@ val homeModule = module {
         )
     }
     viewModelOf(::MdbListSettingsViewModel)
+    // Settings → Layout → Home → Trakt: the feature's own DataStore (TraktSettings — app-level, where the
+    // client credentials and tokens live), its client on the shared OkHttp client, the repository (login,
+    // scrobbles, the watchlist rail — see its header) and the scrobbler VodTuner reports to. Named
+    // arguments for the same reason as MDBList's.
+    single { TraktSettings(androidContext()) }
+    single { TraktApi(get()) }
+    single {
+        TraktRepository(
+            context = androidContext(),
+            settings = get(),
+            api = get(),
+            appSettings = get(),
+            sourceDao = get(),
+            movieDao = get(),
+            seriesDao = get(),
+            profileDao = get(),
+            categoryDao = get(),
+            customize = get(),
+        )
+    }
+    single { TraktScrobbler(player = get(), repo = get(), metadata = get()) }
+    viewModelOf(::TraktSettingsViewModel)
     viewModelOf(::HomeViewModel)
 }
