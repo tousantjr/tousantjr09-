@@ -219,6 +219,16 @@ class OwnTVMobileApp : Application(), androidx.work.Configuration.Provider {
                 )
             }
         }
+        // The TMDB key this build shipped with, once per install and only into an empty setting.
+        appScope.launch {
+            runCatching {
+                tv.own.owntv.mobile.ui.screens.settings.BuiltInTmdbKey.seedOnce(
+                    this@OwnTVMobileApp,
+                    org.koin.core.context.GlobalContext.get().get(),
+                    BuildConfig.TMDB_API_KEY,
+                )
+            }
+        }
     }
 
     private companion object {

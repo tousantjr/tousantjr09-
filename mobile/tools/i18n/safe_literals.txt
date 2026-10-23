@@ -504,6 +504,8 @@
 1	log	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/BackupViewModel.kt	backup target unavailable
 1	file-path	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/BackupViewModel.kt	backup-export
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/BackupViewModel.kt	backup-share
+1	preference-key	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/BuiltInTmdbKey.kt	mptv_builtin_keys
+1	preference-key	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/BuiltInTmdbKey.kt	tmdb_seeded
 1	json	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/DeleteSubtitlesPage.kt	delete-section
 1	json	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/DeleteSubtitlesPage.kt	header
 1	json	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/DeleteSubtitlesPage.kt	sections

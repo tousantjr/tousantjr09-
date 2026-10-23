@@ -141,6 +141,16 @@ class OwnTVApp : Application(), SingletonImageLoader.Factory, androidx.work.Conf
                 GlobalContext.get().get<tv.own.owntv.core.settings.SettingsRepository>().applyStageDefaults()
             }
         }
+        // The TMDB key this build shipped with, once per install and only into an empty setting.
+        appScope.launch {
+            runCatching {
+                tv.own.owntv.features.settings.BuiltInTmdbKey.seedOnce(
+                    this@OwnTVApp,
+                    GlobalContext.get().get(),
+                    BuildConfig.TMDB_API_KEY,
+                )
+            }
+        }
         // Programme reminders: a notification while no screen of the app is open (the shell's prompt
         // covers the rest). Also what creates core's ReminderManager at launch, which re-arms every
         // reminder after an update — the phone has started it this way all along.
