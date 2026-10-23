@@ -195,6 +195,8 @@ jobs:
           ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
           # The MDBList key the app ships with (Settings → Layout → Home → MDBList). Optional, the same way.
           MDBLIST_API_KEY: ${{ secrets.MDBLIST_API_KEY }}
+          # The TMDB key a fresh install starts with (BuiltInTmdbKey). Optional, the same way.
+          TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
           # The Trakt API app the app ships with (Settings → Layout → Home → Trakt). Both optional; the
           # secret stays unset for a PKCE app, which has none.
           TRAKT_CLIENT_ID: ${{ secrets.TRAKT_CLIENT_ID }}
@@ -203,6 +205,7 @@ jobs:
           chmod +x ./gradlew
           if [ -n "$ODDS_API_KEY" ]; then echo "::add-mask::$ODDS_API_KEY"; fi
           if [ -n "$MDBLIST_API_KEY" ]; then echo "::add-mask::$MDBLIST_API_KEY"; fi
+          if [ -n "$TMDB_API_KEY" ]; then echo "::add-mask::$TMDB_API_KEY"; fi
           if [ -n "$TRAKT_CLIENT_ID" ]; then echo "::add-mask::$TRAKT_CLIENT_ID"; fi
           if [ -n "$TRAKT_CLIENT_SECRET" ]; then echo "::add-mask::$TRAKT_CLIENT_SECRET"; fi
           if [ -n "$KEYSTORE_FILE" ]; then

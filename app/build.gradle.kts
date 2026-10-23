@@ -111,6 +111,16 @@ android {
             ?: ""
         buildConfigField("String", "MDBLIST_API_KEY", "\"${mdbListApiKey.replace("\\", "\\\\").replace("\"", "\\\"")}\"")
 
+        // The TMDB v3 key a fresh install starts with (Settings → Content & metadata → Get advanced TMDB info),
+        // resolved the same way: env var (how CI injects the TMDB_API_KEY secret) > Gradle property > the
+        // out-of-repo properties file > "". Seeded once per install and only into an empty field, so a typed or
+        // cleared key always wins (see BuiltInTmdbKey). Blank keeps the default metadata server, as before.
+        val tmdbApiKey = System.getenv("TMDB_API_KEY")
+            ?: providers.gradleProperty("owntv.tmdbApiKey").orNull
+            ?: localSigningProps.getProperty("owntv.tmdbApiKey")
+            ?: ""
+        buildConfigField("String", "TMDB_API_KEY", "\"${tmdbApiKey.replace("\\", "\\\\").replace("\"", "\\\"")}\"")
+
         // The Trakt API app the Trakt features (Settings → Layout → Home → Trakt) can ship with, resolved the
         // same way: env vars (how CI injects the TRAKT_CLIENT_ID / TRAKT_CLIENT_SECRET secrets) > Gradle
         // property > the out-of-repo properties file > "". The secret is optional even with an id: Trakt's
