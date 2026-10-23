@@ -19,7 +19,7 @@
     <string name="content_storage_folder_fallback">مجلد التنزيلات غير متاح الآن، لذا تُحفظ التنزيلات في مجلد MPTV الخاص حتى يعود.</string>
     <string name="local_sync_browser_body">هذا العنوان مخصص لتطبيق MPTV على جهازك الآخر. افتح المزامنة المحلية هناك واختر هذا الجهاز من القائمة.</string>
     <string name="local_sync_browser_title">المزامنة المحلية في MPTV</string>
-    <string name="local_sync_error_unreachable">تعذّر الوصول إلى هذا الجهاز. افتح عليه MPTV ← الإعدادات ← البيانات ← المزامنة المحلية وفعّل وضع المزامنة. يجب أن يكون الجهازان على نفس شبكة الواي فاي.</string>
+    <string name="local_sync_error_unreachable">تعذّر الوصول إلى هذا الجهاز. افتح عليه MPTV ← المزيد ← المزامنة المحلية وفعّل وضع المزامنة. يجب أن يكون الجهازان على نفس شبكة الواي فاي.</string>
     <string name="player_trailer_blocked_title">لا يمكن تشغيل هذا الإعلان في MPTV</string>
     <string name="recording_failed_drm">هذه القناة محمية بنظام DRM، لذا يمكن مشاهدتها لكن لا يمكن تسجيلها. الحماية من مزوّد الخدمة لديك، وليست من MPTV.</string>
     <string name="recovery_title">تعذّر على MPTV فتح قاعدة بياناته</string>
@@ -30,6 +30,8 @@
     <string name="settings_auto_frame_rate_warning_description_mobile">يعمل هذا الجهاز بنظام Android <xliff:g id="android_version">%1$s</xliff:g>. على الإصدارات الأقدم من Android 12، لا يستطيع الجهاز إخبار MPTV بمعدلات التحديث التي يمكنه التبديل إليها بسلاسة، لذا قد يؤدي تغيير معدل الإطارات إلى اسوداد الشاشة لثانية أو ثانيتين — وأحيانًا أكثر من مرة أثناء البرنامج.\n\nنوصي بترك معدل الإطارات التلقائي معطّلًا هنا. إذا كانت شاشتك تنتقل بين معدلات التحديث بسلاسة، فعّله وجرّب: يمكنك تغييره مرة أخرى في أي وقت.</string>
     <string name="settings_catchup_player_internal">مشغّل MPTV</string>
     <string name="settings_dns_toggle_description">حلّ جميع أسماء النطاقات التي يستعلم عنها MPTV عبر خادم DNS مخصص.</string>
+    <string name="settings_ffmpeg_audio_description">تشغيل: يمكن لـ ExoPlayer أيضًا فك ترميز الصوت الذي لا يملك الجهاز وحدة فك ترميز له، مثل DTS أو TrueHD أو MP2. تبقى الأولوية لوحدات فك الترميز الخاصة بالجهاز. إيقاف: يستخدم ExoPlayer وحدات فك ترميز الجهاز فقط. يفك mpv الترميز دائمًا باستخدام FFmpeg. يؤدي تغيير هذا الإعداد إلى إعادة تشغيل MPTV.</string>
+    <string name="settings_ffmpeg_audio_restart_message">تتغير وحدة فك ترميز الصوت بعد إعادة تشغيل MPTV.</string>
     <string name="settings_help_app_icon">أيقونة MPTV على الشاشة الرئيسية للتلفاز. قد يحتاج المشغّل لحظة لإظهار التغيير.</string>
     <string name="settings_help_bg_background">يعرض Stage ألوان MPTV الهادئة الخاصة. تعرض صورة صورتك الخاصة خلف كل شاشة. سادة تعبئة داكنة مسطحة.</string>
     <string name="settings_help_brand_accent">يعرض شعار MPTV في القائمة وصفحة «حول» والإعداد مثلث التشغيل بلون التمييز الذي اخترته. أما الأيقونة على الشاشة الرئيسية فتحتفظ بألوانها.</string>

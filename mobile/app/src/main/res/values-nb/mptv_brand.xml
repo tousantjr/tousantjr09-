@@ -19,7 +19,7 @@
     <string name="content_storage_folder_fallback">Nedlastingsmappen er ikke tilgjengelig akkurat nå, så nedlastinger lagres i MPTVs egen mappe til den er tilbake.</string>
     <string name="local_sync_browser_body">Denne adressen er for MPTV-appen på den andre enheten. Åpne Lokal synkronisering der og velg denne enheten fra listen.</string>
     <string name="local_sync_browser_title">MPTV lokal synkronisering</string>
-    <string name="local_sync_error_unreachable">Enheten kunne ikke nås. Åpne MPTV → Innstillinger → Data → Lokal synkronisering på den og slå på Synkroniseringsmodus. Begge enhetene må være på samme Wi-Fi.</string>
+    <string name="local_sync_error_unreachable">Enheten kunne ikke nås. Åpne MPTV → Mer → Lokal synkronisering på den og slå på Synkroniseringsmodus. Begge enhetene må være på samme Wi-Fi.</string>
     <string name="player_trailer_blocked_title">Denne traileren kan ikke spilles av i MPTV</string>
     <string name="recording_failed_drm">Denne kanalen er DRM-beskyttet, så den kan ses, men ikke tas opp. Beskyttelsen kommer fra leverandøren din, ikke fra MPTV.</string>
     <string name="recovery_title">MPTV kunne ikke åpne databasen sin</string>
@@ -30,6 +30,8 @@
     <string name="settings_auto_frame_rate_warning_description_mobile">Denne enheten kjører Android <xliff:g id="android_version">%1$s</xliff:g>. Under Android 12 kan enheten ikke fortelle MPTV hvilke oppdateringsfrekvenser den kan bytte til uten problemer, så det å endre oppdateringsfrekvensen kan føre til at skjermen blir svart i et par sekunder — noen ganger mer enn én gang under et program.\n\nVi anbefaler å la Auto bildefrekvens være av her. Hvis skjermen din bytter problemfritt, slå den på og se: du kan endre den tilbake når som helst.</string>
     <string name="settings_catchup_player_internal">MPTV-avspiller</string>
     <string name="settings_dns_toggle_description">Utfør alle domeneoppslag for MPTV via en egendefinert DNS-server.</string>
+    <string name="settings_ffmpeg_audio_description">På: ExoPlayer kan også dekode lyd som enheten ikke har dekoder for, for eksempel DTS, TrueHD eller MP2. Enhetens egne dekodere kommer fortsatt først. Av: ExoPlayer bruker bare enhetens dekodere. mpv dekoder alltid med FFmpeg. En endring starter MPTV på nytt.</string>
+    <string name="settings_ffmpeg_audio_restart_message">Lyddekoderen byttes når MPTV har startet på nytt.</string>
     <string name="settings_help_app_icon">MPTV-ikonet på TV-ens startskjerm. Det kan ta et øyeblikk før startskjermen viser endringen.</string>
     <string name="settings_help_bg_background">Stage viser MPTVs egne myke farger. Bilde viser ditt eget bilde bak hver skjerm. Ensfarget er en flat mørk flate.</string>
     <string name="settings_help_brand_accent">MPTV-logoen i menyen, Om og oppsettet viser avspillingstrekanten i aksentfargen din. Ikonet på startskjermen beholder sine egne farger.</string>

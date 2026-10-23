@@ -19,7 +19,7 @@
     <string name="content_storage_folder_fallback">നിങ്ങളുടെ ഡൗൺലോഡ് ഫോൾഡർ ഇപ്പോൾ ലഭ്യമല്ല, അതിനാൽ അത് തിരികെ വരുന്നതുവരെ ഡൗൺലോഡുകൾ MPTV-യുടെ സ്വന്തം ഫോൾഡറിൽ സംരക്ഷിക്കുന്നു.</string>
     <string name="local_sync_browser_body">ഈ വിലാസം നിങ്ങളുടെ മറ്റ് ഉപകരണത്തിലെ MPTV ആപ്പിനുള്ളതാണ്. അവിടെ ലോക്കൽ സമന്വയം തുറന്ന് പട്ടികയിൽ നിന്ന് ഈ ഉപകരണം തിരഞ്ഞെടുക്കുക.</string>
     <string name="local_sync_browser_title">MPTV ലോക്കൽ സമന്വയം</string>
-    <string name="local_sync_error_unreachable">ഈ ഉപകരണത്തിലേക്ക് എത്താനായില്ല. അതിൽ MPTV → ക്രമീകരണങ്ങൾ → ഡാറ്റ → ലോക്കൽ സമന്വയം തുറന്ന് സമന്വയ മോഡ് ഓണാക്കുക. രണ്ട് ഉപകരണങ്ങളും ഒരേ വൈ-ഫൈയിൽ ആയിരിക്കണം.</string>
+    <string name="local_sync_error_unreachable">ഈ ഉപകരണത്തിലേക്ക് എത്താനായില്ല. അതിൽ MPTV → കൂടുതൽ → ലോക്കൽ സമന്വയം തുറന്ന് സമന്വയ മോഡ് ഓണാക്കുക. രണ്ട് ഉപകരണങ്ങളും ഒരേ വൈ-ഫൈയിൽ ആയിരിക്കണം.</string>
     <string name="player_trailer_blocked_title">ഈ ട്രെയിലർ MPTV-യിൽ പ്ലേ ചെയ്യാനാകില്ല</string>
     <string name="recording_failed_drm">ഈ ചാനൽ DRM പരിരക്ഷിതമാണ്, അതിനാൽ കാണാൻ കഴിയും പക്ഷേ റെക്കോർഡ് ചെയ്യാൻ കഴിയില്ല. ഈ പരിരക്ഷ നൽകുന്നത് നിങ്ങളുടെ സേവനദാതാവാണ്, MPTV അല്ല.</string>
     <string name="recovery_title">MPTV-യ്ക്ക് അതിന്റെ ഡാറ്റാബേസ് തുറക്കാനായില്ല</string>
@@ -30,6 +30,8 @@
     <string name="settings_auto_frame_rate_warning_description_mobile">ഈ ഉപകരണം Android <xliff:g id="android_version">%1$s</xliff:g> ആണ് പ്രവർത്തിപ്പിക്കുന്നത്. Android 12-ന് താഴെ, ഏത് റിഫ്രഷ് റേറ്റുകളിലേക്ക് സുഗമമായി മാറാനാകുമെന്ന് ഉപകരണത്തിന് MPTV-യോട് പറയാൻ കഴിയില്ല. അതിനാൽ ഫ്രെയിം റേറ്റ് മാറ്റുമ്പോൾ സ്ക്രീൻ ഒരു സെക്കൻഡോ രണ്ടോ ഇരുണ്ടുപോയേക്കാം — ചിലപ്പോൾ ഒരു പ്രോഗ്രാമിനിടെ ഒന്നിലധികം തവണ.\n\nഓട്ടോ ഫ്രെയിം റേറ്റ് ഇവിടെ ഓഫ് ആക്കി വയ്ക്കാൻ ഞങ്ങൾ ശുപാർശ ചെയ്യുന്നു. നിങ്ങളുടെ സ്ക്രീൻ വൃത്തിയായി മാറുന്നുണ്ടെങ്കിൽ, അത് ഓൺ ചെയ്ത് നോക്കൂ: എപ്പോൾ വേണമെങ്കിലും നിങ്ങൾക്ക് തിരികെ മാറ്റാം.</string>
     <string name="settings_catchup_player_internal">MPTV പ്ലെയർ</string>
     <string name="settings_dns_toggle_description">എല്ലാ MPTV ഡൊമെയ്ൻ ലുക്കപ്പുകളും ഒരു ഇഷ്ടാനുസൃത DNS സെർവർ വഴി പരിഹരിക്കുക.</string>
+    <string name="settings_ffmpeg_audio_description">ഓൺ: ഉപകരണത്തിൽ ഡീകോഡർ ഇല്ലാത്ത ശബ്ദവും (ഉദാ. DTS, TrueHD, MP2) ExoPlayer-ന് ഡീകോഡ് ചെയ്യാം. ഉപകരണത്തിന്റെ സ്വന്തം ഡീകോഡറുകൾക്കാണ് ഇപ്പോഴും മുൻഗണന. ഓഫ്: ExoPlayer ഉപകരണത്തിന്റെ ഡീകോഡറുകൾ മാത്രം ഉപയോഗിക്കുന്നു. mpv എപ്പോഴും FFmpeg ഉപയോഗിച്ച് ഡീകോഡ് ചെയ്യുന്നു. ഇത് മാറ്റിയാൽ MPTV റീസ്റ്റാർട്ട് ചെയ്യും.</string>
+    <string name="settings_ffmpeg_audio_restart_message">MPTV റീസ്റ്റാർട്ട് ചെയ്ത ശേഷം ഓഡിയോ ഡീകോഡർ മാറും.</string>
     <string name="settings_help_app_icon">ടിവിയുടെ ഹോം സ്ക്രീനിലെ MPTV ഐക്കൺ. മാറ്റം കാണിക്കാൻ ലോഞ്ചറിന് അൽപസമയം എടുത്തേക്കാം.</string>
     <string name="settings_help_bg_background">Stage MPTV-യുടെ സ്വന്തം മൃദുവായ നിറങ്ങൾ കാണിക്കുന്നു. ചിത്രം ഓരോ സ്ക്രീനിനും പിന്നിൽ നിങ്ങളുടെ ചിത്രം കാണിക്കുന്നു. സാധാരണം ഒരു പരന്ന ഇരുണ്ട നിറമാണ്.</string>
     <string name="settings_help_brand_accent">മെനു, About, സജ്ജീകരണം എന്നിവിടങ്ങളിലെ MPTV ലോഗോ പ്ലേ ത്രികോണം നിങ്ങളുടെ ആക്സന്റ് നിറത്തിൽ കാണിക്കും. ഹോം സ്ക്രീനിലെ ഐക്കൺ സ്വന്തം നിറങ്ങൾ നിലനിർത്തും.</string>

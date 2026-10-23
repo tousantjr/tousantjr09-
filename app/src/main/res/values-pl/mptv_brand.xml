@@ -19,7 +19,7 @@
     <string name="content_storage_folder_fallback">Folder pobierania jest teraz niedostępny, więc pobrane pliki są zapisywane we własnym folderze MPTV, dopóki nie wróci.</string>
     <string name="local_sync_browser_body">Ten adres jest dla aplikacji MPTV na drugim urządzeniu. Otwórz tam Synchronizację lokalną i wybierz to urządzenie z listy.</string>
     <string name="local_sync_browser_title">Synchronizacja lokalna MPTV</string>
-    <string name="local_sync_error_unreachable">Nie udało się połączyć z tym urządzeniem. Otwórz na nim MPTV → Ustawienia → Dane → Synchronizacja lokalna i włącz Tryb synchronizacji. Oba urządzenia muszą być w tej samej sieci Wi-Fi.</string>
+    <string name="local_sync_error_unreachable">Nie udało się połączyć z tym urządzeniem. Otwórz na nim MPTV → Więcej → Synchronizacja lokalna i włącz Tryb synchronizacji. Oba urządzenia muszą być w tej samej sieci Wi-Fi.</string>
     <string name="player_trailer_blocked_title">Tego zwiastuna nie można odtworzyć w MPTV</string>
     <string name="recording_failed_drm">Ten kanał jest chroniony przez DRM, więc można go oglądać, ale nie nagrywać. Ochronę stosuje Twój dostawca, a nie MPTV.</string>
     <string name="recovery_title">MPTV nie mogła otworzyć swojej bazy danych</string>
@@ -30,6 +30,8 @@
     <string name="settings_auto_frame_rate_warning_description_mobile">To urządzenie działa na Androidzie <xliff:g id="android_version">%1$s</xliff:g>. Na Androidzie poniżej 12 urządzenie nie może przekazać MPTV, na które częstotliwości odświeżania może płynnie przełączać, więc zmiana częstotliwości może sprawić, że ekran zgaśnie na sekundę lub dwie — czasem więcej niż raz podczas programu.\n\nZalecamy pozostawienie tutaj automatycznej częstotliwości odświeżania wyłączonej. Jeśli ekran przełącza ją bez zakłóceń, włącz ją i zobacz: w każdej chwili możesz ją z powrotem wyłączyć.</string>
     <string name="settings_catchup_player_internal">Odtwarzacz MPTV</string>
     <string name="settings_dns_toggle_description">Wykonuj wszystkie zapytania DNS aplikacji MPTV za pośrednictwem niestandardowego serwera DNS.</string>
+    <string name="settings_ffmpeg_audio_description">Włączone: ExoPlayer może też dekodować dźwięk, dla którego urządzenie nie ma dekodera, np. DTS, TrueHD lub MP2. Własne dekodery urządzenia nadal mają pierwszeństwo. Wyłączone: ExoPlayer używa tylko dekoderów urządzenia. mpv zawsze dekoduje przez FFmpeg. Zmiana uruchamia MPTV ponownie.</string>
+    <string name="settings_ffmpeg_audio_restart_message">Dekoder dźwięku zmieni się po ponownym uruchomieniu MPTV.</string>
     <string name="settings_help_app_icon">Ikona MPTV na ekranie głównym telewizora. Launcher może potrzebować chwili, aby pokazać zmianę.</string>
     <string name="settings_help_bg_background">Stage pokazuje własne łagodne kolory MPTV. Obraz pokazuje Twój obraz za każdym ekranem. Gładkie to płaskie ciemne tło.</string>
     <string name="settings_help_brand_accent">Logo MPTV w menu, w sekcji Informacje i w konfiguracji pokazuje trójkąt odtwarzania w Twoim kolorze akcentu. Ikona na ekranie głównym zachowuje swoje kolory.</string>

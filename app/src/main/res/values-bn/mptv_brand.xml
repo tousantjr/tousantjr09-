@@ -19,7 +19,7 @@
     <string name="content_storage_folder_fallback">আপনার ডাউনলোড ফোল্ডার এখন উপলব্ধ নেই, তাই সেটি ফিরে না আসা পর্যন্ত ডাউনলোডগুলো MPTV-এর নিজস্ব ফোল্ডারে সংরক্ষিত হচ্ছে।</string>
     <string name="local_sync_browser_body">এই ঠিকানাটি আপনার অন্য ডিভাইসের MPTV অ্যাপের জন্য। সেখানে লোকাল সিঙ্ক খুলে তালিকা থেকে এই ডিভাইসটি বেছে নিন।</string>
     <string name="local_sync_browser_title">MPTV লোকাল সিঙ্ক</string>
-    <string name="local_sync_error_unreachable">এই ডিভাইসে পৌঁছানো যায়নি। সেটিতে MPTV → সেটিংস → ডেটা → লোকাল সিঙ্ক খুলে সিঙ্ক মোড চালু করুন। দুটি ডিভাইসই একই ওয়াই-ফাইতে থাকতে হবে।</string>
+    <string name="local_sync_error_unreachable">এই ডিভাইসে পৌঁছানো যায়নি। সেটিতে MPTV → আরও → লোকাল সিঙ্ক খুলে সিঙ্ক মোড চালু করুন। দুটি ডিভাইসই একই ওয়াই-ফাইতে থাকতে হবে।</string>
     <string name="player_trailer_blocked_title">এই ট্রেলারটি MPTV-তে চালানো যাবে না</string>
     <string name="recording_failed_drm">এই চ্যানেলটি DRM দ্বারা সুরক্ষিত, তাই এটি দেখা যায় কিন্তু রেকর্ড করা যায় না। এই সুরক্ষা আপনার প্রোভাইডারের দেওয়া, MPTV-র নয়।</string>
     <string name="recovery_title">MPTV এর ডেটাবেস খুলতে পারেনি</string>
@@ -30,6 +30,8 @@
     <string name="settings_auto_frame_rate_warning_description_mobile">এই ডিভাইসে Android <xliff:g id="android_version">%1$s</xliff:g> চলছে। Android 12-এর নিচে ডিভাইসটি MPTV-কে জানাতে পারে না কোন রিফ্রেশ রেটগুলোতে এটি মসৃণভাবে সুইচ করতে পারে, তাই রেট পরিবর্তন করলে স্ক্রিন এক বা দুই সেকেন্ডের জন্য কালো হয়ে যেতে পারে — কখনও কখনও একটি অনুষ্ঠানের সময় একাধিকবারও।\n\nআমরা এখানে অটো ফ্রেম রেট বন্ধ রাখার পরামর্শ দিই। আপনার স্ক্রিন যদি নির্বিঘ্নে সুইচ করে, তবে এটি চালু করে দেখুন: আপনি যেকোনো সময় আবার বন্ধ করে দিতে পারবেন।</string>
     <string name="settings_catchup_player_internal">MPTV প্লেয়ার</string>
     <string name="settings_dns_toggle_description">MPTV-এর সব ডোমেইন লুকআপ একটি কাস্টম DNS সার্ভারের মাধ্যমে রিজলভ করুন।</string>
+    <string name="settings_ffmpeg_audio_description">চালু: যে শব্দের জন্য ডিভাইসে কোনো ডিকোডার নেই, যেমন DTS, TrueHD বা MP2, ExoPlayer তাও ডিকোড করতে পারে। ডিভাইসের নিজস্ব ডিকোডারই আগে ব্যবহার হয়। বন্ধ: ExoPlayer শুধু ডিভাইসের ডিকোডার ব্যবহার করে। mpv সবসময় FFmpeg দিয়ে ডিকোড করে। এটি বদলালে MPTV রিস্টার্ট হয়।</string>
+    <string name="settings_ffmpeg_audio_restart_message">MPTV রিস্টার্ট হওয়ার পর অডিও ডিকোডার বদলাবে।</string>
     <string name="settings_help_app_icon">টিভির হোম স্ক্রিনে MPTV-এর আইকন। পরিবর্তন দেখাতে লঞ্চারের একটু সময় লাগতে পারে।</string>
     <string name="settings_help_bg_background">Stage MPTV-এর নিজস্ব কোমল রং দেখায়। ছবি প্রতিটি স্ক্রিনের পেছনে আপনার নিজের ছবি দেখায়। সাধারণ হলো সমতল গাঢ় রং।</string>
     <string name="settings_help_brand_accent">মেনু, About ও সেটআপে MPTV লোগোর প্লে ত্রিভুজ আপনার অ্যাকসেন্ট রঙে দেখায়। হোম স্ক্রিনের আইকন নিজের রঙ রাখে।</string>

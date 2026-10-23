@@ -19,7 +19,7 @@
     <string name="content_storage_folder_fallback">İndirme klasörünüz şu anda kullanılamıyor; geri gelene kadar indirmeler MPTV\'nin kendi klasörüne kaydediliyor.</string>
     <string name="local_sync_browser_body">Bu adres, diğer cihazınızdaki MPTV uygulaması içindir. Orada Yerel eşitlemeyi açın ve listeden bu cihazı seçin.</string>
     <string name="local_sync_browser_title">MPTV yerel eşitleme</string>
-    <string name="local_sync_error_unreachable">Bu cihaza ulaşılamadı. O cihazda MPTV → Ayarlar → Veriler → Yerel eşitleme yolunu açıp Eşitleme modunu açın. Her iki cihaz da aynı Wi-Fi ağında olmalıdır.</string>
+    <string name="local_sync_error_unreachable">Bu cihaza ulaşılamadı. O cihazda MPTV → Daha fazla → Yerel eşitleme yolunu açıp Eşitleme modunu açın. Her iki cihaz da aynı Wi-Fi ağında olmalıdır.</string>
     <string name="player_trailer_blocked_title">Bu fragman MPTV’de oynatılamıyor</string>
     <string name="recording_failed_drm">Bu kanal DRM korumalı olduğundan izlenebilir ancak kaydedilemez. Bu koruma MPTV\'den değil, sağlayıcınızdan geliyor.</string>
     <string name="recovery_title">MPTV veritabanını açamadı</string>
@@ -30,6 +30,8 @@
     <string name="settings_auto_frame_rate_warning_description_mobile">Bu cihaz Android <xliff:g id="android_version">%1$s</xliff:g> sürümüyle çalışıyor. Android 12\'den önceki sürümlerde cihaz, MPTV\'ye hangi yenileme hızlarına sorunsuz geçebileceğini bildiremez; bu yüzden hızı değiştirmek ekranın bir iki saniyeliğine kararmasına neden olabilir — bazen bir program sırasında birden fazla kez.\n\nBurada otomatik yenileme hızını kapalı bırakmanızı öneririz. Ekranınız sorunsuz geçiş yapıyorsa açıp deneyin: istediğiniz zaman geri değiştirebilirsiniz.</string>
     <string name="settings_catchup_player_internal">MPTV oynatıcı</string>
     <string name="settings_dns_toggle_description">Tüm MPTV alan adı sorguları özel bir DNS sunucusu üzerinden çözümlenir.</string>
+    <string name="settings_ffmpeg_audio_description">Açık: ExoPlayer, cihazın kod çözücüsü olmayan sesleri de (ör. DTS, TrueHD veya MP2) çözebilir. Cihazın kendi kod çözücüleri yine önceliklidir. Kapalı: ExoPlayer yalnızca cihazın kod çözücülerini kullanır. mpv her zaman FFmpeg ile çözer. Değiştirmek MPTV uygulamasını yeniden başlatır.</string>
+    <string name="settings_ffmpeg_audio_restart_message">Ses kod çözücüsü MPTV yeniden başladıktan sonra değişir.</string>
     <string name="settings_help_app_icon">TV’nizin ana ekranındaki MPTV simgesi. Başlatıcının değişikliği göstermesi biraz sürebilir.</string>
     <string name="settings_help_bg_background">Stage, MPTV’nin kendi yumuşak renklerini gösterir. Resim, kendi resminizi her ekranın arkasında gösterir. Düz, koyu ve düz bir dolgudur.</string>
     <string name="settings_help_brand_accent">Menüdeki, Hakkında bölümündeki ve kurulumdaki MPTV logosu oynat üçgenini vurgu renginizde gösterir. Ana ekrandaki simge kendi renklerini korur.</string>

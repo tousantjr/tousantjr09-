@@ -19,7 +19,7 @@
     <string name="content_storage_folder_fallback">A letöltési mappa most nem érhető el, ezért a letöltések az MPTV saját mappájába kerülnek, amíg vissza nem tér.</string>
     <string name="local_sync_browser_body">Ez a cím a másik eszközén futó MPTV alkalmazásnak szól. Nyissa meg ott a Helyi szinkronizálást, és válassza ki ezt az eszközt a listából.</string>
     <string name="local_sync_browser_title">MPTV helyi szinkronizálás</string>
-    <string name="local_sync_error_unreachable">Ez az eszköz nem érhető el. Nyissa meg rajta az MPTV → Beállítások → Adatok → Helyi szinkronizálás menüpontot, és kapcsolja be a Szinkronizálási módot. Mindkét eszköznek ugyanazon a Wi-Fi-n kell lennie.</string>
+    <string name="local_sync_error_unreachable">Ez az eszköz nem érhető el. Nyissa meg rajta az MPTV → Továbbiak → Helyi szinkronizálás menüpontot, és kapcsolja be a Szinkronizálási módot. Mindkét eszköznek ugyanazon a Wi-Fi-n kell lennie.</string>
     <string name="player_trailer_blocked_title">Ez az előzetes nem játszható le az MPTV-ben</string>
     <string name="recording_failed_drm">Ez a csatorna DRM-védett, ezért megnézhető, de nem rögzíthető. A védelmet a szolgáltatója alkalmazza, nem az MPTV.</string>
     <string name="recovery_title">Az MPTV nem tudta megnyitni az adatbázisát</string>
@@ -30,6 +30,8 @@
     <string name="settings_auto_frame_rate_warning_description_mobile">Ezen az eszközön Android <xliff:g id="android_version">%1$s</xliff:g> fut. Android 12 alatt az eszköz nem tudja megmondani az MPTV-nek, mely frissítési frekvenciákra tud zökkenőmentesen váltani, ezért a frekvenciaváltás egy-két másodpercre elsötétítheti a képet — néha egy műsor alatt többször is.\n\nAzt javasoljuk, hagyd itt kikapcsolva az automatikus képkockasebességet. Ha a kijelződ tisztán vált, kapcsold be, és próbáld ki: bármikor visszaállíthatod.</string>
     <string name="settings_catchup_player_internal">MPTV lejátszó</string>
     <string name="settings_dns_toggle_description">Az MPTV összes domainfeloldása egyéni DNS-kiszolgálón keresztül történjen.</string>
+    <string name="settings_ffmpeg_audio_description">Be: az ExoPlayer olyan hangot is dekódolhat, amelyhez az eszköznek nincs dekódere, például DTS, TrueHD vagy MP2. Az eszköz saját dekóderei továbbra is elsőbbséget élveznek. Ki: az ExoPlayer csak az eszköz dekódereit használja. Az mpv mindig FFmpeggel dekódol. A módosítás újraindítja az MPTV-t.</string>
+    <string name="settings_ffmpeg_audio_restart_message">A hangdekóder az MPTV újraindítása után vált.</string>
     <string name="settings_help_app_icon">Az MPTV ikonja a tévé kezdőképernyőjén. Az indítónak eltarthat egy pillanatig, mire megjeleníti a változást.</string>
     <string name="settings_help_bg_background">A Stage az MPTV saját lágy színeit mutatja. A Kép a saját képedet mutatja minden képernyő mögött. Az Egyszerű sima sötét kitöltés.</string>
     <string name="settings_help_brand_accent">Az MPTV logó a menüben, a Névjegyben és a beállításban a kiemelőszínedben mutatja a lejátszás-háromszöget. A kezdőképernyő ikonja megtartja a saját színeit.</string>

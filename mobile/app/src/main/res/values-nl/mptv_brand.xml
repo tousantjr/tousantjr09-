@@ -19,7 +19,7 @@
     <string name="content_storage_folder_fallback">Je downloadmap is nu niet beschikbaar, dus downloads worden in de eigen map van MPTV opgeslagen tot hij terug is.</string>
     <string name="local_sync_browser_body">Dit adres is bedoeld voor de MPTV-app op je andere apparaat. Open daar Lokaal synchroniseren en kies dit apparaat uit de lijst.</string>
     <string name="local_sync_browser_title">MPTV lokaal synchroniseren</string>
-    <string name="local_sync_error_unreachable">Dit apparaat was niet bereikbaar. Open daarop MPTV → Instellingen → Gegevens → Lokaal synchroniseren en zet Synchronisatiemodus aan. Beide apparaten moeten op hetzelfde wifinetwerk zitten.</string>
+    <string name="local_sync_error_unreachable">Dit apparaat was niet bereikbaar. Open daarop MPTV → Meer → Lokaal synchroniseren en zet Synchronisatiemodus aan. Beide apparaten moeten op hetzelfde wifinetwerk zitten.</string>
     <string name="player_trailer_blocked_title">Deze trailer kan niet in MPTV worden afgespeeld</string>
     <string name="recording_failed_drm">Dit kanaal is DRM-beveiligd en kan daarom wel worden bekeken, maar niet opgenomen. De beveiliging komt van je provider, niet van MPTV.</string>
     <string name="recovery_title">MPTV kon de database niet openen</string>
@@ -30,6 +30,8 @@
     <string name="settings_auto_frame_rate_warning_description_mobile">Dit apparaat draait op Android <xliff:g id="android_version">%1$s</xliff:g>. Onder Android 12 kan het apparaat MPTV niet vertellen naar welke verversingsfrequenties het soepel kan overschakelen, dus het wijzigen van de frequentie kan het scherm een seconde of twee zwart maken — soms meerdere keren tijdens een programma.\n\nWe raden aan om Automatische framesnelheid hier uit te laten staan. Als je scherm probleemloos overschakelt, zet je hem aan en kijk je: je kunt hem op elk moment weer uitzetten.</string>
     <string name="settings_catchup_player_internal">MPTV-speler</string>
     <string name="settings_dns_toggle_description">Alle domeinnamen die MPTV opzoekt via een aangepaste DNS-server laten omzetten.</string>
+    <string name="settings_ffmpeg_audio_description">Aan: ExoPlayer kan ook geluid decoderen waarvoor het apparaat geen decoder heeft, zoals DTS, TrueHD of MP2. De eigen decoders van het apparaat gaan nog steeds voor. Uit: ExoPlayer gebruikt alleen de decoders van het apparaat. mpv decodeert altijd met FFmpeg. Wijzigen herstart MPTV.</string>
+    <string name="settings_ffmpeg_audio_restart_message">De audiodecoder wisselt nadat MPTV opnieuw is gestart.</string>
     <string name="settings_help_app_icon">Het MPTV-pictogram op het startscherm van je tv. Het kan even duren voordat de launcher de wijziging toont.</string>
     <string name="settings_help_bg_background">Stage toont de eigen zachte kleuren van MPTV. Afbeelding toont een eigen afbeelding achter elk scherm. Effen is een vlakke donkere vulling.</string>
     <string name="settings_help_brand_accent">Het MPTV-logo in het menu, Over en de installatie toont de afspeeldriehoek in je accentkleur. Het pictogram op het startscherm houdt zijn eigen kleuren.</string>

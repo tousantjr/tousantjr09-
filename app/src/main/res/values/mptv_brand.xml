@@ -19,7 +19,7 @@
     <string name="content_storage_folder_fallback">Your download folder isn\'t available right now, so downloads are being saved to MPTV\'s own folder until it\'s back.</string>
     <string name="local_sync_browser_body">This address is for the MPTV app on your other device. Open Local sync there and pick this device from the list.</string>
     <string name="local_sync_browser_title">MPTV local sync</string>
-    <string name="local_sync_error_unreachable">This device could not be reached. On it, open MPTV → Settings → Data → Local sync and turn Sync mode on. Both devices must be on the same Wi-Fi.</string>
+    <string name="local_sync_error_unreachable">This device could not be reached. On it, open MPTV → More → Local sync and turn Sync mode on. Both devices must be on the same Wi-Fi.</string>
     <string name="player_trailer_blocked_title">This trailer can’t play in MPTV</string>
     <string name="recording_failed_drm">This channel is DRM-protected, so it can be watched but not recorded. The protection comes from your provider, not from MPTV.</string>
     <string name="recovery_title">MPTV could not open its database</string>
@@ -30,6 +30,8 @@
     <string name="settings_auto_frame_rate_warning_description_mobile">This device runs Android <xliff:g id="android_version">%1$s</xliff:g>. Below Android 12 the device can\'t tell MPTV which refresh rates it can switch to smoothly, so changing the rate may black the screen out for a second or two — sometimes more than once during a programme.\n\nWe recommend leaving Auto frame rate off here. If your screen switches cleanly, turn it on and see: you can change it back at any time.</string>
     <string name="settings_catchup_player_internal">MPTV player</string>
     <string name="settings_dns_toggle_description">Resolve all MPTV domain lookups through a custom DNS server.</string>
+    <string name="settings_ffmpeg_audio_description">On: ExoPlayer can also decode sound your device has no decoder for, such as DTS, TrueHD or MP2. The device\'s own decoders still come first. Off: ExoPlayer uses only the device\'s decoders. mpv always decodes with FFmpeg. Changing this restarts MPTV.</string>
+    <string name="settings_ffmpeg_audio_restart_message">The audio decoder changes after MPTV restarts.</string>
     <string name="settings_help_app_icon">The MPTV icon on your TV’s home screen. The launcher may take a moment to show the change.</string>
     <string name="settings_help_bg_background">Stage draws MPTV’s own soft colors. Picture shows a picture of yours behind every screen. Plain is a flat dark fill.</string>
     <string name="settings_help_brand_accent">The MPTV logo in the menu, About and setup shows its play triangle in your accent color. The icon on the home screen keeps its own colors.</string>

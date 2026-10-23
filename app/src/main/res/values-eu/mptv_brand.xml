@@ -19,7 +19,7 @@
     <string name="content_storage_folder_fallback">Zure deskarga-karpeta ez dago eskuragarri oraintxe, beraz deskargak MPTVren karpeta propioan gordetzen ari dira berriro eskuragarri egon arte.</string>
     <string name="local_sync_browser_body">Helbide hau zure beste gailuko MPTV aplikaziorako da. Ireki Tokiko sinkronizazioa bertan eta aukeratu gailu hau zerrendatik.</string>
     <string name="local_sync_browser_title">MPTV tokiko sinkronizazioa</string>
-    <string name="local_sync_error_unreachable">Gailu hori ezin izan da atzitu. Bertan, ireki MPTV → Ezarpenak → Datuak → Tokiko sinkronizazioa eta aktibatu Sinkronizazio modua. Bi gailuak Wi-Fi sare berean egon behar dute.</string>
+    <string name="local_sync_error_unreachable">Gailu hori ezin izan da atzitu. Bertan, ireki MPTV → Gehiago → Tokiko sinkronizazioa eta aktibatu Sinkronizazio modua. Bi gailuak Wi-Fi sare berean egon behar dute.</string>
     <string name="player_trailer_blocked_title">Trailer hau ezin da ikusi MPTV-n</string>
     <string name="recording_failed_drm">Kanal hau DRM bidez babestuta dago, beraz ikusi daiteke baina ezin da grabatu. Babesa zure hornitzailearengandik dator, ez MPTVtik.</string>
     <string name="recovery_title">MPTVk ezin izan du bere datu-basea ireki</string>
@@ -30,6 +30,8 @@
     <string name="settings_auto_frame_rate_warning_description_mobile">Gailu honek Android <xliff:g id="android_version">%1$s</xliff:g> exekutatzen du. Android 12 baino lehenagoko bertsioetan gailuak ezin dio MPTVri esan zein freskatze-maiztasunetara alda dezakeen leun, beraz maiztasuna aldatzeak pantaila segundo bat edo bi beltz utz dezake — batzuetan programa batean zehar behin baino gehiagotan.\n\nHemen Fotograma-maiztasun automatikoa desaktibatuta uztea gomendatzen dugu. Zure pantailak garbi aldatzen badu, aktibatu eta probatu: edonoiz alda dezakezu berriro.</string>
     <string name="settings_catchup_player_internal">MPTV erreproduzigailua</string>
     <string name="settings_dns_toggle_description">Ebatzi MPTVren domeinu-bilaketa guztiak DNS zerbitzari pertsonalizatu baten bidez.</string>
+    <string name="settings_ffmpeg_audio_description">Aktibatuta: ExoPlayer-ek gailuak deskodetzailerik ez duen soinua ere deskodetu dezake, adibidez DTS, TrueHD edo MP2. Gailuaren deskodetzaileek lehentasuna dute oraindik. Desaktibatuta: ExoPlayer-ek gailuaren deskodetzaileak soilik erabiltzen ditu. mpv-k beti FFmpeg bidez deskodetzen du. Aldatzean MPTV berrabiarazten da.</string>
+    <string name="settings_ffmpeg_audio_restart_message">Audio-deskodetzailea MPTV berrabiarazi ondoren aldatzen da.</string>
     <string name="settings_language_contribution_description">Eskaneatu QR kodea edo ireki esteka erabilgarri dagoen edozein hizkuntza aukeratzeko eta MPTVren sei itzulpen-osagaietan guztietan laguntzeko.</string>
     <string name="settings_language_contribution_qr_description">MPTV itzulpen-proiektuaren ikuspegi orokorraren QR kodea</string>
     <string name="settings_language_help_translate">Lagundu MPTV zure hizkuntzara itzultzen</string>

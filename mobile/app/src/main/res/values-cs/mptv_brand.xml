@@ -19,7 +19,7 @@
     <string name="content_storage_folder_fallback">Složka pro stahování teď není dostupná, takže se stahování ukládá do vlastní složky MPTV, dokud nebude zpět.</string>
     <string name="local_sync_browser_body">Tato adresa je určená pro aplikaci MPTV na druhém zařízení. Otevřete tam Místní synchronizaci a vyberte ze seznamu toto zařízení.</string>
     <string name="local_sync_browser_title">Místní synchronizace MPTV</string>
-    <string name="local_sync_error_unreachable">Toto zařízení se nepodařilo kontaktovat. Otevřete na něm MPTV → Nastavení → Data → Místní synchronizace a zapněte Režim synchronizace. Obě zařízení musí být na stejné Wi-Fi.</string>
+    <string name="local_sync_error_unreachable">Toto zařízení se nepodařilo kontaktovat. Otevřete na něm MPTV → Více → Místní synchronizace a zapněte Režim synchronizace. Obě zařízení musí být na stejné Wi-Fi.</string>
     <string name="player_trailer_blocked_title">Tento trailer nelze v MPTV přehrát</string>
     <string name="recording_failed_drm">Tento kanál je chráněný technologií DRM, takže jej lze sledovat, ale ne nahrávat. Ochranu uplatňuje váš poskytovatel, nikoli MPTV.</string>
     <string name="recovery_title">MPTV nemohla otevřít svou databázi</string>
@@ -30,6 +30,8 @@
     <string name="settings_auto_frame_rate_warning_description_mobile">Toto zařízení běží na Androidu <xliff:g id="android_version">%1$s</xliff:g>. Na Androidu nižším než 12 zařízení nedokáže MPTV sdělit, které obnovovací frekvence umí plynule přepínat, takže změna frekvence může na vteřinu nebo dvě zhasnout obrazovku – někdy i vícekrát během jednoho pořadu.\n\nDoporučujeme zde nechat automatickou snímkovou frekvenci vypnutou. Pokud vaše obrazovka přepíná bez problémů, zapněte ji a uvidíte: můžete to kdykoli změnit zpět.</string>
     <string name="settings_catchup_player_internal">Přehrávač MPTV</string>
     <string name="settings_dns_toggle_description">Všechna vyhledávání domén MPTV provádět prostřednictvím vlastního serveru DNS.</string>
+    <string name="settings_ffmpeg_audio_description">Zapnuto: ExoPlayer umí dekódovat i zvuk, pro který zařízení nemá dekodér, například DTS, TrueHD nebo MP2. Vlastní dekodéry zařízení mají stále přednost. Vypnuto: ExoPlayer používá jen dekodéry zařízení. mpv vždy dekóduje pomocí FFmpeg. Změna restartuje MPTV.</string>
+    <string name="settings_ffmpeg_audio_restart_message">Zvukový dekodér se změní po restartu MPTV.</string>
     <string name="settings_help_app_icon">Ikona MPTV na domovské obrazovce televize. Spouštěči může chvíli trvat, než změnu zobrazí.</string>
     <string name="settings_help_bg_background">Stage ukazuje vlastní jemné barvy MPTV. Obrázek ukazuje váš obrázek za každou obrazovkou. Prosté je plochá tmavá výplň.</string>
     <string name="settings_help_brand_accent">Logo MPTV v nabídce, v sekci O aplikaci a v nastavení ukazuje trojúhelník přehrávání ve vaší barvě zvýraznění. Ikona na domovské obrazovce si ponechá své barvy.</string>
