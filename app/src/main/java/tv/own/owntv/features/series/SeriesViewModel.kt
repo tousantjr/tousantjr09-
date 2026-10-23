@@ -937,21 +937,28 @@ class SeriesViewModel(
     val externalPlayerOn: StateFlow<Boolean> = settings.externalPlayerSeries
         .stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
-    /** Long-press "Play with external player" — always external, regardless of the global toggle. */
     /** Stalker episodes resolve to a real URL at play time (create_link, series=<ep>); anything else
      *  returns streamUrl as-is. Null = resolve failed — the caller should not start playback. */
     private suspend fun resolvedEpisodeUrlOrNull(episode: EpisodeEntity): String? {
         val show = seriesDao.getSeriesById(episode.seriesId)
         val source = show?.let { sourceDao.getById(it.sourceId) }
         if (!streamUrlResolver.needsResolve(source)) return episode.streamUrl
+        if (source == null) {
+            Log.w(TAG, "stalker resolve skipped: source missing episodeId=${episode.id}")
+            return null
+        }
         return try {
-            streamUrlResolver.resolve(source!!, episode.streamUrl, vod = true, episode = episode.episodeNumber)
+            streamUrlResolver.resolve(source, episode.streamUrl, vod = true, episode = episode.episodeNumber)
+        } catch (c: kotlinx.coroutines.CancellationException) {
+            // Never swallow cancellation: the caller's scope is gone, so playback must not proceed.
+            throw c
         } catch (e: Exception) {
             Log.w(TAG, "stalker resolve failed episodeId=${episode.id}", e)
             null
         }
     }
 
+    /** Long-press "Play with external player" — always external, regardless of the global toggle. */
     fun playEpisodeExternal(episode: EpisodeEntity) {
         _lastPlayedEpisodeId.value = episode.id
         viewModelScope.launch {

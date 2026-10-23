@@ -6,7 +6,7 @@ agp = "9.4.0"
 kotlin = "2.4.20"
 
 # --- AndroidX / Jetpack ---
-coreKtx = "1.19.0"
+coreKtx = "1.19.1"
 splashscreen = "1.2.0"
 activityCompose = "1.13.0"
 composeBom = "2026.09.00"
@@ -14,7 +14,7 @@ composeBom = "2026.09.00"
 # the one dependency here that the TV catalog does not carry. Versioned separately from the BOM.
 adaptive = "1.3.0"
 lifecycle = "2.11.0"
-navigationCompose = "2.10.1"
+navigationCompose = "2.10.2"
 work = "2.11.2"
 # Home's "Hide adult categories" toggle (HomeContentFilterSettings): an app-level flag that cannot
 # live in :core's compiled SettingsRepository. Matches the TV app's own pin.
@@ -25,7 +25,7 @@ datastore = "1.2.1"
 room = "2.8.5"
 
 # --- Paging ---
-paging = "3.5.1"
+paging = "3.5.3"
 # Correct squircle maths for the Aurora glass. Hand-rolled continuous curvature looks wrong at
 # small radii, and this is the supported implementation of it.
 graphicsShapes = "1.1.0"
@@ -34,7 +34,7 @@ graphicsShapes = "1.1.0"
 coroutines = "1.11.0"
 
 # --- Third party ---
-coil = "3.6.2"
+coil = "3.6.3"
 # Media3 — only the subtitle view. The player itself is core's; this app draws the image
 # subtitles (PGS/VOBSUB/DVB) the engine hands to ExoPlayer, and nothing else from media3.
 media3 = "1.11.1"

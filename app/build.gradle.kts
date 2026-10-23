@@ -39,7 +39,12 @@ android {
     // the repo. Gradle only reads gradle.properties from GRADLE_USER_HOME or the project dir, so this
     // one is loaded by hand. Declared here because defaultConfig below already needs it.
     val localSigningProps = Properties().apply {
-        val f = File("E:/MEGA/CODE/OwnTV_Gradle/owntv-signing.properties")
+        // Location is overridable (env OWNTV_SIGNING_PROPS or Gradle property owntv.signingProps) so
+        // non-Windows machines and other checkouts can use it too; the original path stays the default.
+        val path = System.getenv("OWNTV_SIGNING_PROPS")
+            ?: providers.gradleProperty("owntv.signingProps").orNull
+            ?: "E:/MEGA/CODE/OwnTV_Gradle/owntv-signing.properties"
+        val f = File(path)
         if (f.isFile) f.inputStream().use { load(it) }
     }
 

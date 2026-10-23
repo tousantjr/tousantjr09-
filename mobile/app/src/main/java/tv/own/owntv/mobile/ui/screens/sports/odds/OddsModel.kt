@@ -93,8 +93,9 @@ object ImpliedProbability {
         // Rounding can leave 99 or 101: push the difference onto the largest side.
         val off = 100 - pct.filterNotNull().sum()
         val fixed = if (off == 0) pct else {
-            val big = pct.indices.filter { pct[it] != null }.maxByOrNull { pct[it]!! }!!
-            pct.mapIndexed { i, v -> if (i == big) v!! + off else v }
+            // At least two sides are non-null here (checked above), so a largest side always exists.
+            val big = pct.withIndex().filter { it.value != null }.maxByOrNull { it.value ?: Int.MIN_VALUE }?.index
+            pct.mapIndexed { i, v -> if (i == big && v != null) v + off else v }
         }
         return Triple(fixed[0], fixed[1], fixed[2])
     }

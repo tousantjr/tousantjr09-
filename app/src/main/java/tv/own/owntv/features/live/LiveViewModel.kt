@@ -1353,10 +1353,16 @@ class LiveViewModel(
             if (!tv.own.owntv.core.content.AdultCategoryClassifier.allows(pid, channel.categoryId, profileDao, categoryDao)) return@launch
             val source = withContext(Dispatchers.IO) { sourceDao.getById(channel.sourceId) }
             val url = if (streamUrlResolver.needsResolve(source)) {
+                if (source == null) return@launch
                 withContext(Dispatchers.IO) {
-                    runCatching { streamUrlResolver.resolve(source!!, channel.streamUrl) }
-                        .onFailure { Log.w(TAG, "stalker resolve failed channelId=${channel.id}", it) }
-                        .getOrNull()
+                    try {
+                        streamUrlResolver.resolve(source, channel.streamUrl)
+                    } catch (c: kotlinx.coroutines.CancellationException) {
+                        throw c
+                    } catch (e: Exception) {
+                        Log.w(TAG, "stalker resolve failed channelId=${channel.id}", e)
+                        null
+                    }
                 } ?: return@launch
             } else {
                 channel.streamUrl
