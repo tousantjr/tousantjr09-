@@ -7,6 +7,59 @@
 > Issue numbers that are part of a title are fine; explanatory parentheticals are not. The detail —
 > what, why, files and verification — belongs in the commit message, never here.
 
+## v1.0.14 — 2026-10-23
+
+### ✨ New features
+- **▶️ The Home trailer plays by itself, on by default**
+
+## v1.0.13 — 2026-10-21
+
+### ✨ New features
+- **⏯️ Resume where another device paused, through Trakt**
+- **📺 Up next row on Home: your next episodes, from Trakt**
+- **⏭️ One press switches to the score ticker's game**
+- **🟢 Channel reliability: dots on channel rows, reliable channels ranked first**
+- **🧹 Channel sweep in Diagnostics: find and hide dead channels**
+
+## v1.0.12 — 2026-10-21
+
+### ✨ New features
+- **📊 Bookmaker comparison: DraftKings, FanDuel, BetMGM and Caesars side by side**
+- **🔔 Kick-off and goal alerts when MPTV is closed**
+- **📅 Game-day heads-up: your teams' games, once a day**
+- **🏈 Score ticker in the player for your other live games**
+- **🎞️ Trakt: sign in with a code, scrobbling, watchlist row on Home**
+- **🧩 MDBList rows matched by TMDB and IMDb id**
+
+### 🐛 Fixes
+- **Hidden titles stay out of MDBList rows**
+- **Diagnostics status pill no longer overflows**
+
+## v1.0.11 — 2026-10-21
+
+### ✨ New features
+- **💰 Betting odds on the match page and the Home game card, from ESPN or The Odds API**
+- **🎬 MDBList curated rows on Home**
+- **⭐ IMDb, Rotten Tomatoes, Metacritic and Letterboxd ratings on movie and series pages**
+
+## v1.0.10 — 2026-10-20
+
+### ✨ New features
+- **⏳ Subscription expiry warning on Home**
+- **🔒 Connection limit message in the player**
+- **🏟️ Tonight's game on Home, with Find channels and Remind me**
+- **🎞️ Trailer autoplay in the Home trending card**
+- **🩺 Diagnostic Center: checks, speed test, re-sync, quick fixes, report and Check for updates**
+- **🅜 MPTV logo and marks throughout**
+
+## v1.0.9 — 2026-10-20
+
+### ✨ New features
+- **🅜 MPTV branding**
+
+### 🐛 Fixes
+- **Recording removed**
+
 ## v5.2.0 — 2026-10-17
 
 ### ✨ New features

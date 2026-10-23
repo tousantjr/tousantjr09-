@@ -7,6 +7,56 @@
 > Issue numbers that are part of a title are fine; explanatory parentheticals are not. The detail —
 > what, why, files and verification — belongs in the commit message, never here.
 
+## v1.1.6 — 2026-10-21
+
+### New features
+- **⏯️ Resume where another device paused, through Trakt**
+- **📺 Up next row on Home: your next episodes, from Trakt**
+- **⏭️ Tap the score ticker to switch to that game**
+- **🟢 Channel reliability: dots on channel rows, reliable channels ranked first**
+- **🧹 Channel sweep in Diagnostics: find and hide dead channels**
+
+## v1.1.5 — 2026-10-21
+
+### New features
+- **📊 Bookmaker comparison: DraftKings, FanDuel, BetMGM and Caesars side by side**
+- **📅 Game-day heads-up: your teams' games, once a day**
+- **🏈 Score ticker in the player for your other live games**
+- **🎞️ Trakt: sign in with a code, scrobbling, watchlist row on Home**
+- **🧩 MDBList rows matched by TMDB and IMDb id**
+
+### Fixes
+- **Hidden titles stay out of MDBList rows**
+
+## v1.1.4 — 2026-10-21
+
+### New features
+- **💰 Betting odds on the match page and the Home game card, from ESPN or The Odds API**
+- **🎬 MDBList curated rows on Home**
+- **⭐ IMDb, Rotten Tomatoes, Metacritic and Letterboxd ratings on movie and series pages**
+
+## v1.1.3 — 2026-10-20
+
+### New features
+- **⏳ Subscription expiry card on Home and a notification before it runs out**
+- **🔒 Connection limit message in the player**
+- **🏟️ Tonight's game on Home, with Find channels and Remind me**
+- **🩺 Diagnostic Center: checks, speed test, re-sync, quick fixes, report and Check for updates**
+- **🅜 MPTV logo and marks throughout**
+
+## v1.1.2 — 2026-10-20
+
+### New features
+- **🔗 Permanent download link and Downloader code for the newest phone release**
+
+## v1.1.1 — 2026-10-20
+
+### New features
+- **🅜 MPTV branding**
+
+### Fixes
+- **Recording removed**
+
 ## v1.1.0 — 2026-10-17
 
 ### New features
