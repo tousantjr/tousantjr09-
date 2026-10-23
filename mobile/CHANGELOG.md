@@ -7,6 +7,23 @@
 > Issue numbers that are part of a title are fine; explanatory parentheticals are not. The detail —
 > what, why, files and verification — belongs in the commit message, never here.
 
+## v1.1.7 — 2026-10-23
+
+### New features
+- **🏆 54 more sports leagues, with volleyball and lacrosse**
+- **📅 Sports calendar: every followed league's month, saved on the device**
+- **🏁 Driver, constructor and tennis rankings**
+- **👕 Team pages: fixtures and results, cups included**
+- **🗂️ League cards: leader and next match**
+- **✏️ Edit a playlist's details after adding it**
+- **🔢 Pick a channel's position in a list**
+- **↔️ Right-to-left layouts on tablets**
+- **🎚️ FFmpeg audio for ExoPlayer, as a switch**
+- **🌗 Prefer SDR when a stream offers both**
+
+### Fixes
+- **Playback fixes from OwnTV Mobile 1.1.1 and core 1.0.69**
+
 ## v1.1.6 — 2026-10-21
 
 ### New features
