@@ -58,7 +58,7 @@ jobs:
 
       - name: Fetch base branch
         if: ${{ github.event_name == 'pull_request' }}
-        run: git fetch --no-tags --depth=1 origin "${GITHUB_BASE_REF}"
+        run: git fetch --no-tags origin "${GITHUB_BASE_REF}"
 
       - name: Hardcoded-literal ratchet
         env:
