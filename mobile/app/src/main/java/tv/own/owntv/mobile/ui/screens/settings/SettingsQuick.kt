@@ -25,9 +25,9 @@ class QuickToggle(
 val QUICK_TOGGLES: List<QuickToggle> = listOf(
     QuickToggle(
         "quick_hdr",
-        R.string.settings_quick_hdr,
-        { it.hdrEnabled },
-        { setHdrEnabled(it) },
+        R.string.settings_quick_prefer_sdr,
+        { it.preferSdr },
+        { setPreferSdr(it) },
         default = true,
     ),
     QuickToggle(
@@ -54,9 +54,9 @@ val QUICK_TOGGLES: List<QuickToggle> = listOf(
     ),
     QuickToggle(
         "vp_hdr",
-        R.string.settings_quick_hdr,
-        { it.hdrEnabled },
-        { setHdrEnabled(it) },
+        R.string.settings_quick_prefer_sdr,
+        { it.preferSdr },
+        { setPreferSdr(it) },
         default = true,
     ),
     QuickToggle(

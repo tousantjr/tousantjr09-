@@ -56,6 +56,25 @@
 
 ### Fixes
 - **Recording removed**
+## OwnTV Mobile v1.1.1 — 2026-10-21
+
+### New features
+- **🎧 Audio delay for each output: Bluetooth, speakers, headphones, HDMI**
+- **🎚️ FFmpeg audio for ExoPlayer, as a switch (off by default)**
+- **🌗 Prefer SDR when a stream offers both (replaces the HDR switch)**
+- **💡 A hint to try MPV when a live channel keeps dropping frames**
+
+### Fixes
+- **Playlists can be edited again**
+- **Back from a film or series returns to the same place in the list**
+- **Tablets in Arabic and other right-to-left languages: the side menu and the page's buttons respond to touch again**
+- **Each playlist keeps its own category order**
+- **A re-sync with many custom-category items finishes, instead of locking the database**
+- **Live H.264 channels no longer freeze or drop frames on some devices**
+- **Auto frame rate tells 59.94, 29.97 and 23.976 from 60, 30 and 24, also for films that do not state theirs**
+- **H.264 catch-up stays on hardware decoding on mpv**
+- **"Learned stream fixes" removed: catch-up no longer stays on software decoding for two weeks**
+- **No sound or picture left playing under a live error screen**
 
 ## v1.1.0 — 2026-10-17
 
