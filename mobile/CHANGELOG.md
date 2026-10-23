@@ -7,6 +7,11 @@
 > Issue numbers that are part of a title are fine; explanatory parentheticals are not. The detail —
 > what, why, files and verification — belongs in the commit message, never here.
 
+## v1.1.8 — 2026-10-23
+
+### New features
+- **🎬 Built-in TMDB key: posters, plots and ratings work out of the box**
+
 ## v1.1.7 — 2026-10-23
 
 ### New features
