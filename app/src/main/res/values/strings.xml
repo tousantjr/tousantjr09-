@@ -182,7 +182,7 @@
     <!-- Settings → Layout → Home: the focused Trending title's trailer plays, muted, inside the hero
          after a short dwell (TrendingTrailerPreview). App-level, its own DataStore (HomeTrailerSettings). -->
     <string name="settings_home_play_trailers">Play trailers on Home</string>
-    <string name="settings_home_play_trailers_description">Play the focused title\'s trailer, muted, in the Home hero after a moment</string>
+    <string name="settings_home_play_trailers_description">Play the Trending title\'s trailer, muted, in the Home hero as soon as it appears</string>
 
     <!-- Settings → Diagnostics, the Diagnostic Center (DiagnosticsScreen / DiagnosticsViewModel):
          fixes under the checks (re-sync a playlist or the guide, switch the Movies & Series engine),

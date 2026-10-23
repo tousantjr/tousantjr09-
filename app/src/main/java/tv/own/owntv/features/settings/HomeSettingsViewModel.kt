@@ -50,9 +50,9 @@ class HomeSettingsViewModel(
         viewModelScope.launch { homeContentFilter.setHideAdultCategories(hidden) }
     }
 
-    /** "Play trailers on Home": the focused Trending title's trailer, muted, in the hero. Off by default on a low-RAM box. */
-    val playTrailersOnHome: StateFlow<Boolean> = homeTrailers.playTrailers(settings.heroPreviewDefault)
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), settings.heroPreviewDefault)
+    /** "Play trailers on Home": the Trending hero's trailer, muted, as soon as Home shows it. On by default. */
+    val playTrailersOnHome: StateFlow<Boolean> = homeTrailers.playTrailers(HomeTrailerSettings.DEFAULT)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeTrailerSettings.DEFAULT)
 
     fun setPlayTrailersOnHome(enabled: Boolean) {
         viewModelScope.launch { homeTrailers.setPlayTrailers(enabled) }

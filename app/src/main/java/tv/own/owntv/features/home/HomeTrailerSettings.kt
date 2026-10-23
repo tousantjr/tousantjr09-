@@ -10,17 +10,22 @@ import kotlinx.coroutines.flow.map
 private val Context.homeTrailerDataStore by preferencesDataStore(name = "home_trailers")
 
 /**
- * App-level toggle for Home's Trending hero: whether the focused title's trailer plays, muted, inside
- * the hero's backdrop after a short dwell (see [TrendingTrailerPreview]).
+ * App-level toggle for Home's Trending hero: whether the shown title's trailer plays, muted, inside
+ * the hero's backdrop as soon as the hero has settled (see [TrendingTrailerPreview]).
  *
  * Its own tiny DataStore for the same reason as [HomeContentFilterSettings]: `:core`'s
- * `SettingsRepository` ships compiled and cannot gain a preference from app code. The default follows
- * core's own hero-preview default (off on a low-RAM device): a muted WebView video costs about what the
- * live hero preview does, so the two should be switched on for the same boxes.
+ * `SettingsRepository` ships compiled and cannot gain a preference from app code. On by default on
+ * every box ([DEFAULT]): the trailer is the hero's point, and a muted video at a fraction of the
+ * screen has been fine on the sticks tried; the switch stays for anyone who finds Home less smooth.
  */
 class HomeTrailerSettings(private val context: Context) {
     private object Keys {
         val PLAY_TRAILERS = booleanPreferencesKey("play_trailers_on_home")
+    }
+
+    companion object {
+        /** Trailers play unless the user switches them off. */
+        const val DEFAULT = true
     }
 
     fun playTrailers(default: Boolean): Flow<Boolean> = context.homeTrailerDataStore.data

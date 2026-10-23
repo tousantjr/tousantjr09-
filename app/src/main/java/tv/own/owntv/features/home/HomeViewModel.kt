@@ -151,9 +151,9 @@ class HomeViewModel(
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
-    /** Settings › Layout › Home › Play trailers on Home: the focused Trending title's trailer in the hero. */
-    val trailersOnHome: StateFlow<Boolean> = homeTrailers.playTrailers(settings.heroPreviewDefault)
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
+    /** Settings › Layout › Home › Play trailers on Home: the Trending hero's trailer, on unless switched off. */
+    val trailersOnHome: StateFlow<Boolean> = homeTrailers.playTrailers(HomeTrailerSettings.DEFAULT)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeTrailerSettings.DEFAULT)
 
     /** Bumped after each Home load, so the curated rails re-match against a catalog a sync may just have changed. */
     private val railsRefresh = MutableStateFlow(0)

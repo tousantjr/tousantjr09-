@@ -130,8 +130,8 @@ private val CompactHeroHeight = 228.mpx - RowGap
 /** Where the rows start when there is no hero: just below the top-right cluster. */
 private val NoHeroTop = 110.mpx
 
-/** How long the Trending hero must hold focus before its title's trailer starts (TrendingTrailerPreview). */
-private const val TRAILER_DWELL_MS = 2_500L
+/** How long the Trending hero must sit unfolded on screen before its title's trailer starts (TrendingTrailerPreview). */
+private const val TRAILER_DWELL_MS = 1_000L
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -372,12 +372,13 @@ fun HomeScreen(
         ?.takeIf { fullBleed && state.trendingItems.size >= TrendingDao.MIN_ELIGIBLE_ITEMS }
     val posterItem = state.trendingItems.getOrNull(posterIndex)
 
-    // Dwell-to-trailer: the focused Trending title's trailer, muted, in the hero after 2.5 s of
-    // uninterrupted focus — the same idea as the Keep watching dwell, so a D-pad sweep through the hero
-    // never starts a WebView. Anything that takes the hero away ends it: focus into the rows, the pager
-    // moving to another title, the full-screen trailer or Details opening, the setting going off.
+    // Settle-to-trailer: the shown Trending title's trailer, muted, in the hero once the hero has sat
+    // unfolded for a second — whether or not focus is on it, so Home plays it by itself on arrival; the
+    // short settle still keeps a pager sweep from starting a WebView per title. Anything that takes the
+    // hero away ends it: focus into the rows (the hero folds), the pager moving to another title, the
+    // full-screen trailer or Details opening, the setting going off.
     val trailerCandidate = trendingItem?.takeIf {
-        trailersOnHome && fullBleed && heroFocused.value && !inRows && trailerVideoKey == null &&
+        trailersOnHome && fullBleed && !inRows && trailerVideoKey == null &&
             detailsItem == null && !it.snapshot.trailerKey.isNullOrBlank() && it.stableKey != trailerPreviewEnded
     }
     LaunchedEffect(trailerCandidate?.stableKey) {
