@@ -51,8 +51,8 @@ class HomeSettingsViewModel(
     }
 
     /** "Play trailers on Home": the Trending hero's trailer, muted, as soon as Home shows it. On by default. */
-    val playTrailersOnHome: StateFlow<Boolean> = homeTrailers.playTrailers(HomeTrailerSettings.DEFAULT)
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeTrailerSettings.DEFAULT)
+    val playTrailersOnHome: StateFlow<Boolean> = homeTrailers.playTrailers(tv.own.owntv.features.home.HomeTrailerSettings.DEFAULT)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), tv.own.owntv.features.home.HomeTrailerSettings.DEFAULT)
 
     fun setPlayTrailersOnHome(enabled: Boolean) {
         viewModelScope.launch { homeTrailers.setPlayTrailers(enabled) }
