@@ -257,6 +257,8 @@ open class MainActivity : FragmentActivity() {
             intent.removeExtra(tv.own.owntv.core.sports.MatchNotifications.EXTRA_MATCH_KEY)
             org.koin.core.context.GlobalContext.get().get<tv.own.owntv.mobile.ui.screens.sports.SportsPlayback>().openMatchKey.value = key
         }
+        // "MPTV vX is ready — tap to install": straight on to the APK download.
+        tv.own.owntv.mobile.update.UpdateNotifier.handleTap(this, intent)
     }
 
     /**

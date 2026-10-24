@@ -331,6 +331,12 @@
     <string name="sports_game_day_time">Heads-up time</string>
     <string name="sports_game_day_time_description">When the daily heads-up arrives. Nothing is sent on a day without a game</string>
     <string name="sports_game_day_channel">Game day</string>
+    <!-- Translators: name of the notification channel for "a new app version is ready" (shown in Android's notification settings). -->
+    <string name="update_ready_channel">App updates</string>
+    <!-- Translators: notification title when a new version was found in the background, e.g. "MPTV v1.0.18 is ready". %1$s is the app name, %2$s the version number. -->
+    <string name="update_ready_title">%1$s v%2$s is ready</string>
+    <!-- Translators: notification text under "MPTV vX is ready"; tapping opens the app and starts the update. -->
+    <string name="update_ready_text">Tap to install</string>
     <plurals name="sports_game_day_title">
         <item quantity="one">Your teams play today: %1$d game</item>
         <item quantity="other">Your teams play today: %1$d games</item>

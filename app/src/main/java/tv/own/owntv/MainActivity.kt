@@ -118,6 +118,13 @@ open class MainActivity : ComponentActivity() {
         runCatching { get<tv.own.owntv.features.sports.SportsPlayback>().openMatchKey.value = key }
     }
 
+    /** "MPTV vX is ready — tap to install" was tapped: the shell shows the update dialog and starts the download. */
+    private fun readUpdateRequest(intent: Intent?) {
+        if (intent?.getBooleanExtra(tv.own.owntv.features.update.UpdateNotifier.EXTRA_INSTALL_UPDATE, false) != true) return
+        intent.removeExtra(tv.own.owntv.features.update.UpdateNotifier.EXTRA_INSTALL_UPDATE)
+        tv.own.owntv.features.update.UpdateInstallRequest.pending.value = true
+    }
+
     /** The permission hook holds this activity; let it go unless a newer activity has already set its own. */
     override fun onDestroy() {
         if (tv.own.owntv.core.sports.MatchAlertHost.requestNotificationPermission === askPermission) {
@@ -146,6 +153,7 @@ open class MainActivity : ComponentActivity() {
         pendingDeepLink = LauncherDeepLink.parse(intent.data)
         Log.d(TAG, "onNewIntent deepLinkHost=${intent.data?.host} deepLinkType=${pendingDeepLink?.javaClass?.simpleName ?: "none"}")
         readMatchRequest(intent)
+        readUpdateRequest(intent)
     }
 
     override fun onStop() {
@@ -211,6 +219,7 @@ open class MainActivity : ComponentActivity() {
         // Turning Sports goal alerts (or the game-day heads-up) on asks here; core calls the hook.
         tv.own.owntv.core.sports.MatchAlertHost.requestNotificationPermission = askPermission
         readMatchRequest(intent)
+        readUpdateRequest(intent)
         val dbError = probeDatabase()
         if (dbError != null) {
             contentReady = true // the recovery screen IS the destination — don't hold the splash over it
