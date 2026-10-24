@@ -7,6 +7,15 @@
 > Issue numbers that are part of a title are fine; explanatory parentheticals are not. The detail —
 > what, why, files and verification — belongs in the commit message, never here.
 
+## v1.0.17 — 2026-10-23
+
+### 🐛 Fixes
+- **Stalker: cancelled movie, episode and external-player starts stop cleanly**
+- **Startup database check made thread-safe**
+- **Betting odds: no crash on rounding**
+- **Channel health dot pauses in the background**
+- **Library updates**
+
 ## v1.0.16 — 2026-10-23
 
 ### ✨ New features
