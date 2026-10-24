@@ -1732,10 +1732,11 @@
 1	technical	app/src/main/java/tv/own/owntv/ui/components/TimeWheel.kt	▲
 1	technical	app/src/main/java/tv/own/owntv/ui/components/TimeWheel.kt	▼
 1	locale	app/src/main/java/tv/own/owntv/ui/components/TrackOptionText.kt	und
-1	log	app/src/main/java/tv/own/owntv/ui/components/TrailerPlayerScreen.kt	TrailerPlayer
+2	log	app/src/main/java/tv/own/owntv/ui/components/TrailerPlayerScreen.kt	TrailerPlayer
 1	uri	app/src/main/java/tv/own/owntv/ui/components/TrailerPlayerScreen.kt	https://www.youtube.com/watch?v=$videoKey
 1	technical	app/src/main/java/tv/own/owntv/ui/components/TrailerPlayerScreen.kt	tnum
 1	log	app/src/main/java/tv/own/owntv/ui/components/TrailerPlayerScreen.kt	trailer error key=${keys[keyIndex]} error=$error
+1	log	app/src/main/java/tv/own/owntv/ui/components/TrailerPlayerScreen.kt	trailer start timeout key=${keys[keyIndex]} ready=${player != null}
 1	log	app/src/main/java/tv/own/owntv/ui/components/TrailerPlayerScreen.kt	trailerHud
 1	uri	app/src/main/java/tv/own/owntv/ui/components/TrailerPlayerScreen.kt	vnd.youtube:$videoKey
 1	technical	app/src/main/java/tv/own/owntv/ui/components/TrailerPlayerScreen.kt	◀ ▶

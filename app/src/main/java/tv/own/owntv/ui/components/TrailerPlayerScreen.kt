@@ -100,6 +100,9 @@ private fun TrailerPlayerContent(videoKey: String, title: String?, onExit: () ->
     var playing by remember { mutableStateOf(true) }
     var player by remember { mutableStateOf<YouTubePlayer?>(null) }
     var reportedPlaybackQuality by remember { mutableStateOf<PlayerConstants.PlaybackQuality?>(null) }
+    // True once the current key has actually started playing. Until then a spinner shows, and the
+    // watchdog below gives up on a key that never starts.
+    var started by remember { mutableStateOf(false) }
     // Bumped on every key: the HUD shows, and hides again HUD_HIDE_MS later while playing.
     var keyStamp by remember { mutableIntStateOf(0) }
     var hudVisible by remember { mutableStateOf(true) }
@@ -166,7 +169,7 @@ private fun TrailerPlayerContent(videoKey: String, title: String?, onExit: () ->
                 android.util.Log.w("TrailerPlayer", "trailer error key=${keys[keyIndex]} error=$error")
                 if (keyIndex < keys.lastIndex) {
                     keyIndex++
-                    currentSec = 0f; durationSec = 0f
+                    currentSec = 0f; durationSec = 0f; started = false
                     youTubePlayer.loadVideo(keys[keyIndex], 0f)
                 } else {
                     failed = true
@@ -183,7 +186,7 @@ private fun TrailerPlayerContent(videoKey: String, title: String?, onExit: () ->
             override fun onStateChange(youTubePlayer: YouTubePlayer, state: PlayerConstants.PlayerState) {
                 when (state) {
                     PlayerConstants.PlayerState.ENDED -> onExit()
-                    PlayerConstants.PlayerState.PLAYING -> playing = true
+                    PlayerConstants.PlayerState.PLAYING -> { playing = true; started = true }
                     PlayerConstants.PlayerState.PAUSED -> playing = false
                     else -> Unit
                 }
@@ -192,6 +195,25 @@ private fun TrailerPlayerContent(videoKey: String, title: String?, onExit: () ->
         // OwnTV supplies the TV-safe D-pad controls; do not make WebView render a second control layer.
         runCatching { playerView.initialize(listener, playerOptions) }.onFailure { failed = true }
         onDispose { player = null; runCatching { playerView.release() } }
+    }
+
+    // Watchdog for the "pressed Trailer, nothing happens" report: on some boxes the WebView never
+    // loads the YouTube IFrame player (onReady never fires) or a video stalls without onError, which
+    // left a silent black screen. If the current key hasn't started within START_TIMEOUT_MS, try the
+    // next key, and after the last one show the Open in YouTube dialog — the button always does something.
+    LaunchedEffect(keyIndex, started) {
+        if (started) return@LaunchedEffect
+        delay(START_TIMEOUT_MS)
+        if (started) return@LaunchedEffect
+        android.util.Log.w("TrailerPlayer", "trailer start timeout key=${keys[keyIndex]} ready=${player != null}")
+        val p = player
+        if (p != null && keyIndex < keys.lastIndex) {
+            keyIndex++
+            currentSec = 0f; durationSec = 0f
+            p.loadVideo(keys[keyIndex], 0f)
+        } else {
+            failed = true
+        }
     }
 
     // Every key shows the HUD; ◀ ▶ seek ±10 s (physical by design: left rewinds in every locale).
@@ -234,6 +256,8 @@ private fun TrailerPlayerContent(videoKey: String, title: String?, onExit: () ->
             val screenW = maxWidth
             fun fx(px: Int) = screenW * (px / 1920f)
             AndroidView(factory = { playerView }, modifier = Modifier.fillMaxSize())
+            // Visible feedback while the player loads, instead of a bare black screen.
+            if (!started) OwnTVSpinner(Modifier.align(Alignment.Center), sizeDp = 56)
 
             val hudAlpha by animateFloatAsState(if (hudVisible) 1f else 0f, ownTvTween(320), label = "trailerHud")
             val wash = Color(5, 8, 10)
@@ -304,6 +328,9 @@ private const val HUD_HIDE_MS = 4_000L
 
 /** The first hide after opening: past YouTube's own start overlay. */
 private const val HUD_FIRST_HIDE_MS = 8_000L
+
+/** How long one trailer key may take to start playing before the next key (or the fallback) is tried. */
+private const val START_TIMEOUT_MS = 15_000L
 
 /**
  * When no trailer video can play in the app (owners can block embedded players, and some boxes have no
