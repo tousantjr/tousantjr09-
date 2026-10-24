@@ -8,13 +8,13 @@ agp = "9.4.0"
 kotlin = "2.4.20"
 
 # --- AndroidX / Jetpack ---
-coreKtx = "1.19.0"
+coreKtx = "1.19.1"
 activityCompose = "1.13.0"
-composeBom = "2026.08.00"
+composeBom = "2026.09.00"
 tvMaterial = "1.1.0"
 tvProvider = "1.1.0"
 lifecycle = "2.11.0"
-navigationCompose = "2.10.0"
+navigationCompose = "2.10.2"
 datastore = "1.2.1"
 work = "2.11.2"
 
@@ -27,7 +27,7 @@ ksp = "2.3.11"
 
 # --- Database / paging ---
 room = "2.8.5"
-paging = "3.5.1"
+paging = "3.5.3"
 
 # --- Media playback ---
 # Bumped to 1.11.0: AudioTrack init + HLS live timestamp/refresh fixes, TTML timing, MPEG-TS DTS-HD.
@@ -47,19 +47,19 @@ splashscreen = "1.2.0"
 # Macrobenchmark + the baseline-profile Gradle plugin. The plugin and the runtime
 # library are versioned together — bump both or neither. Must be 1.5.0-alpha+: the 1.4.x plugin
 # rejects an AGP 9 app module outright ("Module `:app` is not a supported android module").
-benchmark = "1.5.0-rc02"
+benchmark = "1.5.0"
 uiautomator = "2.4.0"
 
 # --- Kotlin libs ---
 coroutines = "1.11.0"
 
 # --- Third party ---
-coil = "3.6.0"
+coil = "3.6.3"
 koin = "4.2.2"
 # OkHttp 5 is a KMP module: Android consumers resolve to `okhttp-android`, which carries the
 # Android platform support (TLS socket adapter, cert chain cleaner) and consumer R8 rules.
 # Brings Happy Eyeballs (fastFallback) on by default — parallel IPv4/IPv6 connect.
-okhttp = "5.5.0"
+okhttp = "5.5.1"
 youtubePlayer = "13.0.0"
 # QR generation for the Remote (companion) add-source flow — pure-Java, offline, no Android deps.
 zxing = "3.5.4"

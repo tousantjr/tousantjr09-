@@ -5,13 +5,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.koin.compose.koinInject
 import tv.own.owntv.R
 import tv.own.owntv.ui.theme.StageColors
@@ -25,7 +25,8 @@ import tv.own.owntv.ui.theme.mpx
 @Composable
 fun ChannelHealthDot(channelId: Long, modifier: Modifier = Modifier) {
     val store: ChannelHealthStore = koinInject()
-    val snapshot by store.snapshot.collectAsState()
+    // One of these per visible channel row: lifecycle-aware so none keep collecting while backgrounded.
+    val snapshot by store.snapshot.collectAsStateWithLifecycle()
     val level = remember(snapshot, channelId) { snapshot[channelId]?.level(System.currentTimeMillis()) } ?: return
     val color = when (level) {
         HealthLevel.GOOD -> StageColors.Ok

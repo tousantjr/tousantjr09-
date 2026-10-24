@@ -12,6 +12,7 @@ import androidx.paging.PagingSource
 import androidx.paging.cachedIn
 import androidx.paging.filter
 import androidx.paging.map
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.delay
@@ -57,6 +58,7 @@ import tv.own.owntv.core.database.entity.DownloadEntity
 import tv.own.owntv.core.database.entity.FavoriteEntity
 import tv.own.owntv.core.database.entity.MovieEntity
 import tv.own.owntv.core.database.entity.PlaybackProgressEntity
+import tv.own.owntv.core.database.entity.SourceEntity
 import tv.own.owntv.core.database.entity.WatchHistoryEntity
 import tv.own.owntv.core.launcher.LauncherIntegrationRepository
 import tv.own.owntv.core.model.MediaType
@@ -627,8 +629,20 @@ class MovieViewModel(
     private suspend fun resolvedUrlOrNull(movie: MovieEntity): String? {
         val source = sourceDao.getById(movie.sourceId)
         if (!streamUrlResolver.needsResolve(source)) return movie.streamUrl
+        return resolveStalkerVodOrNull(source, movie)
+    }
+
+    /** Mints a Stalker VOD URL. Null on a portal/auth failure (logged) or a missing source; never
+     *  swallows cancellation, so a play request abandoned mid-resolve stops instead of carrying on. */
+    private suspend fun resolveStalkerVodOrNull(source: SourceEntity?, movie: MovieEntity): String? {
+        if (source == null) {
+            Log.w(TAG, "stalker resolve skipped: source missing movieId=${movie.id}")
+            return null
+        }
         return try {
-            streamUrlResolver.resolve(source!!, movie.streamUrl, vod = true)
+            streamUrlResolver.resolve(source, movie.streamUrl, vod = true)
+        } catch (c: CancellationException) {
+            throw c
         } catch (e: Exception) {
             Log.w(TAG, "stalker resolve failed movieId=${movie.id}", e)
             null
@@ -692,12 +706,7 @@ class MovieViewModel(
             // Stalker: mint the playable URL right before playback (create_link, type=vod). The stored
             // streamUrl stays the cmd — it's the item's identity (engine pins, downloads, history).
             val playUrl = if (streamUrlResolver.needsResolve(source)) {
-                try {
-                    streamUrlResolver.resolve(source!!, movie.streamUrl, vod = true)
-                } catch (e: Exception) {
-                    Log.w(TAG, "stalker resolve failed movieId=${movie.id}", e)
-                    return@launch
-                }
+                resolveStalkerVodOrNull(source, movie) ?: return@launch
             } else {
                 movie.streamUrl
             }

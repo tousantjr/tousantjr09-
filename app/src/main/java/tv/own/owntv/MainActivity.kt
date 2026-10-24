@@ -179,7 +179,9 @@ open class MainActivity : ComponentActivity() {
      * device never sits on a blank window.
      */
     private fun probeDatabase(): String? {
-        var error: String? = null
+        // Written by the worker, read here. An AtomicReference gives the read a happens-before edge
+        // even when join() times out and the worker is still running (a plain var would be a data race).
+        val error = java.util.concurrent.atomic.AtomicReference<String?>(null)
         val worker = Thread {
             // Core configures a SQLiteDriver, and `openHelper` throws outright
             // once one is set. Opening a connection is what this probe was always really doing —
@@ -188,12 +190,13 @@ open class MainActivity : ComponentActivity() {
                 kotlinx.coroutines.runBlocking {
                     get<tv.own.owntv.core.database.OwnTVDatabase>().useWriterConnection { }
                 }
-            }.onFailure { error = it.message ?: it.javaClass.simpleName }
+            }.onFailure { error.set(it.message ?: it.javaClass.simpleName) }
         }
         worker.start()
         worker.join(DB_PROBE_TIMEOUT_MS)
-        if (error != null) Log.e(TAG, "database probe failed: $error")
-        return error
+        val result = error.get()
+        if (result != null) Log.e(TAG, "database probe failed: $result")
+        return result
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
