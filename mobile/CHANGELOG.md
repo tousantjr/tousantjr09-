@@ -7,6 +7,13 @@
 > Issue numbers that are part of a title are fine; explanatory parentheticals are not. The detail —
 > what, why, files and verification — belongs in the commit message, never here.
 
+## v1.1.9 — 2026-10-23
+
+### Fixes
+- **Betting odds: no crash on rounding**
+- **Channel health dot pauses in the background**
+- **Library updates**
+
 ## v1.1.8 — 2026-10-23
 
 ### New features
