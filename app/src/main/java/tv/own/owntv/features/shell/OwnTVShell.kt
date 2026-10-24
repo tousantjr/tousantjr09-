@@ -2029,6 +2029,26 @@ fun OwnTVShell(
                 updateManager.check()
             }
         }
+        // "MPTV vX is ready — tap to install" was tapped (MainActivity raised the request): the update
+        // dialog, and the download started for the user — the release the notification named when it is
+        // still loaded, else a fresh check first (the process may have been gone since). Android's own
+        // install confirmation is the only step left. Counts as this launch's update check.
+        LaunchedEffect(Unit) {
+            tv.own.owntv.features.update.UpdateInstallRequest.pending.collect { requested ->
+                if (!requested) return@collect
+                tv.own.owntv.features.update.UpdateInstallRequest.pending.value = false
+                shellVm.startupUpdateCheckDone = true
+                showStartupToast = true
+                showChangelog = true
+                val now = updateManager.state.value
+                if (now is UpdateManager.State.Downloading) return@collect
+                if (now !is UpdateManager.State.Available) updateManager.check()
+                val settled = kotlinx.coroutines.withTimeoutOrNull(UPDATE_TAP_CHECK_MS) {
+                    updateManager.state.first { tv.own.owntv.features.update.BackgroundUpdate.isSettled(it) }
+                }
+                if (settled is UpdateManager.State.Available) updateManager.downloadAndInstall()
+            }
+        }
         if (showChangelog) {
             // Full "What's New" changelog (same dialog the manual Settings check uses), shown when
             // the startup card's "What's New" is pressed. No re-check — the release is already loaded.
@@ -2049,6 +2069,9 @@ fun OwnTVShell(
     }
     }
 }
+
+/** How long a notification tap waits for the update check before leaving the dialog to the user. */
+private const val UPDATE_TAP_CHECK_MS = 60_000L
 
 /** A goal toast stays this long. */
 private const val GOAL_TOAST_MS = 8_000L

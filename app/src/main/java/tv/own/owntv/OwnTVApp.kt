@@ -168,6 +168,9 @@ class OwnTVApp : Application(), SingletonImageLoader.Factory, androidx.work.Conf
                 tv.own.owntv.features.sports.GameDayWorker.sync(this@OwnTVApp, notices.current())
             }
         }
+        // "MPTV vX is ready — tap to install": the twice-daily background update check (it follows
+        // Settings' "Check for updates on startup"); same thread rule as above.
+        appScope.launch { runCatching { tv.own.owntv.features.update.UpdateCheckWorker.schedule(this@OwnTVApp) } }
         // Sports: core decides from Auto rebuild whether the stored board is due ("on every app start",
         // or older than the chosen hours). It reads one small file and touches no database.
         appScope.launch {

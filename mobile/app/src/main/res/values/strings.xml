@@ -166,6 +166,12 @@
     <string name="subscription_expired_title">Your %1$s subscription has expired</string>
     <string name="subscription_expired_body">It ended on %1$s — renew with your provider to keep watching.</string>
     <string name="subscription_channel_name">Subscription</string>
+    <!-- Translators: name of the notification channel for "a new app version is ready" (shown in Android's notification settings). -->
+    <string name="update_ready_channel">App updates</string>
+    <!-- Translators: notification title when a new version was found in the background, e.g. "MPTV v1.1.10 is ready". %1$s is the app name, %2$s the version number. -->
+    <string name="update_ready_title">%1$s v%2$s is ready</string>
+    <!-- Translators: notification text under "MPTV vX is ready"; tapping opens the download of the new version. -->
+    <string name="update_ready_text">Tap to install</string>
 
     <!-- Player → failure panel: the account's own connection numbers, under core's generic reason,
          when every connection is in use elsewhere (ConnectionLimitNotices). Core already says this

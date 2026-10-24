@@ -95,8 +95,9 @@ class OwnTVMobileApp : Application(), androidx.work.Configuration.Provider {
         // after every catalog sync — using the two permissions this app's manifest removes.
         CoreBuildInfo.tvHome = false
         // MPTV: this fork's repository, never upstream's (whose APKs are signed with a different key).
-        // The phone's update check is switched off in the UI, though — this repository's "latest"
-        // release is the TV app, which the phone cannot install. See MobileShell / SettingsAppPage.
+        // Core's own update check stays off on the phone — this repository's "latest" release is the
+        // TV app, which the phone cannot install. The phone asks MobileUpdateCheck instead (mobile-v*
+        // releases): Settings → Diagnostics, and the background UpdateCheckWorker scheduled below.
         CoreBuildInfo.releaseRepo = "tousantjr/tousantjr09-"
         // Fixed for this process before any player exists: the setting applies only after a restart.
         tv.own.owntv.core.player.FfmpegAudioSetting.load(this)
@@ -200,6 +201,8 @@ class OwnTVMobileApp : Application(), androidx.work.Configuration.Provider {
         // Subscription expiry: the daily check behind Home's notice, as a notification when the app is
         // closed. Off the main thread: WorkManager's first touch opens its database.
         appScope.launch { runCatching { tv.own.owntv.mobile.subscription.SubscriptionExpiryWorker.schedule(this@OwnTVMobileApp) } }
+        // "MPTV vX is ready — tap to install": the twice-daily background update check; same thread rule.
+        appScope.launch { runCatching { tv.own.owntv.mobile.update.UpdateCheckWorker.schedule(this@OwnTVMobileApp) } }
         // Channel reliability: watch the tuner's engine for the life of the process, so every channel
         // that is tried — a start, a failure, a stall — teaches the Sports ranking and the rows' dots.
         runCatching { org.koin.core.context.GlobalContext.get().get<tv.own.owntv.mobile.health.ChannelHealthMonitor>().start() }
