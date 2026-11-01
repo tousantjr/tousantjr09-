@@ -130,6 +130,12 @@
     <string name="sports_odds_status_exhausted">Request limit reached — odds resume tomorrow</string>
     <string name="sports_odds_status_key_rejected">The key was rejected — check it at the-odds-api.com</string>
     <string name="sports_odds_status_unreachable">Could not reach the odds service</string>
+    <!-- EPG Sources: a feed that has not synced for over three days. %d = whole days. -->
+    <plurals name="settings_epg_sources_stale">
+        <item quantity="one">Out of date · last updated %d day ago</item>
+        <item quantity="other">Out of date · last updated %d days ago</item>
+    </plurals>
+    <string name="settings_epg_sources_stale_badge">Out of date</string>
     <string name="sports_odds_status_http">The odds service answered HTTP %1$d</string>
     <string name="sports_odds_status_no_line">No line for the last game shown</string>
     <string name="sports_odds_status_not_covered">The last game\'s league is not covered by The Odds API</string>

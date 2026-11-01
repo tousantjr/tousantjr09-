@@ -205,6 +205,12 @@
         <item quantity="other">%1$d guide feeds</item>
     </plurals>
     <string name="diagnostics_epg_resync_playlist_only">Your guide comes with the playlist — use Re-sync this playlist above to refresh it</string>
+    <!-- EPG Sources: a feed that has not synced for over three days. %d = whole days. -->
+    <plurals name="settings_epg_sources_stale">
+        <item quantity="one">Out of date · last updated %d day ago</item>
+        <item quantity="other">Out of date · last updated %d days ago</item>
+    </plurals>
+    <string name="settings_epg_sources_stale_badge">Out of date</string>
     <string name="diagnostics_sports_title">Sports scores</string>
     <plurals name="diagnostics_sports_failing">
         <item quantity="one">%1$d score feed couldn\'t load — some scores may be missing</item>
