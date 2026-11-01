@@ -40,6 +40,18 @@
 1	performance	app/src/main/java/tv/own/owntv/OwnTVApp.kt	koin-started
 1	technical	app/src/main/java/tv/own/owntv/OwnTVApp.kt	tousantjr/tousantjr09-
 3	empty	app/src/main/java/tv/own/owntv/core/i18n/LocalizedContent.kt	\0
+1	url	app/src/main/java/tv/own/owntv/features/announce/Announcements.kt	${fileUrl()}?t=${System.currentTimeMillis() / CACHE_BUCKET_MS}
+1	protocol	app/src/main/java/tv/own/owntv/features/announce/Announcements.kt	MPTV
+1	json	app/src/main/java/tv/own/owntv/features/announce/Announcements.kt	apps
+1	url	app/src/main/java/tv/own/owntv/features/announce/Announcements.kt	https://raw.githubusercontent.com/${CoreBuildInfo.releaseRepo}/main/announcement.json
+1	json	app/src/main/java/tv/own/owntv/features/announce/Announcements.kt	id
+1	json	app/src/main/java/tv/own/owntv/features/announce/Announcements.kt	message
+1	preference-key	app/src/main/java/tv/own/owntv/features/announce/Announcements.kt	mptv_announcements
+1	protocol	app/src/main/java/tv/own/owntv/features/announce/Announcements.kt	phone
+1	preference-key	app/src/main/java/tv/own/owntv/features/announce/Announcements.kt	seen_id
+1	json	app/src/main/java/tv/own/owntv/features/announce/Announcements.kt	title
+1	protocol	app/src/main/java/tv/own/owntv/features/announce/Announcements.kt	tv
+1	json	app/src/main/java/tv/own/owntv/features/announce/Announcements.kt	until
 1	empty	app/src/main/java/tv/own/owntv/features/customize/CustomizeItemsScreen.kt	\0
 1	assertion	app/src/main/java/tv/own/owntv/features/customize/CustomizeItemsViewModel.kt	EPISODE not applicable
 2	assertion	app/src/main/java/tv/own/owntv/features/customize/CustomizeItemsViewModel.kt	EPISODE not applicable to category items

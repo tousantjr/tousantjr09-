@@ -93,6 +93,7 @@ val settingsModule = module {
     // The phone's own update check (core's UpdateManager reads the repository's latest release,
     // which is always the TV app's — see MobileUpdateCheck).
     single { MobileUpdateCheck(httpClient = get()) }
+    single { tv.own.owntv.mobile.announce.AnnouncementCheck(get(), androidContext()) }
     // Diagnostics → Channel sweep: app-wide, so a sweep stopped by leaving the page keeps its place.
     single {
         tv.own.owntv.mobile.health.ChannelSweep(
