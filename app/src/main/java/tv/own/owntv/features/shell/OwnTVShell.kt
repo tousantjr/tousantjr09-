@@ -2066,6 +2066,29 @@ fun OwnTVShell(
                 )
             }
         }
+
+        // Minimum version (min_version.json in the release repository): a build older than the owner
+        // still supports is told so every launch, never over playback. OK or Back both start the
+        // update, through the same path as the "ready to install" notification tap.
+        val minVersion = koinInject<tv.own.owntv.features.update.MinVersionCheck>()
+        var minNotice by remember { mutableStateOf<tv.own.owntv.features.update.MinVersionNotice?>(null) }
+        LaunchedEffect(Unit) {
+            if (minVersion.lookedThisLaunch) return@LaunchedEffect
+            kotlinx.coroutines.delay(tv.own.owntv.features.update.MinVersionCheck.START_DELAY_MS)
+            minNotice = minVersion.notice(tv.own.owntv.BuildConfig.VERSION_NAME)
+        }
+        minNotice?.takeIf { playerMode == PlayerMode.NONE }?.let { n ->
+            val startUpdate: () -> Unit = {
+                minNotice = null
+                tv.own.owntv.features.update.UpdateInstallRequest.pending.value = true
+            }
+            tv.own.owntv.ui.stage.StageNotice(
+                title = androidx.compose.ui.res.stringResource(R.string.min_version_title),
+                body = n.message ?: androidx.compose.ui.res.stringResource(R.string.min_version_body, tv.own.owntv.BuildConfig.VERSION_NAME, n.required),
+                onDismiss = startUpdate,
+                ok = androidx.compose.ui.res.stringResource(R.string.min_version_update),
+            )
+        }
     }
     }
 }

@@ -92,6 +92,7 @@ val settingsModule = module {
     viewModel { DeleteSubtitlesViewModel(controller = get()) }
     // The phone's own update check (core's UpdateManager reads the repository's latest release,
     // which is always the TV app's — see MobileUpdateCheck).
+    single { tv.own.owntv.mobile.update.MinVersionCheck(get()) }
     single { MobileUpdateCheck(httpClient = get()) }
     // Diagnostics → Channel sweep: app-wide, so a sweep stopped by leaving the page keeps its place.
     single {

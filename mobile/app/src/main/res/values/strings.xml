@@ -130,6 +130,10 @@
     <string name="sports_odds_status_http">The odds service answered HTTP %1$d</string>
     <string name="sports_odds_status_no_line">No line for the last game shown</string>
     <string name="sports_odds_status_not_covered">The last game\'s league is not covered by The Odds API</string>
+    <!-- Minimum version: min_version.json says this build is too old. -->
+    <string name="min_version_title">Update needed</string>
+    <string name="min_version_body">This version of MPTV (%1$s) is no longer supported. Update to %2$s or newer to keep watching.</string>
+    <string name="min_version_update">Update now</string>
     <plurals name="sports_odds_requests_left">
         <item quantity="one">%1$d request left this month</item>
         <item quantity="other">%1$d requests left this month</item>
