@@ -5,6 +5,9 @@
   merge, so redefining just these three here rebrands the app without touching :core or any Kotlin.
 -->
 <resources>
+    <!-- Voice search on the Search page. -->
+    <string name="search_voice">Voice search</string>
+    <string name="search_voice_prompt">Say a channel, film or show</string>
     <string name="app_name" translatable="false">MPTV</string>
     <string name="brand_own" translatable="false">MP</string>
     <string name="brand_tv" translatable="false">TV</string>

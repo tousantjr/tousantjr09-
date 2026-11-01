@@ -139,6 +139,8 @@ fun SearchScreen(
     val singleKind = searching && kinds.size == 1
     val goChannel: (Long) -> Unit = { vm.rememberQuery(); onOpenChannel(it) }
 
+    val voiceSearch = rememberVoiceSearch(stringResource(R.string.search_voice_prompt)) { heard -> vm.setQuery(heard); keyboard?.hide() }
+
     Column(modifier.fillMaxSize().imePadding()) {
         StageSearchField(
             value = query,
@@ -163,7 +165,7 @@ fun SearchScreen(
 
         when {
             searching && shown.isEmpty -> NothingFound(stringResource(R.string.search_nothing_found, trimmed), stringResource(R.string.search_nothing_found_body))
-            !searching && intent == null -> Launcher(recents = recents, onIntent = vm::setIntent, onPick = vm::setQuery, onClear = vm::clearRecentSearches)
+            !searching && intent == null -> Launcher(recents = recents, onIntent = vm::setIntent, onPick = vm::setQuery, onClear = vm::clearRecentSearches, onVoice = voiceSearch)
             else -> LazyColumn(
                 state = listState,
                 modifier = Modifier.fillMaxSize(),
@@ -365,10 +367,16 @@ private fun JumpTo(selected: SearchIntent?, onIntent: (SearchIntent?) -> Unit) {
 
 /** Before typing: JUMP TO, RECENT SEARCHES with Clear, and the glass card that says what is searched. */
 @Composable
-private fun Launcher(recents: List<String>, onIntent: (SearchIntent?) -> Unit, onPick: (String) -> Unit, onClear: () -> Unit) {
+private fun Launcher(recents: List<String>, onIntent: (SearchIntent?) -> Unit, onPick: (String) -> Unit, onClear: () -> Unit, onVoice: (() -> Unit)?) {
     val palette = LocalStagePalette.current
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(start = 6.dp, end = 6.dp, top = 8.dp, bottom = 24.dp)) {
         item(key = "jump") { JumpTo(selected = null, onIntent = onIntent) }
+        // Hidden when the phone has no speech recogniser.
+        onVoice?.let { voice ->
+            item(key = "voice") {
+                StageTool(onClick = voice, label = stringResource(R.string.search_voice), icon = MobileIcons.Mic, modifier = Modifier.padding(start = 8.dp, top = 8.dp))
+            }
+        }
         if (recents.isNotEmpty()) {
             item(key = "recent-h") { StageLabel(stringResource(R.string.search_recent), Modifier.padding(start = 12.dp, top = 12.dp, bottom = 4.dp)) }
             items(recents, key = { "r$it" }) { term -> StageMenuItem(term, onClick = { onPick(term) }, icon = MobileIcons.History) }

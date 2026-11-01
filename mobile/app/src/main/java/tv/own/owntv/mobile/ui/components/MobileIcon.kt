@@ -248,6 +248,10 @@ object MobileIcons {
     val VolumeOff: ImageVector by lazy {
         glyph() { speaker(); line(14f, 9f, 20f, 15f); line(20f, 9f, 14f, 15f) }
     }
+    // Voice search: a microphone, so it doesn't read as the speaker (sound out) or the note (audio track).
+    val Mic: ImageVector by lazy {
+        glyph() { box(9f, 3f, 15f, 14f, 3f); arc(12f, 11f, 6f, 0f, 180f); line(12f, 17f, 12f, 21f); line(9f, 21f, 15f, 21f) }
+    }
     val MusicNote: ImageVector by lazy { glyph() { note() } }
     val Audiotrack: ImageVector by lazy { glyph() { note() } }
     val AspectRatio: ImageVector by lazy {
