@@ -644,7 +644,23 @@ fun MobileShell(
             onDismiss = { answer(dueReminder, watch = false) },
         )
     }
+
+    // Announcements (announcement.json in the release repository): a message the owner has not shown
+    // on this phone yet, once, a few seconds after launch.
+    val announcements: tv.own.owntv.mobile.announce.AnnouncementCheck = koinInject()
+    var announcement by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<tv.own.owntv.mobile.announce.Announcement?>(null) }
+    LaunchedEffect(Unit) {
+        if (announcements.lookedThisLaunch) return@LaunchedEffect
+        kotlinx.coroutines.delay(ANNOUNCEMENT_DELAY_MS)
+        announcement = announcements.unseen()
+    }
+    announcement?.let { a ->
+        tv.own.owntv.mobile.announce.AnnouncementSheet(a) { announcements.markSeen(a.id); announcement = null }
+    }
 }
+
+/** Announcements wait until the app has settled, so the sheet is not lost under the start-up screens. */
+private const val ANNOUNCEMENT_DELAY_MS = 4_000L
 
 /**
  * Header slot, content, bottom chrome. The header and the bottom chrome slide by [ShellChromeState]'s

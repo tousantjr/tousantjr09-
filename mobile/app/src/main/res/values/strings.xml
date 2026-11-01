@@ -388,4 +388,7 @@
         <item quantity="other">Showing %1$d watchlist titles</item>
     </plurals>
     <string name="trakt_status_scrobbled">Last scrobbled: %1$s</string>
+    <!-- Announcements: the owner's message from announcement.json, shown once. -->
+    <string name="announcement_title">Announcement</string>
+    <string name="announcement_eyebrow">Message from MPTV</string>
 </resources>

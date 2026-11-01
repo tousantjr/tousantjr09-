@@ -211,6 +211,7 @@ val appModule = module {
     single { tv.own.owntv.features.sports.odds.EspnOddsSource(get()) }
     single { tv.own.owntv.features.sports.odds.TheOddsApiSource(get()) }
     single { tv.own.owntv.features.sports.odds.OddsRepository(get(), get(), get()) }
+    single { tv.own.owntv.features.announce.AnnouncementCheck(get(), androidContext()) }
     viewModelOf(::SeriesViewModel)
     viewModelOf(::SearchViewModel)
     viewModelOf(::ProfilesViewModel)

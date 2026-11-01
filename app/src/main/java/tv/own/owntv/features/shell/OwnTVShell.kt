@@ -2015,6 +2015,24 @@ fun OwnTVShell(
             )
     }
 
+        // Announcements (announcement.json in the release repository): a message the owner has not
+        // shown on this device yet, once, a few seconds after launch and never over playback.
+        val announcements = koinInject<tv.own.owntv.features.announce.AnnouncementCheck>()
+        var announcement by remember { mutableStateOf<tv.own.owntv.features.announce.Announcement?>(null) }
+        LaunchedEffect(Unit) {
+            if (announcements.lookedThisLaunch) return@LaunchedEffect
+            kotlinx.coroutines.delay(ANNOUNCEMENT_DELAY_MS)
+            announcement = announcements.unseen()
+        }
+        announcement?.takeIf { playerMode == PlayerMode.NONE }?.let { a ->
+            tv.own.owntv.ui.stage.StageNotice(
+                title = a.title.ifBlank { androidx.compose.ui.res.stringResource(R.string.announcement_title) },
+                body = a.message,
+                onDismiss = { announcements.markSeen(a.id); announcement = null },
+                eyebrow = androidx.compose.ui.res.stringResource(R.string.announcement_eyebrow),
+            )
+        }
+
         val updateManager = koinInject<UpdateManager>()
         var showStartupToast by remember { mutableStateOf(false) }
         var showChangelog by remember { mutableStateOf(false) }
@@ -2072,6 +2090,9 @@ fun OwnTVShell(
 
 /** How long a notification tap waits for the update check before leaving the dialog to the user. */
 private const val UPDATE_TAP_CHECK_MS = 60_000L
+
+/** Announcements wait until the app has settled, so the pop-up is not lost under the start-up screens. */
+private const val ANNOUNCEMENT_DELAY_MS = 4_000L
 
 /** A goal toast stays this long. */
 private const val GOAL_TOAST_MS = 8_000L
