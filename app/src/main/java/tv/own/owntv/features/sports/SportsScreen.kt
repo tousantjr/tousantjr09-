@@ -97,6 +97,7 @@ fun SportsScreen(
     } else if (current == null) {
         SportsHubScreen(
             vm = vm,
+            liveVm = liveVm,
             onOpenMatch = open,
             onPlayChannel = onPlayChannel,
             onOpenUpcoming = { upcoming = true },

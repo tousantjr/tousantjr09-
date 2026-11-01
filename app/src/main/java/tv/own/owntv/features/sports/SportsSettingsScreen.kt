@@ -163,7 +163,8 @@ private fun MainRows(vm: SportsSettingsViewModel, c: SportsConfig, shown: Boolea
         vm.update { it.copy(spoilerFree = !it.spoilerFree) }
     }
 
-    StageSettingsHeading(stringResource(R.string.sports_settings_watching), 6)
+    val hubNotices by vm.noticeConfig.collectAsStateWithLifecycle()
+    StageSettingsHeading(stringResource(R.string.sports_settings_watching), if (hubNotices.livePreview) 8 else 7)
     val langs = c.preferredLanguages(vm.appLanguage).map { languageName(it) }
     Row(OwnTVIcon.LANGUAGE, stringResource(R.string.sports_languages), stringResource(R.string.sports_languages_description),
         SettingValue.Opens(langs.joinToString(", ").ifBlank { stringResource(R.string.sports_any) })) { open(SportsSettingsPage.LANGUAGES) }
@@ -183,6 +184,15 @@ private fun MainRows(vm: SportsSettingsViewModel, c: SportsConfig, shown: Boolea
     }
     Row(OwnTVIcon.LAYERS, stringResource(R.string.sports_strict_filter), stringResource(R.string.sports_strict_filter_description), SettingValue.Switch(c.strictFilter)) {
         vm.update { it.copy(strictFilter = !it.strictFilter) }
+    }
+    // The hub's preview of the selected game's channel: this device's (SportsNoticeSettings), like the ticker.
+    Row(OwnTVIcon.LIVE_TV, stringResource(R.string.sports_live_preview), stringResource(R.string.sports_live_preview_description), SettingValue.Switch(hubNotices.livePreview)) {
+        vm.setLivePreview(!hubNotices.livePreview)
+    }
+    if (hubNotices.livePreview) {
+        Row(OwnTVIcon.LIVE_TV, stringResource(R.string.sports_live_preview_sound), stringResource(R.string.sports_live_preview_sound_description), SettingValue.Switch(hubNotices.livePreviewSound)) {
+            vm.setLivePreviewSound(!hubNotices.livePreviewSound)
+        }
     }
 
     StageSettingsHeading(stringResource(R.string.sports_settings_while_watching), 4)
