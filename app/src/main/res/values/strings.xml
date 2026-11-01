@@ -92,6 +92,10 @@
     <string name="boxing_searching_channels">Searching your channels…</string>
     <string name="boxing_no_channels_found">No matching channels found in your playlist</string>
 
+    <!-- Minimum version: min_version.json says this build is too old. -->
+    <string name="min_version_title">Update needed</string>
+    <string name="min_version_body">This version of MPTV (%1$s) is no longer supported. Update to %2$s or newer to keep watching.</string>
+    <string name="min_version_update">Update now</string>
     <!-- Home → subscription notice: a strip above the rows once an Xtream playlist's account ends
          within a week, or has ended (SubscriptionExpiry / SubscriptionNotice). %1$s is the playlist's
          name as the user named it; the date is formatted by the app. -->

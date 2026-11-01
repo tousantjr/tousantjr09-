@@ -616,6 +616,17 @@ fun MobileShell(
         )
     }
 
+    // Minimum version (min_version.json in the release repository): a build older than the owner still
+    // supports is told so, every launch, with a button that downloads the latest phone APK.
+    val minVersion: tv.own.owntv.mobile.update.MinVersionCheck = koinInject()
+    var minNotice by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<tv.own.owntv.mobile.update.MinVersionNotice?>(null) }
+    LaunchedEffect(Unit) {
+        if (minVersion.lookedThisLaunch) return@LaunchedEffect
+        kotlinx.coroutines.delay(tv.own.owntv.mobile.update.MinVersionCheck.START_DELAY_MS)
+        minNotice = minVersion.notice(tv.own.owntv.mobile.BuildConfig.VERSION_NAME)
+    }
+    minNotice?.let { n -> tv.own.owntv.mobile.update.MinVersionSheet(n) { minNotice = null } }
+
     // Programme reminders: when one comes up, ask to switch, or switch — over whatever is on screen,
     // the player included. Notify only is a notification (ReminderNotifier), so nothing is drawn here.
     val reminders: tv.own.owntv.core.reminder.ReminderManager = koinInject()
