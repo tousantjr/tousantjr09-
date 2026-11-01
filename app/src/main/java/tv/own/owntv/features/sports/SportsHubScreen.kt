@@ -109,7 +109,7 @@ private const val HUB_PREVIEW_DWELL_MS = 1_500L
 @Composable
 fun SportsHubScreen(
     vm: SportsViewModel,
-    /** Live TV's preview player: a focused card plays its game's channel through it, muted (no second decoder). */
+    /** Live TV's preview player: a focused card plays its game's channel through it (no second decoder). */
     liveVm: tv.own.owntv.features.live.LiveViewModel,
     onOpenMatch: (Match) -> Unit,
     onPlayChannel: (ChannelEntity, List<ChannelEntity>) -> Unit,
@@ -148,7 +148,7 @@ fun SportsHubScreen(
     androidx.compose.runtime.LaunchedEffect(menuFor) { menuChannels = menuFor?.let { vm.channelsFound(it) }.orEmpty() }
 
     // Live preview on Sports tab (Settings → Sports): a card that keeps focus for a moment plays its game's
-    // first Watch live channel, muted, inside the card. Off with Live TV's own preview off, and while
+    // first Watch live channel inside the card, with sound unless Live preview sound is off. Off with Live TV's own preview off, and while
     // spoiler-free is on (a live picture shows the score). Moving on stops it; only the one player runs.
     val notices by org.koin.compose.koinInject<SportsNoticeSettings>().config.collectAsStateWithLifecycle(SportsNoticeConfig())
     val livePreviewOn by liveVm.livePreviewEnabled.collectAsStateWithLifecycle()
@@ -161,7 +161,7 @@ fun SportsHubScreen(
         if (!previewOn) return@LaunchedEffect
         kotlinx.coroutines.delay(HUB_PREVIEW_DWELL_MS)
         val channel = vm.previewChannel(m) ?: return@LaunchedEffect
-        liveVm.playPreview(channel, forceMuted = true)
+        liveVm.playPreview(channel, muted = !notices.livePreviewSound)
         previewing = m.key
     }
     // Leaving the hub (OK opens the match page) ends a preview this screen started, and only that one.
@@ -460,7 +460,7 @@ internal fun SportsChip(
  * `.mc`: a match card, 324 wide (the featured first card 648, with the big score). League line and
  * minute or kick-off on top, both sides with crest and score, then a Reminder tag or the followed star.
  * No channels: they are found on the match page. With [preview] (the hub's Live preview on Sports tab),
- * the game's channel plays muted behind the card's text.
+ * the game's channel plays behind the card's text.
  */
 @Composable
 internal fun MatchCard(

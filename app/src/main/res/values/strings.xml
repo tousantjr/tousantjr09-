@@ -345,7 +345,9 @@
     <string name="sports_score_ticker">Score ticker</string>
     <string name="sports_score_ticker_description">While you watch, a small line at the top of the picture cycles through your other followed games that are on. Spoiler-free leaves out the scores</string>
     <string name="sports_live_preview">Live preview on Sports tab</string>
-    <string name="sports_live_preview_description">Rest on a live game\'s card for a moment and its channel plays muted inside the card. Off while spoiler-free is on</string>
+    <string name="sports_live_preview_description">Rest on a live game\'s card for a moment and its channel plays inside the card. Off while spoiler-free is on</string>
+    <string name="sports_live_preview_sound">Live preview sound</string>
+    <string name="sports_live_preview_sound_description">Play the Sports tab preview with sound. Turn off for a silent preview</string>
     <!-- The ticker's switch prompt (D-pad Up on the pill): "Switch to Eagles – Cowboys?" over the channel it would play. -->
     <string name="sports_ticker_switch_prompt">Switch to %1$s?</string>
     <string name="settings_search_keywords_sports_notices">sports notifications alerts kick-off game day heads-up score ticker</string>

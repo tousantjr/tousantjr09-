@@ -57,6 +57,7 @@ class SportsSettingsViewModel(
     fun setGameDayHour(hour: Int) = viewModelScope.launch { notices.setGameDayHour(hour) }
     fun setScoreTicker(on: Boolean) = viewModelScope.launch { notices.setScoreTicker(on) }
     fun setLivePreview(on: Boolean) = viewModelScope.launch { notices.setLivePreview(on) }
+    fun setLivePreviewSound(on: Boolean) = viewModelScope.launch { notices.setLivePreviewSound(on) }
 
     /** Betting odds (app-level, not the profile's — OddsSettings) and what its last fetch came to, for the Status row. */
     val oddsConfig: StateFlow<OddsConfig> = oddsSettings.config

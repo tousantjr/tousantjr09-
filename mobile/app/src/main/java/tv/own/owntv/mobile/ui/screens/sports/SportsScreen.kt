@@ -146,7 +146,7 @@ fun SportsScreen(
     val context = LocalContext.current
 
     // Live preview on Sports tab (Settings → Sports): a long press on a game that is on (or about to
-    // start) also plays its first Watch live channel, muted, above the list — the match page's search,
+    // start) also plays its first Watch live channel above the list (with sound unless Live preview sound is off) — the match page's search,
     // Live TV's preview player. Never over a stream the user is watching, not with Live TV's preview off,
     // not while spoiler-free is on (a live picture shows the score). A tap still opens the match page.
     val tuner = koinInject<LiveTuner>()
@@ -172,7 +172,7 @@ fun SportsScreen(
             if (previewFor?.key != m.key) return@launch
             if (channel == null) { stopPreview(); return@launch }
             previewChannel = channel
-            tuner.preview(channel.id, forceMuted = true)
+            tuner.preview(channel.id, muted = !notices.livePreviewSound)
         }
     }
     LaunchedEffect(previewOn) { if (!previewOn) stopPreview() }
@@ -307,7 +307,7 @@ fun SportsScreen(
 }
 
 /**
- * The Sports list's live preview: the long-pressed game's channel through Live TV's preview player, muted,
+ * The Sports list's live preview: the long-pressed game's channel through Live TV's preview player, with sound by default,
  * with the LIVE badge and the channel's name; a tap opens the match page, ✕ stops it. Covered while a
  * sheet is open (the surface is punched through the window), as Live TV's preview is.
  */

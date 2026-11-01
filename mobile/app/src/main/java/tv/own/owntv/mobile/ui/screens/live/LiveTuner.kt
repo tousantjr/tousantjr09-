@@ -446,10 +446,10 @@ class LiveTuner(
     private var previewChannel: ChannelEntity? = null
 
     /**
-     * Play [channelId] in Live TV's preview pane (see [previewing]). [forceMuted]: the Sports list's
-     * preview is always silent, whatever Preview sound says.
+     * Play [channelId] in Live TV's preview pane (see [previewing]). [muted]: the Sports list's
+     * preview follows its own Live preview sound setting; null = Preview sound's.
      */
-    fun preview(channelId: Long, forceMuted: Boolean = false) {
+    fun preview(channelId: Long, muted: Boolean? = null) {
         // Casting: the television plays what is picked, as before — a silent preview belongs to the phone.
         if (cast.deviceName.value != null) return tune(channelId)
         if (loadedId == channelId) return
@@ -469,7 +469,7 @@ class LiveTuner(
             previewChannel = channel
             _previewing.value = true
             _channel.value = custom.value.itemNames[CustomizeKeys.channel(channel)]?.let { channel.copy(name = it) } ?: channel
-            live.preview(channel, muted = forceMuted || !settings.livePreviewAudio.first())
+            live.preview(channel, muted = muted ?: !settings.livePreviewAudio.first())
             _nowNext.value = epgReader.nowNext(channel, custom.value, settings.epgOffsetMinutes.first())
             loadSiblings(channel)
         }
