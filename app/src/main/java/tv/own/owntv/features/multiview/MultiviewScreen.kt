@@ -89,6 +89,19 @@ fun MultiviewScreen(
     val focusRequesters = remember(state.tiles.size) { List(state.tiles.size) { FocusRequester() } }
 
     LaunchedEffect(Unit) { runCatching { focusRequesters[state.focused].requestFocus() } }
+
+    // Sound follows selection (tile menu, remembered on this TV): once the highlight has rested on a
+    // filled tile for a moment the sound moves there, so watching four games is just moving around the
+    // grid. A quick pass over a tile on the way to another does not flick the sound back and forth.
+    // giveSoundTo already ignores an empty or failed tile, and OK still gives the sound as before.
+    val context = LocalContext.current
+    val prefs = remember { MultiviewPrefs(context) }
+    var soundFollows by remember { mutableStateOf(prefs.soundFollowsSelection) }
+    LaunchedEffect(state.focused, soundFollows) {
+        if (!soundFollows || state.audible == state.focused) return@LaunchedEffect
+        kotlinx.coroutines.delay(SOUND_FOLLOW_DWELL_MS)
+        state.giveSoundTo(state.focused)
+    }
     BackHandler(enabled = menuFor == null) { onExit() }
 
     Box(modifier.fillMaxSize().background(Color.Black)) {
@@ -131,6 +144,12 @@ fun MultiviewScreen(
             onFullscreen = { menuFor = null; state.tiles[tile].channel?.let(onFullscreen) },
             onSound = { menuFor = null; state.giveSoundTo(tile) },
             onSoundOnly = { menuFor = null; state.setSoundOnly(tile, tile !in state.soundOnly) },
+            soundFollows = soundFollows,
+            onSoundFollows = {
+                menuFor = null
+                soundFollows = !soundFollows
+                prefs.soundFollowsSelection = soundFollows
+            },
             onRemove = { menuFor = null; state.clear(tile) },
             onDismiss = { menuFor = null },
         )
@@ -356,3 +375,20 @@ private const val LongPressMs = 500L
  * anything and would leave a black tile and no explanation for all of it.
  */
 private const val StreamLostGraceMs = 12_000L
+
+/** How long the highlight rests on a tile before the sound follows it. */
+private const val SOUND_FOLLOW_DWELL_MS = 800L
+
+/** This TV's Multiview choices that outlive the grid. Sound follows selection is on until turned off. */
+private class MultiviewPrefs(context: android.content.Context) {
+    private val prefs = context.applicationContext.getSharedPreferences(PREFS_NAME, android.content.Context.MODE_PRIVATE)
+
+    var soundFollowsSelection: Boolean
+        get() = prefs.getBoolean(KEY_SOUND_FOLLOWS, true)
+        set(value) { prefs.edit().putBoolean(KEY_SOUND_FOLLOWS, value).apply() }
+
+    private companion object {
+        const val PREFS_NAME = "mptv_multiview"
+        const val KEY_SOUND_FOLLOWS = "sound_follows_selection"
+    }
+}

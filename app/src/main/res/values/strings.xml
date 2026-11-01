@@ -415,6 +415,9 @@
     </plurals>
     <string name="trakt_status_scrobbled">Last scrobbled: %1$s</string>
     <string name="settings_search_keywords_trakt">trakt scrobble scrobbling watchlist sync watched history resume up next episode</string>
+    <!-- Multiview tile menu: the row shows what pressing it will do. -->
+    <string name="multiview_sound_follows_on">Sound follows selection: On</string>
+    <string name="multiview_sound_follows_off">Sound follows selection: Off</string>
     <!-- Announcements: the owner's message from announcement.json, shown once. -->
     <string name="announcement_title">Announcement</string>
     <string name="announcement_eyebrow">Message from MPTV</string>
