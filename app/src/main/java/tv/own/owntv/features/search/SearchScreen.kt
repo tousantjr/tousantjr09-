@@ -307,11 +307,13 @@ fun SearchScreen(
                 .focusProperties { down = if (searching) filterEntry else if (!showingResults) jumpFocus else FocusRequester.Default },
         )
 
+        val voiceSearch = rememberVoiceSearch(stringResource(R.string.search_voice_prompt), vm::setQuery)
         if (!showingResults) {
             Launcher(
                 firstFocus = jumpFocus,
                 recent = recent,
                 onIntent = vm::setIntent,
+                onVoice = voiceSearch,
                 onRecent = vm::setQuery,
                 onClearRecent = vm::clearRecentSearches,
                 modifier = Modifier.padding(start = listX, top = 192.mpx).width(listW),
@@ -692,6 +694,7 @@ private fun Launcher(
     firstFocus: FocusRequester,
     recent: List<String>,
     onIntent: (SearchIntent) -> Unit,
+    onVoice: (() -> Unit)?,
     onRecent: (String) -> Unit,
     onClearRecent: () -> Unit,
     modifier: Modifier = Modifier,
@@ -711,6 +714,8 @@ private fun Launcher(
                     modifier = if (i == SearchIntent.entries.first()) Modifier.focusRequester(firstFocus) else Modifier,
                 )
             }
+            // Last in the row so ▼ from the field still lands on Continue watching.
+            onVoice?.let { StageTool(text = stringResource(R.string.search_voice), icon = OwnTVIcon.MIC, onClick = it) }
         }
         if (recent.isNotEmpty()) {
             GroupHeading(stringResource(R.string.search_recent).uppercase(locale), Modifier.padding(top = 46.mpx, bottom = 4.mpx))
