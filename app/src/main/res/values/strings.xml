@@ -198,6 +198,23 @@
         <item quantity="other">%1$d guide feeds</item>
     </plurals>
     <string name="diagnostics_epg_resync_playlist_only">Your guide comes with the playlist — use Re-sync this playlist above to refresh it</string>
+    <!-- Sports → match page → Preview tab (ESPN's pre-game preview) -->
+    <string name="sports_tab_preview">Preview</string>
+    <string name="sports_matchpreview_win_chance">Win chance</string>
+    <string name="sports_matchpreview_percent">%1$d%%</string>
+    <string name="sports_matchpreview_record">Season record</string>
+    <string name="sports_matchpreview_home_away">Home / away record</string>
+    <string name="sports_matchpreview_head_to_head">Head to head</string>
+    <string name="sports_matchpreview_score">%1$s %2$s – %3$s %4$s</string>
+    <string name="sports_matchpreview_weather">Weather: %1$d°F</string>
+    <string name="sports_matchpreview_weather_rain">Weather: %1$d°F · %2$d%% chance of rain</string>
+    <string name="sports_matchpreview_injuries">Injuries</string>
+    <plurals name="sports_matchpreview_more">
+        <item quantity="one">+%d more</item>
+        <item quantity="other">+%d more</item>
+    </plurals>
+    <string name="sports_matchpreview_source">Preview from ESPN</string>
+    <string name="sports_matchpreview_none">–</string>
     <string name="diagnostics_sports_title">Sports scores</string>
     <plurals name="diagnostics_sports_failing">
         <item quantity="one">%1$d score feed couldn\'t load — some scores may be missing</item>

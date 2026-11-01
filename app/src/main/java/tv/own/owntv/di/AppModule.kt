@@ -211,6 +211,9 @@ val appModule = module {
     single { tv.own.owntv.features.sports.odds.EspnOddsSource(get()) }
     single { tv.own.owntv.features.sports.odds.TheOddsApiSource(get()) }
     single { tv.own.owntv.features.sports.odds.OddsRepository(get(), get(), get()) }
+    // The match page's Preview tab: ESPN's article, records, win chance, head to head and injuries before kick-off.
+    single { tv.own.owntv.features.sports.preview.MatchPreviewSource(get()) }
+    single { tv.own.owntv.features.sports.preview.MatchPreviewRepository(get()) }
     viewModelOf(::SeriesViewModel)
     viewModelOf(::SearchViewModel)
     viewModelOf(::ProfilesViewModel)
