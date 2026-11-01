@@ -37,6 +37,9 @@ fun MultiviewTileMenu(
     onFullscreen: () -> Unit,
     onSound: () -> Unit,
     onSoundOnly: () -> Unit,
+    /** Sound follows selection: whether it is on, and the row that turns it on or off. */
+    soundFollows: Boolean,
+    onSoundFollows: () -> Unit,
     onRemove: () -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -75,6 +78,11 @@ fun MultiviewTileMenu(
             )
             MenuRow(stringResource(R.string.multiview_tile_remove), OwnTVIcon.CLOSE, onRemove)
         }
+        MenuRow(
+            label = stringResource(if (soundFollows) R.string.multiview_sound_follows_on else R.string.multiview_sound_follows_off),
+            icon = OwnTVIcon.VOLUME_HIGH,
+            onClick = onSoundFollows,
+        )
         MenuRow(stringResource(R.string.content_close), OwnTVIcon.CLOSE, onDismiss)
       }
       }
