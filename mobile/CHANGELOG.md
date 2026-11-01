@@ -7,6 +7,15 @@
 > Issue numbers that are part of a title are fine; explanatory parentheticals are not. The detail —
 > what, why, files and verification — belongs in the commit message, never here.
 
+## v1.1.12 — 2026-11-01
+
+### New features
+- **Announcements from MPTV**
+- **Required update for old versions**
+- **Voice search**
+- **EPG Sources: out-of-date guide warning**
+- **Sports: Preview tab on the match page**
+
 ## v1.1.11 — 2026-11-01
 
 ### New features
