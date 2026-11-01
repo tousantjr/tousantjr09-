@@ -858,11 +858,12 @@ class LiveViewModel(
     val previewBlockedSingleSession: StateFlow<Boolean> = live.previewBlockedSingleSession
 
     /** In-pane preview playback (no history) — triggered by the UI after the focus settles. */
-    fun playPreview(channel: ChannelEntity) {
+    fun playPreview(channel: ChannelEntity, forceMuted: Boolean = false) {
         if (channel.categoryId != null && channel.categoryId in hiddenCategoryIds.value) return
         // Core keeps the preview off a promoted full-screen stream, re-mutes on a re-focus instead of
         // reloading, mints a Stalker link, and holds back on a one-session panel while mpv plays.
-        live.preview(channel, muted = !livePreviewAudio.value)
+        // [forceMuted]: the Sports hub's card preview is always silent, whatever Live TV's audio setting.
+        live.preview(channel, muted = forceMuted || !livePreviewAudio.value)
     }
 
     // --- Multiview: channels kept from the browse screen ------------------------------------------

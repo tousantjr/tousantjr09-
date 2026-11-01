@@ -29,6 +29,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusProperties
@@ -96,6 +97,9 @@ private val LINE_SCORE_SPORTS = setOf(Sport.TENNIS, Sport.CRICKET, Sport.GOLF, S
 /** Chips shown before "+N": eight sports. */
 private const val SPORT_CHIPS = 8
 
+/** How long a card keeps focus before its live preview starts. */
+private const val HUB_PREVIEW_DWELL_MS = 1_500L
+
 /**
  * The Sports hub: title and today's counts, sport chips ending in ⟳ (rebuild),
  * *Live now* with the featured first card, *Sport on your channels now* from the guide, *Starting soon*,
@@ -105,6 +109,8 @@ private const val SPORT_CHIPS = 8
 @Composable
 fun SportsHubScreen(
     vm: SportsViewModel,
+    /** Live TV's preview player: a focused card plays its game's channel through it, muted (no second decoder). */
+    liveVm: tv.own.owntv.features.live.LiveViewModel,
     onOpenMatch: (Match) -> Unit,
     onPlayChannel: (ChannelEntity, List<ChannelEntity>) -> Unit,
     onOpenUpcoming: () -> Unit,
@@ -140,6 +146,29 @@ fun SportsHubScreen(
     // The menu's Remind me needs a channel: one Find channels already found for that match, if any.
     var menuChannels by remember { mutableStateOf<List<WatchOption>>(emptyList()) }
     androidx.compose.runtime.LaunchedEffect(menuFor) { menuChannels = menuFor?.let { vm.channelsFound(it) }.orEmpty() }
+
+    // Live preview on Sports tab (Settings → Sports): a card that keeps focus for a moment plays its game's
+    // first Watch live channel, muted, inside the card. Off with Live TV's own preview off, and while
+    // spoiler-free is on (a live picture shows the score). Moving on stops it; only the one player runs.
+    val notices by org.koin.compose.koinInject<SportsNoticeSettings>().config.collectAsStateWithLifecycle(SportsNoticeConfig())
+    val livePreviewOn by liveVm.livePreviewEnabled.collectAsStateWithLifecycle()
+    val previewOn = notices.livePreview && livePreviewOn && !config.spoilerFree
+    var focusedCard by remember { mutableStateOf<Match?>(null) }
+    var previewing by remember { mutableStateOf<String?>(null) }
+    androidx.compose.runtime.LaunchedEffect(focusedCard?.key, previewOn) {
+        if (previewing != null) { liveVm.stopPreview(); previewing = null }
+        val m = focusedCard ?: return@LaunchedEffect
+        if (!previewOn) return@LaunchedEffect
+        kotlinx.coroutines.delay(HUB_PREVIEW_DWELL_MS)
+        val channel = vm.previewChannel(m) ?: return@LaunchedEffect
+        liveVm.playPreview(channel, forceMuted = true)
+        previewing = m.key
+    }
+    // Leaving the hub (OK opens the match page) ends a preview this screen started, and only that one.
+    DisposableEffect(Unit) { onDispose { if (previewing != null) liveVm.stopPreview() } }
+    fun Modifier.previewFocus(m: Match) = onFocusChanged {
+        if (it.isFocused) focusedCard = m else if (focusedCard?.key == m.key) focusedCard = null
+    }
 
     val myTeamKeys = remember(config.teams) { config.teams.map { it.key }.toSet() }
     fun Match.isMine() = competitors.any { FollowedTeam(sport, it.team.id, it.team.name).key in myTeamKeys }
@@ -263,7 +292,8 @@ fun SportsHubScreen(
                                     m, featured = i == 0, config = config, now = now,
                                     reminded = false,
                                     onClick = { onOpenMatch(m) }, onPlay = { onOpenMatch(m) }, onHold = { menuFor = m },
-                                    modifier = (if (i == 0) Modifier.focusRequester(featuredFocus) else Modifier).focusRequester(focusOf(m.key)),
+                                    preview = liveVm.previewEngine.takeIf { previewing == m.key },
+                                    modifier = (if (i == 0) Modifier.focusRequester(featuredFocus) else Modifier).focusRequester(focusOf(m.key)).previewFocus(m),
                                 )
                             }
                         }
@@ -310,7 +340,8 @@ fun SportsHubScreen(
                                     m, featured = false, config = config, now = now,
                                     reminded = SportsViewModel.reminderKey(m.startMs, MatchNotifications.pair(context, m)) in state.reminders,
                                     onClick = { onOpenMatch(m) }, onPlay = { onOpenMatch(m) }, onHold = { menuFor = m },
-                                    modifier = Modifier.focusRequester(focusOf(m.key)),
+                                    preview = liveVm.previewEngine.takeIf { previewing == m.key },
+                                    modifier = Modifier.focusRequester(focusOf(m.key)).previewFocus(m),
                                 )
                             }
                         }
@@ -428,7 +459,8 @@ internal fun SportsChip(
 /**
  * `.mc`: a match card, 324 wide (the featured first card 648, with the big score). League line and
  * minute or kick-off on top, both sides with crest and score, then a Reminder tag or the followed star.
- * No channels: they are found on the match page.
+ * No channels: they are found on the match page. With [preview] (the hub's Live preview on Sports tab),
+ * the game's channel plays muted behind the card's text.
  */
 @Composable
 internal fun MatchCard(
@@ -441,6 +473,7 @@ internal fun MatchCard(
     onPlay: () -> Unit,
     onHold: () -> Unit,
     modifier: Modifier = Modifier,
+    preview: tv.own.owntv.player.LivePreviewEngine? = null,
 ) {
     val r = 20.mpx
     val locale = LocalConfiguration.current.locales[0]
@@ -462,6 +495,7 @@ internal fun MatchCard(
             .background(StageColors.Ink.copy(alpha = 0.045f), RoundedCornerShape(r))
             .drawBehind { drawInnerRing(Color.White.copy(alpha = 0.05f), 1.mpx.toPx(), r.toPx()) },
     ) { _ ->
+        if (preview != null) CardPreview(preview, r)
         Column(Modifier.fillMaxSize().padding(horizontal = 20.mpx, vertical = 16.mpx)) {
             // League line · minute (red while live) or kick-off.
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -484,6 +518,21 @@ internal fun MatchCard(
             val followed = m.competitors.any { c -> config.teams.any { it.sport == m.sport && it.id == c.team.id } }
             CardFooter(m.venue, reminded, followed)
         }
+    }
+}
+
+/**
+ * The card's live preview: Live TV's preview player drawn through a TextureView (the card scales on
+ * focus, which a SurfaceView would not follow), under a dark veil so the card's text stays readable.
+ * Nothing until the stream is loading or playing; a failed stream leaves the card as it was.
+ */
+@Composable
+private fun CardPreview(engine: tv.own.owntv.player.LivePreviewEngine, r: Dp) {
+    val state by engine.state.collectAsStateWithLifecycle()
+    if (state == tv.own.owntv.player.LivePreviewEngine.State.ERROR || state == tv.own.owntv.player.LivePreviewEngine.State.IDLE) return
+    Box(Modifier.fillMaxSize().clip(RoundedCornerShape(r))) {
+        tv.own.owntv.player.ExoPreviewSurface(engine = engine, modifier = Modifier.fillMaxSize(), useTextureView = true)
+        Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.55f)))
     }
 }
 

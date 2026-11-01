@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.transformLatest
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import tv.own.owntv.core.database.dao.SourceDao
 import tv.own.owntv.core.database.entity.ChannelEntity
 import tv.own.owntv.core.reminder.ReminderManager
@@ -386,9 +387,36 @@ class SportsViewModel(
         return WatchList.of(options, WatchFilter.from(c, Locale.getDefault().language, liveSources.value)).shown
     }
 
+    /**
+     * The Sports list's preview (Settings → Sports → Live preview on Sports tab): the channel the match
+     * page would list first under Watch live — same search, same filter, same order — or null when the
+     * game is neither on nor about to start ([previewable]), Find channels' window is shut, or no channel
+     * carries it. Searches this one match when nothing was found for it yet, as [remindFeatured] does.
+     */
+    suspend fun previewChannel(match: Match): ChannelEntity? = withContext(Dispatchers.Default) {
+        val b = repository.board.value
+        val m = b.match(match.key) ?: match
+        val now = System.currentTimeMillis()
+        if (!previewable(m.isLive, m.startMs, now) || !hasPlaylist.first()) return@withContext null
+        if (WatchWindow.of(m, b.endedAt[m.key], now) != WatchWindow.Open) return@withContext null
+        val c = config.first()
+        val found = watchReader.found(m) { SportsMemory.rememberedFor(c, it) }
+            ?: watchReader.watchFor(listOf(m)) { SportsMemory.rememberedFor(c, it) }[m.key].orEmpty()
+        val appLanguage = Locale.getDefault().language
+        val preferred = c.preferredLanguages(appLanguage).toList()
+        WatchList.of(found, WatchFilter.from(c, appLanguage, liveSources.value), preferred, alsoList = preferred.toSet())
+            .shown.firstOrNull()?.channel
+    }
+
     companion object {
         private const val HOME_ROW_DELAY_MS = 3_000L
         private const val MATCH_WAIT_MS = 10_000L
+
+        /** How soon before kick-off a card may preview its channel ("about to start"). */
+        const val PREVIEW_LEAD_MS = 15 * 60_000L
+
+        /** A card previews while its game is live, or kicks off within [PREVIEW_LEAD_MS]. */
+        fun previewable(isLive: Boolean, startMs: Long, now: Long): Boolean = isLive || startMs - now in 0..PREVIEW_LEAD_MS
 
         fun reminderKey(startMs: Long, title: String) = "$startMs|$title"
     }

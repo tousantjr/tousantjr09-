@@ -1,6 +1,25 @@
 package tv.own.owntv.mobile.ui.screens.sports
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.height
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import kotlinx.coroutines.launch
+import tv.own.owntv.core.database.entity.ChannelEntity
+import tv.own.owntv.core.live.ProviderTags
+import tv.own.owntv.core.settings.SettingsRepository
+import tv.own.owntv.mobile.ui.components.sheetOpen
+import tv.own.owntv.mobile.ui.player.VideoStage
+import tv.own.owntv.mobile.ui.screens.live.LiveTuner
+import tv.own.owntv.mobile.ui.shell.LocalStreamOnScreen
+import tv.own.owntv.mobile.ui.stage.StageLiveBadge
+import tv.own.owntv.mobile.ui.stage.StageRadii
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -126,9 +145,58 @@ fun SportsScreen(
     val followedSports = remember(config) { vm.followedSports(config) }
     val context = LocalContext.current
 
+    // Live preview on Sports tab (Settings → Sports): a long press on a game that is on (or about to
+    // start) also plays its first Watch live channel, muted, above the list — the match page's search,
+    // Live TV's preview player. Never over a stream the user is watching, not with Live TV's preview off,
+    // not while spoiler-free is on (a live picture shows the score). A tap still opens the match page.
+    val tuner = koinInject<LiveTuner>()
+    val cast = koinInject<tv.own.owntv.mobile.cast.CastController>()
+    val notices by koinInject<SportsNoticeSettings>().config.collectAsStateWithLifecycle(SportsNoticeConfig())
+    val livePreviewOn by koinInject<SettingsRepository>().livePreviewEnabled.collectAsStateWithLifecycle(true)
+    val previewOn = notices.livePreview && livePreviewOn && !config.spoilerFree
+    var previewFor by remember { mutableStateOf<Match?>(null) }
+    var previewChannel by remember { mutableStateOf<ChannelEntity?>(null) }
+    val scope = rememberCoroutineScope()
+    fun stopPreview() {
+        if (previewChannel != null && tuner.previewing.value) tuner.stop()
+        previewFor = null
+        previewChannel = null
+    }
+    fun startPreview(m: Match) {
+        if (!previewOn || previewFor?.key == m.key) return
+        // Casting, the tuner's preview would put the channel on the television: a glance is the phone's only.
+        if (tuner.channel.value != null && !tuner.previewing.value || cast.deviceName.value != null) return
+        previewFor = m
+        scope.launch {
+            val channel = vm.previewChannel(m)
+            if (previewFor?.key != m.key) return@launch
+            if (channel == null) { stopPreview(); return@launch }
+            previewChannel = channel
+            tuner.preview(channel.id, forceMuted = true)
+        }
+    }
+    LaunchedEffect(previewOn) { if (!previewOn) stopPreview() }
+    // Stopped elsewhere (leaving the app ends a preview): the box goes with it.
+    val tuned by tuner.channel.collectAsStateWithLifecycle()
+    LaunchedEffect(tuned?.id) {
+        if (previewChannel != null && tuned?.id != previewChannel?.id) { previewFor = null; previewChannel = null }
+    }
+    val streamOnScreen = LocalStreamOnScreen.current
+    DisposableEffect(previewChannel != null) {
+        streamOnScreen.value = previewChannel != null
+        onDispose { streamOnScreen.value = false }
+    }
+    DisposableEffect(Unit) { onDispose { if (previewChannel != null && tuner.previewing.value) tuner.stop() } }
+
     val listState = rememberLazyListState()
     listState.ObeyScrollToTop(route = route, scrollToTop = scrollToTop)
-    LazyColumn(state = listState, modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 100.dp)) {
+    Column(Modifier.fillMaxSize()) {
+    val shownPreview = previewChannel
+    val shownFor = previewFor
+    if (shownPreview != null && shownFor != null) {
+        SportsLivePreview(tuner, shownPreview, onOpen = { onOpenMatch(shownFor) }, onClose = { stopPreview() })
+    }
+    LazyColumn(state = listState, modifier = Modifier.fillMaxWidth().weight(1f), contentPadding = PaddingValues(bottom = 100.dp)) {
         item(key = "head") {
             Column(Modifier.padding(horizontal = 14.dp)) {
                 HubSubtitle(today.filter { it.passes() })
@@ -202,7 +270,7 @@ fun SportsScreen(
                     RowHeader(stringResource(R.string.sports_live_now), live = true)
                     LazyRow(contentPadding = PaddingValues(horizontal = 14.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         itemsIndexed(live, key = { _, m -> m.key }) { i, m ->
-                            MatchCard(m, featured = i == 0, config = config, reminded = false, onClick = { onOpenMatch(m) }, onLongClick = { menuFor = m })
+                            MatchCard(m, featured = i == 0, config = config, reminded = false, onClick = { onOpenMatch(m) }, onLongClick = { menuFor = m; startPreview(m) })
                         }
                     }
                 }
@@ -221,10 +289,11 @@ fun SportsScreen(
                     m,
                     reminded = SportsViewModel.reminderKey(m.startMs, MatchNotifications.pair(context, m)) in state.reminders,
                     onClick = { onOpenMatch(m) },
-                    onLongClick = { menuFor = m },
+                    onLongClick = { menuFor = m; startPreview(m) },
                 )
             }
         }
+    }
     }
 
     menuFor?.let { m ->
@@ -233,6 +302,46 @@ fun SportsScreen(
             onFollow = { vm.toggleTeam(it) },
             onRemind = { vm.remind(m, menuChannels) },
             onDismiss = { menuFor = null },
+        )
+    }
+}
+
+/**
+ * The Sports list's live preview: the long-pressed game's channel through Live TV's preview player, muted,
+ * with the LIVE badge and the channel's name; a tap opens the match page, ✕ stops it. Covered while a
+ * sheet is open (the surface is punched through the window), as Live TV's preview is.
+ */
+@Composable
+private fun SportsLivePreview(tuner: LiveTuner, channel: ChannelEntity, onOpen: () -> Unit, onClose: () -> Unit) {
+    val shape = RoundedCornerShape(StageRadii.Video)
+    val name = remember(channel.name) { ProviderTags.parse(channel.name).name }
+    val close = stringResource(R.string.content_close)
+    Box(
+        Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 14.dp, vertical = 8.dp)
+            .height(180.dp)
+            .clip(shape)
+            .background(Color.Black)
+            .clickable(onClick = onOpen),
+    ) {
+        VideoStage(player = tuner.player, modifier = Modifier.fillMaxSize())
+        if (sheetOpen()) Box(Modifier.fillMaxSize().background(Color.Black))
+        Box(Modifier.fillMaxSize().background(Brush.verticalGradient(0.55f to Color.Transparent, 1f to Color.Black.copy(alpha = 0.72f))))
+        StageLiveBadge(stringResource(R.string.player_live), Modifier.align(Alignment.TopStart).padding(10.dp))
+        Box(
+            Modifier
+                .align(Alignment.TopEnd)
+                .padding(6.dp)
+                .size(36.dp)
+                .clip(RoundedCornerShape(18.dp))
+                .clickable(onClick = onClose)
+                .semantics { contentDescription = close },
+            contentAlignment = Alignment.Center,
+        ) { StageIcon(MobileIcons.Close, 18.dp, Color.White) }
+        Text(
+            name, style = stageText(13.5f, 700), color = Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.align(Alignment.BottomStart).padding(start = 12.dp, end = 12.dp, bottom = 10.dp),
         )
     }
 }

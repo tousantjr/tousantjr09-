@@ -136,6 +136,11 @@ fun SportsSettingsPage(vm: SportsSettingsViewModel = koinViewModel()) {
                 SwitchRow(MobileIcons.Layers, stringResource(R.string.sports_strict_filter), stringResource(R.string.sports_strict_filter_description), c.strictFilter) {
                     vm.update { it.copy(strictFilter = !it.strictFilter) }
                 }
+                // The Sports list's muted preview of a long-pressed game: this device's (SportsNoticeSettings), like the ticker.
+                val hubNotices by vm.noticeConfig.collectAsStateWithLifecycle()
+                SwitchRow(MobileIcons.LiveTv, stringResource(R.string.sports_live_preview), stringResource(R.string.sports_live_preview_description), hubNotices.livePreview) {
+                    vm.setLivePreview(!hubNotices.livePreview)
+                }
             }
         }
         item(key = "while") {

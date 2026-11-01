@@ -22,6 +22,8 @@ data class SportsNoticeConfig(
     val scoreTicker: Boolean = false,
     /** The local day (ISO date) the heads-up was last posted, so a re-run of the worker never posts twice. */
     val gameDayNotifiedDay: String? = null,
+    /** The Sports tab's muted live-channel preview of the selected game. On until turned off. */
+    val livePreview: Boolean = true,
 ) {
     companion object {
         const val DEFAULT_GAME_DAY_HOUR = 9
@@ -44,6 +46,7 @@ class SportsNoticeSettings(private val context: Context) {
         val GAME_DAY_HOUR = intPreferencesKey("game_day_hour")
         val SCORE_TICKER = booleanPreferencesKey("score_ticker")
         val GAME_DAY_NOTIFIED = stringPreferencesKey("game_day_notified_day")
+        val LIVE_PREVIEW = booleanPreferencesKey("live_preview")
     }
 
     val config: Flow<SportsNoticeConfig> = context.sportsNoticeDataStore.data.map { p ->
@@ -52,6 +55,7 @@ class SportsNoticeSettings(private val context: Context) {
             gameDayHour = p[Keys.GAME_DAY_HOUR]?.takeIf { it in 0..23 } ?: SportsNoticeConfig.DEFAULT_GAME_DAY_HOUR,
             scoreTicker = p[Keys.SCORE_TICKER] ?: false,
             gameDayNotifiedDay = p[Keys.GAME_DAY_NOTIFIED]?.takeIf { it.isNotEmpty() },
+            livePreview = p[Keys.LIVE_PREVIEW] ?: true,
         )
     }.distinctUntilChanged()
 
@@ -68,6 +72,8 @@ class SportsNoticeSettings(private val context: Context) {
     }
 
     suspend fun setScoreTicker(on: Boolean) = edit { it[Keys.SCORE_TICKER] = on }
+
+    suspend fun setLivePreview(on: Boolean) = edit { it[Keys.LIVE_PREVIEW] = on }
 
     suspend fun markGameDayNotified(day: String) = edit { it[Keys.GAME_DAY_NOTIFIED] = day }
 

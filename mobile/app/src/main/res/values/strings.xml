@@ -331,6 +331,8 @@
     <string name="sports_game_day_now">Now</string>
     <string name="sports_score_ticker">Score ticker</string>
     <string name="sports_score_ticker_description">While you watch, a small line at the top of the picture cycles through your other followed games that are on. Spoiler-free leaves out the scores</string>
+    <string name="sports_live_preview">Live preview on Sports tab</string>
+    <string name="sports_live_preview_description">Touch and hold a live game\'s card to play its channel muted at the top of the list. Off while spoiler-free is on</string>
     <!-- The ticker's switch sheet (a tap on the pill): the eyebrow over the game's name. -->
     <string name="sports_ticker_switch_title">Switch game</string>
     <!-- Settings › Layout › Home › Trakt -->
