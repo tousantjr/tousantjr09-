@@ -434,6 +434,8 @@ dependencies {
 
     // Test
     testImplementation(libs.junit)
+    // Test-only, never packaged: android.jar's org.json is a stub, so JSON parsing tests need the real one.
+    testImplementation(libs.org.json)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))

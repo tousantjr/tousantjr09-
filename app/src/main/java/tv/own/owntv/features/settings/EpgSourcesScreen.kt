@@ -231,6 +231,7 @@ private fun EpgRow(
     val catchupNote = count?.third?.takeIf { it > 0 }?.let {
         pluralStringResource(R.plurals.settings_epg_sources_catchup, it, it)
     }
+    val staleDays = guideStaleDays(source.lastSyncAt)
     val status = when {
         activeSync != null -> when {
             activeSync.programmes > 0 -> stringResource(
@@ -249,6 +250,7 @@ private fun EpgRow(
             R.string.settings_epg_sources_error,
             classifySyncFailure(source.lastError, online = true).displayText(),
         )
+        staleDays != null -> pluralStringResource(R.plurals.settings_epg_sources_stale, staleDays, staleDays)
         count != null && count!!.second > 0 -> {
             val counts = stringResource(
                 R.string.settings_epg_sources_status_count,
@@ -263,7 +265,8 @@ private fun EpgRow(
         } ?: stringResource(R.string.settings_epg_sources_status_synced)
         else -> stringResource(R.string.settings_epg_sources_not_synced)
     }
-    val failed = source.lastError != null && activeSync == null
+    // An out-of-date feed is shown like a failed one: red, on the right, where it is seen.
+    val failed = (source.lastError != null || staleDays != null) && activeSync == null
     val badge = when {
         deleting -> stringResource(R.string.settings_epg_sources_deleting)
         activeSync != null -> syncPercent?.let { stringResource(R.string.settings_epg_sources_syncing_percent, it) }
@@ -503,3 +506,17 @@ private fun PlaylistEpgPicker(
     if (panelEditor(onDismiss) { list() }) return
     tv.own.owntv.ui.stage.StagePopup(onDismiss = onDismiss, title = stringResource(R.string.settings_epg_sources_fill_playlist)) { list() }
 }
+
+/**
+ * Whole days since a guide feed last synced, once that is past [STALE_GUIDE_MS] (three days, the
+ * same line Diagnostics draws between "ageing" and "a problem"); null while it is fresh or has never
+ * synced. A feed that quietly stopped updating still says "synced" with plenty of programmes — until
+ * the guide runs out mid-week — so its row says "out of date" instead.
+ */
+internal fun guideStaleDays(lastSyncAt: Long?, now: Long = System.currentTimeMillis()): Int? {
+    val age = now - (lastSyncAt ?: return null)
+    return if (age > STALE_GUIDE_MS) (age / DAY_MS).toInt() else null
+}
+
+private const val DAY_MS = 24L * 60 * 60 * 1000
+private const val STALE_GUIDE_MS = 3 * DAY_MS

@@ -208,12 +208,14 @@ val appModule = module {
     // Settings → Sports → the game-day heads-up and the score ticker: app-level too (SportsNoticeSettings),
     // core's SportsConfig being compiled; the store also keeps GameDayWorker's schedule in step.
     single { tv.own.owntv.features.sports.SportsNoticeSettings(androidContext()) }
+    single { tv.own.owntv.features.update.MinVersionCheck(get()) }
     single { tv.own.owntv.features.sports.odds.EspnOddsSource(get()) }
     single { tv.own.owntv.features.sports.odds.TheOddsApiSource(get()) }
     single { tv.own.owntv.features.sports.odds.OddsRepository(get(), get(), get()) }
     // The match page's Preview tab: ESPN's article, records, win chance, head to head and injuries before kick-off.
     single { tv.own.owntv.features.sports.preview.MatchPreviewSource(get()) }
     single { tv.own.owntv.features.sports.preview.MatchPreviewRepository(get()) }
+    single { tv.own.owntv.features.announce.AnnouncementCheck(get(), androidContext()) }
     viewModelOf(::SeriesViewModel)
     viewModelOf(::SearchViewModel)
     viewModelOf(::ProfilesViewModel)

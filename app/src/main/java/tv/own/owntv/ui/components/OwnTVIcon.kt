@@ -45,6 +45,9 @@ enum class OwnTVIcon {
     PHONE, SEND,
     // The sleep timer: a crescent moon, the phone's mark for the same button.
     BEDTIME,
+    // Voice search: a microphone. Every other sound mark here is a speaker or a note, and both of
+    // those mean "what comes out", not "what goes in".
+    MIC,
     // Stage marks with no older counterpart (see StageGlyphs.kt). TILES is the More destination.
     PLAY_CIRCLE, BELL, REC, CHEVRON_LEFT, GRID, LIST, CHECK, CLOCK, SUN, TREND, LAYERS, PENCIL,
     EYE_OFF, MOVE, EXTERNAL, TRASH, MULTIVIEW, NOW, CALENDAR, TILES,
@@ -341,6 +344,15 @@ fun OwnTVIcon(
                 val disc = Path().apply { addOval(Rect(p(3.5f, 3.5f), p(20.5f, 20.5f))) }
                 val bite = Path().apply { addOval(Rect(p(9.5f, 1f), p(23f, 14.5f))) }
                 drawPath(Path.combine(PathOperation.Difference, disc, bite), tint, style = stroke)
+            }
+            OwnTVIcon.MIC -> {
+                drawRoundRectStroke(p(9f, 3f), p(15f, 14f), 3f * s, tint, stroke)
+                drawArc(
+                    color = tint, startAngle = 0f, sweepAngle = 180f, useCenter = false,
+                    topLeft = p(6f, 5f), size = Size(12f * s, 12f * s), style = stroke,
+                )
+                drawLineStroke(p(12f, 17f), p(12f, 21f), tint, stroke)
+                drawLineStroke(p(9f, 21f), p(15f, 21f), tint, stroke)
             }
             OwnTVIcon.SEND -> {
                 // DOWNLOADS reflected: same shaft, same baseline, arrowhead at the top. Send and

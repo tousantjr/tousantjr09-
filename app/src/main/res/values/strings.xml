@@ -6,6 +6,9 @@
   The content_search_* strings below the brand block are upstream's own.
 -->
 <resources>
+    <!-- Voice search on the Search page. -->
+    <string name="search_voice">Voice search</string>
+    <string name="search_voice_prompt">Say a channel, film or show</string>
     <string name="app_name" translatable="false">MPTV</string>
     <string name="brand_own" translatable="false">MP</string>
     <string name="brand_tv" translatable="false">TV</string>
@@ -89,6 +92,10 @@
     <string name="boxing_searching_channels">Searching your channels…</string>
     <string name="boxing_no_channels_found">No matching channels found in your playlist</string>
 
+    <!-- Minimum version: min_version.json says this build is too old. -->
+    <string name="min_version_title">Update needed</string>
+    <string name="min_version_body">This version of MPTV (%1$s) is no longer supported. Update to %2$s or newer to keep watching.</string>
+    <string name="min_version_update">Update now</string>
     <!-- Home → subscription notice: a strip above the rows once an Xtream playlist's account ends
          within a week, or has ended (SubscriptionExpiry / SubscriptionNotice). %1$s is the playlist's
          name as the user named it; the date is formatted by the app. -->
@@ -215,6 +222,12 @@
     </plurals>
     <string name="sports_matchpreview_source">Preview from ESPN</string>
     <string name="sports_matchpreview_none">–</string>
+    <!-- EPG Sources: a feed that has not synced for over three days. %d = whole days. -->
+    <plurals name="settings_epg_sources_stale">
+        <item quantity="one">Out of date · last updated %d day ago</item>
+        <item quantity="other">Out of date · last updated %d days ago</item>
+    </plurals>
+    <string name="settings_epg_sources_stale_badge">Out of date</string>
     <string name="diagnostics_sports_title">Sports scores</string>
     <plurals name="diagnostics_sports_failing">
         <item quantity="one">%1$d score feed couldn\'t load — some scores may be missing</item>
@@ -419,4 +432,7 @@
     </plurals>
     <string name="trakt_status_scrobbled">Last scrobbled: %1$s</string>
     <string name="settings_search_keywords_trakt">trakt scrobble scrobbling watchlist sync watched history resume up next episode</string>
+    <!-- Announcements: the owner's message from announcement.json, shown once. -->
+    <string name="announcement_title">Announcement</string>
+    <string name="announcement_eyebrow">Message from MPTV</string>
 </resources>

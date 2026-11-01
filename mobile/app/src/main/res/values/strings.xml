@@ -5,6 +5,9 @@
   merge, so redefining just these three here rebrands the app without touching :core or any Kotlin.
 -->
 <resources>
+    <!-- Voice search on the Search page. -->
+    <string name="search_voice">Voice search</string>
+    <string name="search_voice_prompt">Say a channel, film or show</string>
     <string name="app_name" translatable="false">MPTV</string>
     <string name="brand_own" translatable="false">MP</string>
     <string name="brand_tv" translatable="false">TV</string>
@@ -144,9 +147,19 @@
     </plurals>
     <string name="sports_matchpreview_source">Preview from ESPN</string>
     <string name="sports_matchpreview_none">–</string>
+    <!-- EPG Sources: a feed that has not synced for over three days. %d = whole days. -->
+    <plurals name="settings_epg_sources_stale">
+        <item quantity="one">Out of date · last updated %d day ago</item>
+        <item quantity="other">Out of date · last updated %d days ago</item>
+    </plurals>
+    <string name="settings_epg_sources_stale_badge">Out of date</string>
     <string name="sports_odds_status_http">The odds service answered HTTP %1$d</string>
     <string name="sports_odds_status_no_line">No line for the last game shown</string>
     <string name="sports_odds_status_not_covered">The last game\'s league is not covered by The Odds API</string>
+    <!-- Minimum version: min_version.json says this build is too old. -->
+    <string name="min_version_title">Update needed</string>
+    <string name="min_version_body">This version of MPTV (%1$s) is no longer supported. Update to %2$s or newer to keep watching.</string>
+    <string name="min_version_update">Update now</string>
     <plurals name="sports_odds_requests_left">
         <item quantity="one">%1$d request left this month</item>
         <item quantity="other">%1$d requests left this month</item>
@@ -405,4 +418,7 @@
         <item quantity="other">Showing %1$d watchlist titles</item>
     </plurals>
     <string name="trakt_status_scrobbled">Last scrobbled: %1$s</string>
+    <!-- Announcements: the owner's message from announcement.json, shown once. -->
+    <string name="announcement_title">Announcement</string>
+    <string name="announcement_eyebrow">Message from MPTV</string>
 </resources>
