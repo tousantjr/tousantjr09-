@@ -115,6 +115,8 @@ class SportsViewModel(
     sourceDao: SourceDao,
     // Appended last: SportsModule binds this view-model positionally.
     private val odds: OddsRepository,
+    /** ESPN's pre-game preview for the match page's Preview tab (appended last, as above). */
+    private val previews: tv.own.owntv.mobile.ui.screens.sports.preview.MatchPreviewRepository,
 ) : ViewModel() {
 
     private val config = settings.activeSportsConfig.distinctUntilChanged()
@@ -271,6 +273,13 @@ class SportsViewModel(
     val matchOdds: StateFlow<OddsLine?> = matchPage.map { it?.match }
         .distinctUntilChanged { a, b -> a?.key == b?.key && a?.state == b?.state }
         .flatMapLatest { odds.observe(it) }
+        .flowOn(Dispatchers.Default)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
+    /** The open match's preview (the Preview tab): before kick-off only, gone once the game starts. */
+    val matchPreview: StateFlow<tv.own.owntv.mobile.ui.screens.sports.preview.MatchPreview?> = matchPage.map { it?.match }
+        .distinctUntilChanged { a, b -> a?.key == b?.key && a?.state == b?.state }
+        .flatMapLatest { previews.observe(it) }
         .flowOn(Dispatchers.Default)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 

@@ -70,8 +70,11 @@ import tv.own.owntv.mobile.ui.stage.StageTool
 import tv.own.owntv.mobile.ui.stage.stageAccent
 import tv.own.owntv.mobile.ui.stage.stageText
 
-/** The match page's tabs: Watch live first, then the television's details (Form in Head to head's place). */
-private enum class MatchTab { WATCH, TIMELINE, STATS, LINEUPS, TABLE, FORM, BROADCASTS }
+/**
+ * The match page's tabs: Watch live first, then the television's details (Form in Head to head's place).
+ * Preview (ESPN's pre-game preview) only before kick-off, when ESPN has one.
+ */
+private enum class MatchTab { WATCH, PREVIEW, TIMELINE, STATS, LINEUPS, TABLE, FORM, BROADCASTS }
 
 /**
  * A match (the television's match page as built). The league line and Following, the score box
@@ -91,6 +94,7 @@ fun SportsMatchScreen(
     LaunchedEffect(matchKey) { vm.matchOf(matchKey)?.let(vm::open) }
     val page by vm.matchPage.collectAsStateWithLifecycle()
     val odds by vm.matchOdds.collectAsStateWithLifecycle()
+    val preview by vm.matchPreview.collectAsStateWithLifecycle()
     val raw = page ?: return
     // Same-tier channels reordered by how they have behaved on this phone — here rather than in the
     // view model, whose constructor SportsModule binds positionally (the television ranks in its own).
@@ -98,7 +102,9 @@ fun SportsMatchScreen(
     val healthSnapshot by health.snapshot.collectAsState()
     val state = remember(raw, healthSnapshot) { raw.copy(list = health.rank(raw.list)) }
     val m = state.match
-    var tab by rememberSaveable { mutableStateOf(MatchTab.WATCH) }
+    var picked by rememberSaveable { mutableStateOf(MatchTab.WATCH) }
+    // Preview goes away as the game starts; a page left on it falls back to Watch live.
+    val tab = if (picked == MatchTab.PREVIEW && preview == null) MatchTab.WATCH else picked
     var revealed by remember(m.key) { mutableStateOf(false) }
     var filters by remember { mutableStateOf(false) }
     var rememberFor by remember { mutableStateOf<WatchOption?>(null) }
@@ -110,6 +116,7 @@ fun SportsMatchScreen(
     val listState = rememberLazyListState()
 
     val tabs = MatchTab.entries.filter {
+        (it != MatchTab.PREVIEW || preview != null) &&
         (it != MatchTab.TABLE || state.standings?.groups?.any { g -> g.rows.isNotEmpty() } == true) &&
             (it != MatchTab.STATS || !state.summary?.stats.isNullOrEmpty()) &&
             (it != MatchTab.LINEUPS || !state.summary?.lineups.isNullOrEmpty()) &&
@@ -151,11 +158,12 @@ fun SportsMatchScreen(
         }
         item(key = "tabs") {
             LazyRow(Modifier.padding(top = 12.dp, bottom = 6.dp), contentPadding = PaddingValues(horizontal = 14.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                items(tabs) { t -> StageTool(onClick = { tab = t }, label = stringResource(t.label), on = tab == t) }
+                items(tabs) { t -> StageTool(onClick = { picked = t }, label = stringResource(t.label), on = tab == t) }
             }
         }
         when (tab) {
             MatchTab.WATCH -> watchLive(state, sep, play = play, onHold = { rememberFor = it }, onFind = vm::findChannels, onFilters = { filters = true }, onAddPlaylist = onAddPlaylist)
+            MatchTab.PREVIEW -> preview?.let { p -> item { PreviewTab(p) } }
             MatchTab.TIMELINE -> items((state.summary?.timeline ?: m.events).asReversed()) { e -> TimelineRow(e, m) }
             MatchTab.STATS -> items(state.summary?.stats.orEmpty()) { s -> StatRow(s.label, s.home, s.away) }
             MatchTab.LINEUPS -> item { Lineups(m, state.summary) }
@@ -183,6 +191,7 @@ fun SportsMatchScreen(
 
 private val MatchTab.label: Int get() = when (this) {
     MatchTab.WATCH -> R.string.sports_watch_live
+    MatchTab.PREVIEW -> R.string.sports_tab_preview
     MatchTab.TIMELINE -> R.string.sports_tab_timeline
     MatchTab.STATS -> R.string.sports_tab_stats
     MatchTab.LINEUPS -> R.string.sports_tab_lineups
@@ -481,6 +490,88 @@ private fun Lineups(m: Match, summary: MatchSummary?) {
                 }
             }
         }
+    }
+}
+
+/**
+ * Before kick-off, what ESPN says about the game (the television's Preview tab): win chance as Stats'
+ * bars, each side's record, the head to head with the last meetings, the weather, the preview
+ * article, and each side's injuries. Only what ESPN has is shown.
+ */
+@Composable
+private fun PreviewTab(p: tv.own.owntv.mobile.ui.screens.sports.preview.MatchPreview) {
+    val palette = LocalStagePalette.current
+    val sep = stringResource(R.string.content_epg_bits_separator)
+    val home = p.home
+    val away = p.away
+    val max = tv.own.owntv.mobile.ui.screens.sports.preview.MatchPreviewParser.MAX_INJURIES
+    Column(Modifier.fillMaxWidth().padding(vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        if (home?.winChance != null && away?.winChance != null) {
+            StatRow(
+                stringResource(R.string.sports_matchpreview_win_chance),
+                stringResource(R.string.sports_matchpreview_percent, Math.round(home.winChance)),
+                stringResource(R.string.sports_matchpreview_percent, Math.round(away.winChance)),
+            )
+        }
+        if (home?.record != null || away?.record != null) PreviewLine(stringResource(R.string.sports_matchpreview_record), home?.record, away?.record)
+        if (home?.venueRecord != null || away?.venueRecord != null) PreviewLine(stringResource(R.string.sports_matchpreview_home_away), home?.venueRecord, away?.venueRecord)
+        p.headToHead?.let { h2h ->
+            PreviewHeading(stringResource(R.string.sports_matchpreview_head_to_head))
+            Text(h2h, style = stageText(12.5f, 600), color = palette.body, modifier = Modifier.padding(horizontal = 18.dp))
+        }
+        val locale = LocalConfiguration.current.locales[0]
+        p.meetings.take(5).forEach { g ->
+            val day = runCatching {
+                java.time.LocalDate.parse(g.date).format(java.time.format.DateTimeFormatter.ofLocalizedDate(java.time.format.FormatStyle.MEDIUM).withLocale(locale))
+            }.getOrDefault(g.date)
+            Row(Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 3.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(day, style = stageText(12f, 500), color = palette.muted, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.width(110.dp))
+                Text(stringResource(R.string.sports_matchpreview_score, g.home, g.homeScore, g.awayScore, g.away), style = stageText(12.5f, 700), color = palette.text, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
+        }
+        val weather = p.temperatureF?.let { t ->
+            p.rainChance?.let { stringResource(R.string.sports_matchpreview_weather_rain, t, it) } ?: stringResource(R.string.sports_matchpreview_weather, t)
+        }
+        if (weather != null) Text(weather, style = stageText(12f, 500), color = palette.muted, modifier = Modifier.padding(horizontal = 18.dp, vertical = 4.dp))
+        if (p.headline != null || p.paragraphs.isNotEmpty()) {
+            PreviewHeading(p.headline ?: stringResource(R.string.sports_tab_preview))
+            p.paragraphs.forEach { para ->
+                Text(para, style = stageText(12.5f, 400, lineHeight = 1.45f), color = palette.body, modifier = Modifier.padding(horizontal = 18.dp, vertical = 3.dp))
+            }
+            Text(stringResource(R.string.sports_matchpreview_source), style = stageText(11f, 500), color = palette.dim, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(horizontal = 18.dp))
+        }
+        val sides = listOfNotNull(home, away).filter { it.injuries.isNotEmpty() }
+        if (sides.isNotEmpty()) {
+            PreviewHeading(stringResource(R.string.sports_matchpreview_injuries))
+            sides.forEach { side ->
+                Text(side.abbreviation, style = stageText(12.5f, 800), color = palette.text, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(start = 18.dp, top = 4.dp))
+                side.injuries.take(max).forEach { i ->
+                    Row(Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 2.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Text(listOfNotNull(i.name, i.position).joinToString(sep), style = stageText(12.5f, 600), color = palette.body, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                        Text(listOfNotNull(i.status, i.detail).joinToString(sep), style = stageText(11.5f, 600), color = TierPick, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    }
+                }
+                val more = side.injuries.size - max
+                if (more > 0) Text(pluralStringResource(R.plurals.sports_matchpreview_more, more, more), style = stageText(11.5f, 400), color = palette.dim, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(start = 18.dp))
+            }
+        }
+    }
+}
+
+@Composable
+private fun PreviewHeading(text: String) {
+    Text(text, style = stageText(13.5f, 800), color = LocalStagePalette.current.text, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(start = 18.dp, end = 18.dp, top = 10.dp))
+}
+
+/** Home value, the name, away value — Stats' row without the bar, for records. */
+@Composable
+private fun PreviewLine(label: String, home: String?, away: String?) {
+    val palette = LocalStagePalette.current
+    val none = stringResource(R.string.sports_matchpreview_none)
+    Row(Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 7.dp), verticalAlignment = Alignment.CenterVertically) {
+        Text(home ?: none, style = stageText(13.5f, 700), color = palette.text, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.width(72.dp))
+        Text(label, style = stageText(12f, 600), color = palette.muted, maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center, modifier = Modifier.weight(1f))
+        Text(away ?: none, style = stageText(13.5f, 700), color = palette.text, maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.End, modifier = Modifier.width(72.dp))
     }
 }
 

@@ -118,6 +118,8 @@ class SportsViewModel(
     private val odds: OddsRepository,
     /** How each channel has behaved here: same-tier channels are reordered by it (see [ChannelHealthStore.rank]). */
     private val health: tv.own.owntv.features.health.ChannelHealthStore,
+    /** ESPN's pre-game preview for the match page's Preview tab. */
+    private val previews: tv.own.owntv.features.sports.preview.MatchPreviewRepository,
 ) : ViewModel() {
 
     private val config = settings.activeSportsConfig.distinctUntilChanged()
@@ -281,6 +283,16 @@ class SportsViewModel(
     val matchOdds: StateFlow<OddsLine?> = matchPage.map { it?.match }
         .distinctUntilChanged { a, b -> a?.key == b?.key && a?.state == b?.state }
         .flatMapLatest { odds.observe(it) }
+        .flowOn(Dispatchers.Default)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
+    /**
+     * The open match's preview (the Preview tab): before kick-off only, so it goes away as the game
+     * starts and the board's fresh copy of the match says so.
+     */
+    val matchPreview: StateFlow<tv.own.owntv.features.sports.preview.MatchPreview?> = matchPage.map { it?.match }
+        .distinctUntilChanged { a, b -> a?.key == b?.key && a?.state == b?.state }
+        .flatMapLatest { previews.observe(it) }
         .flowOn(Dispatchers.Default)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
