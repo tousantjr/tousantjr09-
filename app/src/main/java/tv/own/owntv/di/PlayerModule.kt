@@ -19,6 +19,9 @@ val playerModule = module {
     // behind the Live preview pane and promoted fullscreen playback. The pool builds its own, one per
     // tile, and is the only thing that owns more than one at a time.
     single { tv.own.owntv.player.LiveEnginePool { livePreviewEngine() } }
+    // "Preload next channel": one more engine of the same kind, built only when the setting is on and
+    // a neighbour is actually warmed, released when Live is left, backgrounded or memory runs low.
+    single { tv.own.owntv.features.live.LiveChannelPreloader { livePreviewEngine() } }
     // Muted ExoPlayer engine for the Home hero preview. The last argument lets it ask whether mpv is
     // already streaming, so a one-session provider isn't locked out by the hero preview.
     // Resolved lazily inside the lambda to keep this free of a construction-order dependency.

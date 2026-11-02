@@ -93,6 +93,7 @@ class SettingsViewModel(
     private val enginePool: tv.own.owntv.player.LiveEnginePool,
     // Adding a playlist is core's sequence, not a copy of it — see [importState].
     private val importer: SourceImporter,
+    private val livePreload: tv.own.owntv.features.live.LivePreloadSettings,
 ) : ViewModel() {
     companion object {
         private const val TAG = "OwnTVHome"
@@ -513,6 +514,10 @@ class SettingsViewModel(
 
     val directTune: StateFlow<Boolean> = settings.directTune.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), true)
     fun setDirectTune(enabled: Boolean) { viewModelScope.launch { settings.setDirectTune(enabled) } }
+
+    val preloadNextChannel: StateFlow<Boolean> = livePreload.preloadNext
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), tv.own.owntv.features.live.LivePreloadSettings.DEFAULT)
+    fun setPreloadNextChannel(enabled: Boolean) { viewModelScope.launch { livePreload.setPreloadNext(enabled) } }
 
     val liveLeftRightRewinds: StateFlow<Boolean> = settings.liveLeftRightRewinds.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
     fun setLiveLeftRightRewinds(enabled: Boolean) { viewModelScope.launch { settings.setLiveLeftRightRewinds(enabled) } }

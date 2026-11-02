@@ -255,6 +255,8 @@ class OwnTVApp : Application(), SingletonImageLoader.Factory, androidx.work.Conf
         @Suppress("DEPRECATION")
         if (level >= TRIM_MEMORY_RUNNING_LOW) {
             runCatching { SingletonImageLoader.get(this).memoryCache?.clear() }
+            // "Preload next channel" is optional: drop the warm neighbour's decoder at the first sign of pressure.
+            runCatching { GlobalContext.getOrNull()?.getOrNull<tv.own.owntv.features.live.LiveChannelPreloader>()?.release() }
         }
         // The engines judge the level themselves: UI_HIDDEN (every Home press) is not pressure for them,
         // and used to leave mpv on a trimmed cache for the rest of the session.
