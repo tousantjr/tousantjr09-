@@ -438,6 +438,8 @@
     <!-- Announcements: the owner's message from announcement.json, shown once. -->
     <string name="announcement_title">Announcement</string>
     <string name="announcement_eyebrow">Message from MPTV</string>
+    <!-- Sports hub day strip: a day other than today with nothing on it. -->
+    <string name="sports_day_empty">No matches on this day in what you follow</string>
     <!-- Settings → Video player → Live: Preload next channel (off by default, uses an extra connection). -->
     <string name="settings_preload_next_channel">Preload next channel</string>
     <string name="settings_preload_next_channel_description">Quietly opens the next channel in the list while you watch, so CH+/CH− feels instant. Uses an extra connection — leave off if your provider allows only one.</string>

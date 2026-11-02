@@ -432,6 +432,14 @@ rebuilds the sports data now; the bottom status pill says **Rebuilding sports…
 Rows: **Live now** (red LIVE mark), **Sport on your channels now** (from your guide) and
 **Starting soon**. **OK** on a match opens its page.
 
+### 📅 Browse other days
+**Where:** the Sports page → the row of days under the filter buttons (TV and phone)
+**Yesterday · Today · Tomorrow** and the four days after (shown as weekday and date, e.g. *Thu 5*).
+Pick a day to see that day's matches for everything you follow, one row per competition — yesterday's
+with their final scores (hidden while spoiler-free is on). The sport and league buttons above still
+filter the list. **Today** is the page as before, with Live now and Starting soon. The day you picked
+stays until you close the app; **⟳** reloads it.
+
 ### 📋 A match page
 The box at the top shows the score, the time, the round and the venue with its city and country.
 Tabs show the timeline, statistics, line-ups, the table, each side's form and **Broadcasts**.

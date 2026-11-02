@@ -421,4 +421,6 @@
     <!-- Announcements: the owner's message from announcement.json, shown once. -->
     <string name="announcement_title">Announcement</string>
     <string name="announcement_eyebrow">Message from MPTV</string>
+    <!-- Sports hub day strip: a day other than today with nothing on it. -->
+    <string name="sports_day_empty">No matches on this day in what you follow</string>
 </resources>

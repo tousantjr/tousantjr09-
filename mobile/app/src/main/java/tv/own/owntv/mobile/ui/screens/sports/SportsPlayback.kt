@@ -45,6 +45,9 @@ class SportsPlayback(
     var hubChips: Set<HubChip> = emptySet()
     var hubLeagues: Set<String> = emptySet()
 
+    /** The hub's day strip ([SportsDays]): 0 = today. Kept while the app runs, back to today on a fresh start. */
+    var hubDay: Int = 0
+
     /** The channel last played from a match page, so its row is scrolled to again on return. */
     var lastPlayedChannelId: Long? = null
 

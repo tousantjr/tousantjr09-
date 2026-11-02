@@ -111,6 +111,8 @@ fun SportsHubScreen(
     vm: SportsViewModel,
     /** Live TV's preview player: a focused card plays its game's channel through it (no second decoder). */
     liveVm: tv.own.owntv.features.live.LiveViewModel,
+    /** The day strip's other days (not today), fetched per followed league — see [SportsUpcomingViewModel.loadDay]. */
+    dayVm: SportsUpcomingViewModel,
     onOpenMatch: (Match) -> Unit,
     onPlayChannel: (ChannelEntity, List<ChannelEntity>) -> Unit,
     onOpenUpcoming: () -> Unit,
@@ -141,6 +143,16 @@ fun SportsHubScreen(
     @Suppress("UNCHECKED_CAST")
     var leagues by remember { mutableStateOf(playback.hubLeague as? Set<String> ?: emptySet()) }
     androidx.compose.runtime.LaunchedEffect(chips, leagues) { playback.hubChip = chips; playback.hubLeague = leagues }
+    // The day strip: 0 = today (core's live board, as before); any other day is fetched on its own.
+    var dayOffset by remember { mutableStateOf(playback.hubDay) }
+    val otherDay = dayOffset != 0
+    val dayDate = SportsDays.dateOf(dayOffset)
+    val dayState by dayVm.day.collectAsStateWithLifecycle()
+    val followedKeys = config.followedLeagues()
+    androidx.compose.runtime.LaunchedEffect(dayOffset, followedKeys) {
+        playback.hubDay = dayOffset
+        if (otherDay) dayVm.loadDay(dayDate)
+    }
     var showAllSports by rememberSaveable { mutableStateOf(false) }
     var menuFor by remember { mutableStateOf<Match?>(null) }
     // The menu's Remind me needs a channel: one Find channels already found for that match, if any.
@@ -191,11 +203,13 @@ fun SportsHubScreen(
     }
     // ESPN's tennis and golf feeds list a whole tournament; "today" is what is live or starts today.
     val today = state.board.today.values.flatten().distinctBy { it.key }.filter { it.isLive || isToday(it.startMs) }
-    val live = today.filter { it.isLive && it.passes() }
+    val live = today.filter { !otherDay && it.isLive && it.passes() }
         .sortedWith(compareBy<Match>({ config.rankOf(it.sport, it.feed).first }, { config.rankOf(it.sport, it.feed).second }, { !it.isMine() }, { it.startMs }))
-    val soon = state.board.matches.filter { it.state == MatchState.PRE && it.startMs > now && it.passes() }
+    val soon = state.board.matches.filter { !otherDay && it.state == MatchState.PRE && it.startMs > now && it.passes() }
         .sortedWith(compareBy<Match>({ config.rankOf(it.sport, it.feed).first }, { config.rankOf(it.sport, it.feed).second }, { it.startMs })).take(12)
-    val onNow = state.onNow.values.flatten().take(6)
+    val onNow = if (otherDay) emptyList() else state.onNow.values.flatten().take(6)
+    val dayMatches = if (otherDay && dayState.date == dayDate) dayState.matches.filter { it.passes() } else emptyList()
+    val locale = LocalConfiguration.current.locales[0]
     val followedSports = remember(config) { vm.followedSports(config) }
 
     val featuredFocus = remember { FocusRequester() }
@@ -214,8 +228,8 @@ fun SportsHubScreen(
                 Column(Modifier.padding(start = contentStart, end = 360.mpx)) {
                     Text(stringResource(R.string.sports_title), style = stageText(48, 800), color = StageColors.Text, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Spacer(Modifier.height(9.mpx))
-                    HubSubtitle(today.filter { it.passes() })
-                    if (state.board.paused) {
+                    HubSubtitle(if (otherDay) dayMatches else today.filter { it.passes() }, hubDayLabel(dayOffset, locale))
+                    if (state.board.paused || (otherDay && dayState.paused)) {
                         Spacer(Modifier.height(6.mpx))
                         Text(stringResource(R.string.sports_paused), style = stageText(18, 600), color = StageColors.Warn, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
@@ -238,7 +252,7 @@ fun SportsHubScreen(
                         item { SportsChip("+${followedSports.size - SPORT_CHIPS}", false, dim = true) { showAllSports = true } }
                     }
                     // ⟳: build the whole board again; its progress shows in the bottom status pill.
-                    item { SportsChip("", false, icon = OwnTVIcon.REFRESH) { vm.rebuild() } }
+                    item { SportsChip("", false, icon = OwnTVIcon.REFRESH) { vm.rebuild(); if (otherDay) dayVm.loadDay(dayDate, force = true) } }
                     // Beyond today/tomorrow: the next 7 days per followed league, fetched on its own
                     // (core's Demand/Feed model has no "day N" — see SportsUpcomingViewModel).
                     item { SportsChip(stringResource(R.string.sports_upcoming_title), false, icon = OwnTVIcon.CALENDAR) { onOpenUpcoming() } }
@@ -264,9 +278,68 @@ fun SportsHubScreen(
                 }
             }
 
+            // The day strip: Yesterday · Today · Tomorrow · the four days after. Works with both chip rows above.
+            item(key = "days") {
+                LazyRow(
+                    Modifier.padding(top = 12.mpx).focusRestorer().focusGroup(),
+                    contentPadding = PaddingValues(start = contentStart, end = 64.mpx),
+                    horizontalArrangement = Arrangement.spacedBy(12.mpx),
+                ) {
+                    items(SportsDays.offsets, key = { it }) { o ->
+                        SportsChip(hubDayLabel(o, locale), o == dayOffset) { dayOffset = o }
+                    }
+                }
+            }
+
             val nothing = live.isEmpty() && soon.isEmpty() && onNow.isEmpty()
             if (config.followedLeagues().isEmpty()) {
                 item(key = "none") { NothingFollowedNote(Modifier.padding(start = contentStart, top = 80.mpx, end = 360.mpx)) }
+            } else if (otherDay) {
+                if (dayMatches.isEmpty()) {
+                    item(key = "dayEmpty") {
+                        if (dayState.loading || dayState.date != dayDate) {
+                            tv.own.owntv.ui.components.OwnTVSpinner(sizeDp = 18, modifier = Modifier.padding(start = contentStart, top = 80.mpx))
+                        } else {
+                            Text(
+                                stringResource(if (dayState.hasFailures) R.string.sports_empty_unreachable else R.string.sports_day_empty),
+                                style = stageText(22, 600), color = StageColors.Muted,
+                                modifier = Modifier.padding(start = contentStart, top = 80.mpx),
+                            )
+                        }
+                    }
+                } else {
+                    if (dayState.hasFailures) {
+                        item(key = "dayFailed") {
+                            Text(
+                                stringResource(R.string.sports_upcoming_partial_failure), style = stageText(18, 600), color = StageColors.Warn,
+                                maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(start = contentStart, top = 18.mpx),
+                            )
+                        }
+                    }
+                    // One row per competition, in the profile's order (Settings → Sports and leagues).
+                    dayMatches.groupBy { it.feed }.forEach { (feed, group) ->
+                        item(key = "day-$feed") {
+                            val context = LocalContext.current
+                            Column {
+                                RowHeader(contentStart, leagueName(group.first()), null)
+                                LazyRow(
+                                    Modifier.focusRestorer().focusGroup(),
+                                    contentPadding = PaddingValues(start = contentStart, end = 64.mpx, top = 6.mpx, bottom = 6.mpx),
+                                    horizontalArrangement = Arrangement.spacedBy(18.mpx),
+                                ) {
+                                    items(group, key = { it.key }) { m ->
+                                        MatchCard(
+                                            m, featured = false, config = config, now = now,
+                                            reminded = SportsViewModel.reminderKey(m.startMs, MatchNotifications.pair(context, m)) in state.reminders,
+                                            onClick = { onOpenMatch(m) }, onPlay = { onOpenMatch(m) }, onHold = { menuFor = m },
+                                            modifier = Modifier.focusRequester(focusOf(m.key)),
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             } else if (nothing && !state.rebuilding) {
                 item(key = "empty") {
                     val unreachable = state.board.failing.isNotEmpty() && state.board.today.isEmpty()
@@ -372,11 +445,11 @@ fun SportsHubScreen(
 
 /** "**Today** · 6 live · 41 matches · Scores: ESPN" (no channel count — channels are found per match). */
 @Composable
-private fun HubSubtitle(today: List<Match>) {
+private fun HubSubtitle(today: List<Match>, dayLabel: String) {
     val accent = stageAccent.accent
     val sep = stringResource(R.string.content_epg_bits_separator)
     val liveCount = today.count { it.isLive }
-    val todayLabel = stringResource(R.string.content_epg_today)
+    val todayLabel = dayLabel
     val liveText = pluralStringResource(R.plurals.sports_hub_live, liveCount, liveCount)
     val matchesText = pluralStringResource(R.plurals.sports_hub_matches, today.size, today.size)
     val credit = stringResource(R.string.sports_scores_espn)
@@ -390,6 +463,17 @@ private fun HubSubtitle(today: List<Match>) {
         },
         style = stageText(21, 400), color = StageColors.Muted, maxLines = 1, overflow = TextOverflow.Ellipsis,
     )
+}
+
+/** A day strip chip: Yesterday / Today / Tomorrow, then the weekday and date ("Thu 5"), locale-formatted. */
+@Composable
+@androidx.compose.runtime.ReadOnlyComposable
+internal fun hubDayLabel(offset: Int, locale: java.util.Locale): String = when (offset) {
+    -1 -> stringResource(R.string.content_epg_yesterday)
+    0 -> stringResource(R.string.content_epg_today)
+    1 -> stringResource(R.string.content_epg_tomorrow)
+    else -> java.time.format.DateTimeFormatter.ofPattern(android.text.format.DateFormat.getBestDateTimePattern(locale, "EEEd"), locale)
+        .format(SportsDays.dateOf(offset))
 }
 
 /** The hub with nothing followed (new users follow nothing): what to do, where, and why to choose with care. */
