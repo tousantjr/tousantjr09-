@@ -253,6 +253,15 @@ happens. **Live TV player per playlist** right below applies a different choice 
 > **Settings → Live TV → Give up on a channel after** sets how long that may take (30 s default);
 > **Give up after, per playlist** gives one provider its own time.
 
+### 🧊 Anti-freeze
+**Where:** Settings → Video Player → Live TV → **Anti-freeze** (TV) · Settings → Live TV → **Anti-freeze** (phone) — **On** by default
+If a live channel keeps freezing — it buffers more than twice in about 30 seconds, or stalls for more
+than about 8 seconds — MPTV reopens it once in the other stream format (**MPEG-TS ⇄ HLS**) and shows
+a short note such as *"Switched to HLS to reduce freezing"*. The format that worked is **remembered
+for that channel**, so next time it opens straight in it. It replaces the frozen stream rather than
+opening a second one, so it is safe on one-connection accounts. **Xtream playlists only** — M3U and
+Stalker channels are left as they are.
+
 ### ⏳ "Too many connections"
 The spinner stays up with a live countdown and OwnTV retries by itself. Don't press Retry — just
 wait.

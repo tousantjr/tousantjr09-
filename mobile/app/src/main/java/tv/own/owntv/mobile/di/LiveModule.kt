@@ -5,6 +5,7 @@ import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 import tv.own.owntv.core.live.LiveArchiveUrls
 import tv.own.owntv.core.live.LiveEpgReader
+import tv.own.owntv.mobile.ui.screens.live.AntiFreezeSettings
 import tv.own.owntv.mobile.ui.screens.live.LiveTuner
 import tv.own.owntv.mobile.ui.screens.live.LiveViewModel
 
@@ -19,6 +20,8 @@ import tv.own.owntv.mobile.ui.screens.live.LiveViewModel
 val liveModule = module {
     single { LiveEpgReader(get(), get(), get(), get(), get()) }
     single { LiveArchiveUrls(get(), get(), get(), get()) }
+    // Settings → Live TV: "Anti-freeze" and each channel's working format (on by default).
+    single { AntiFreezeSettings(androidContext()) }
     single {
         LiveTuner(
             context = androidContext(),
@@ -46,6 +49,7 @@ val liveModule = module {
             player = get(),
             watchSession = get(),
             downloadWatchGuard = get(),
+            antiFreezeSettings = get(),
         )
     }
     viewModelOf(::LiveViewModel)

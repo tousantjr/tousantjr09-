@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
@@ -106,6 +107,8 @@ class LiveTuner(
     private val watchSession: tv.own.owntv.core.live.WatchSession,
     /** Keeps the preview off a one-stream playlist while a download is using it. */
     private val downloadWatchGuard: tv.own.owntv.core.download.DownloadWatchGuard,
+    /** "Anti-freeze": switch a freezing Xtream channel between MPEG-TS and HLS (see AntiFreeze.kt). */
+    private val antiFreezeSettings: AntiFreezeSettings,
 ) : CastHandoff {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
@@ -543,12 +546,14 @@ class LiveTuner(
         val pid = ctx.value.profileId.takeIf { it >= 0 } ?: return refuse()
         if (!AdultCategoryClassifier.allows(pid, channel.categoryId, profileDao, categoryDao)) return refuse()
 
-        val source = withContext(Dispatchers.IO) { sourceDao.getById(channel.sourceId) }
+        val storedSource = withContext(Dispatchers.IO) { sourceDao.getById(channel.sourceId) }
+        // Anti-freeze: a channel that froze before opens straight in the format that worked (Xtream only).
+        val (tuneChannel, source) = antiFreezeTarget(channel, storedSource)
         // Stalker portals mint a play URL per tune; the stored "URL" is a portal command until then.
         val url = if (streamUrlResolver.needsResolve(source)) {
             runCatching { streamUrlResolver.resolve(source!!, channel.streamUrl) }.getOrNull() ?: return refuse()
         } else {
-            channel.streamUrl
+            tuneChannel.streamUrl
         }
 
         timeshift.clear() // a new channel is never still rewound into the old one's archive
@@ -577,8 +582,10 @@ class LiveTuner(
             // Core decides which engine opens it, arms the ladder and starts it — the television's
             // order of authority (DRM, the pin, a learned panel refusal, the playlist, the setting).
             // The link minted above is reused for the first rung: minting ends the previous session.
-            live.start(named, source, resolved = url)
+            val tuneNamed = named.copy(streamUrl = tuneChannel.streamUrl)
+            live.start(tuneNamed, source, resolved = url)
             applyAudioOnlyDefault(channel)
+            watchForFreeze(named, tuneNamed, source)
         } else {
             live.noteWatched(named) // "previous channel" follows a cast zap too
         }
@@ -586,6 +593,74 @@ class LiveTuner(
         _nowNext.value = epgReader.nowNext(channel, custom.value, settings.epgOffsetMinutes.first())
         _timelineProgrammes.value = catchupProgrammes()
             .map { LiveProgramme(it.startMs, it.stopMs, it.title) }
+    }
+
+    // --- Anti-freeze ------------------------------------------------------------------------------
+    // While an Xtream channel plays, repeated rebuffering (more than AntiFreeze.MAX_REBUFFERS inside
+    // AntiFreeze.WINDOW_MS) or one stall longer than AntiFreeze.STALL_MS re-tunes the same channel in
+    // the other output format (.ts ⇄ .m3u8) through the controller's normal tune job — the same ladder
+    // and reconnect handling as any tune. At most one switch per tune; the new format is remembered.
+
+    private var freezeJob: kotlinx.coroutines.Job? = null
+
+    private suspend fun antiFreezeTarget(
+        channel: ChannelEntity,
+        source: tv.own.owntv.core.database.entity.SourceEntity?,
+    ): Pair<ChannelEntity, tv.own.owntv.core.database.entity.SourceEntity?> {
+        if (source == null || !AntiFreeze.switchable(channel, source) || !antiFreezeSettings.enabled.first()) return channel to source
+        val remembered = antiFreezeSettings.rememberedFormat(channel) ?: return channel to source
+        if (remembered == AntiFreeze.currentFormat(channel, source)) return channel to source
+        return AntiFreeze.withFormat(channel, source, remembered)
+    }
+
+    private fun watchForFreeze(
+        channel: ChannelEntity,
+        playing: ChannelEntity,
+        source: tv.own.owntv.core.database.entity.SourceEntity?,
+    ) {
+        freezeJob?.cancel()
+        freezeJob = null
+        if (source == null || !AntiFreeze.switchable(playing, source)) return
+        freezeJob = scope.launch {
+            if (!antiFreezeSettings.enabled.first()) return@launch
+            // Opening is not freezing: count only once the channel has actually played.
+            liveOnExo.flatMapLatest { onExo -> if (onExo) exo.isPlaying else player.isPlaying }.first { it }
+            val counter = RebufferCounter()
+            var stallJob: kotlinx.coroutines.Job? = null
+            val frozen = kotlinx.coroutines.CompletableDeferred<Unit>()
+            val watcher = launch {
+                liveOnExo.flatMapLatest { onExo -> if (onExo) exo.buffering else player.buffering }
+                    .distinctUntilChanged()
+                    .collect { buffering ->
+                        stallJob?.cancel()
+                        if (!buffering) return@collect
+                        if (counter.onRebuffer(android.os.SystemClock.elapsedRealtime())) frozen.complete(Unit)
+                        else stallJob = launch { kotlinx.coroutines.delay(AntiFreeze.STALL_MS); frozen.complete(Unit) }
+                    }
+            }
+            frozen.await()
+            watcher.cancel()
+            switchFormatAfterFreeze(channel, playing, source)
+        }
+    }
+
+    private fun switchFormatAfterFreeze(
+        channel: ChannelEntity,
+        playing: ChannelEntity,
+        source: tv.own.owntv.core.database.entity.SourceEntity,
+    ) {
+        if (_channel.value?.id != channel.id || _replaying.value || timeshift.isRewound || casting()) return
+        val to = AntiFreeze.other(AntiFreeze.currentFormat(playing, source))
+        // The panel already answered that this channel has no HLS variant: switching would only fail.
+        if (to == LiveFormat.HLS && tv.own.owntv.player.LiveStreamQuirks.lacksHlsVariant(playing.streamUrl)) return
+        scope.launch { antiFreezeSettings.rememberFormat(channel, to) }
+        android.widget.Toast.makeText(
+            context,
+            if (to == LiveFormat.HLS) R.string.anti_freeze_switched_hls else R.string.anti_freeze_switched_ts,
+            android.widget.Toast.LENGTH_SHORT,
+        ).show()
+        val (c, s) = AntiFreeze.withFormat(playing, source, to)
+        live.launch { start(c, s, c.streamUrl) }
     }
 
     /**

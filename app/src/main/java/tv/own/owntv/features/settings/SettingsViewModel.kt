@@ -93,6 +93,7 @@ class SettingsViewModel(
     private val enginePool: tv.own.owntv.player.LiveEnginePool,
     // Adding a playlist is core's sequence, not a copy of it — see [importState].
     private val importer: SourceImporter,
+    private val antiFreeze: tv.own.owntv.features.live.AntiFreezeSettings,
 ) : ViewModel() {
     companion object {
         private const val TAG = "OwnTVHome"
@@ -513,6 +514,10 @@ class SettingsViewModel(
 
     val directTune: StateFlow<Boolean> = settings.directTune.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), true)
     fun setDirectTune(enabled: Boolean) { viewModelScope.launch { settings.setDirectTune(enabled) } }
+
+    val antiFreezeEnabled: StateFlow<Boolean> = antiFreeze.enabled
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), tv.own.owntv.features.live.AntiFreezeSettings.DEFAULT)
+    fun setAntiFreezeEnabled(enabled: Boolean) { viewModelScope.launch { antiFreeze.setEnabled(enabled) } }
 
     val liveLeftRightRewinds: StateFlow<Boolean> = settings.liveLeftRightRewinds.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
     fun setLiveLeftRightRewinds(enabled: Boolean) { viewModelScope.launch { settings.setLiveLeftRightRewinds(enabled) } }
