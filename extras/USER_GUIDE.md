@@ -253,6 +253,13 @@ happens. **Live TV player per playlist** right below applies a different choice 
 > **Settings → Live TV → Give up on a channel after** sets how long that may take (30 s default);
 > **Give up after, per playlist** gives one provider its own time.
 
+### ⚡ Preload next channel
+**Where:** Settings → Video player → Live → **Preload next channel** (off by default)
+While a channel plays full screen, OwnTV quietly opens the channel **CH+ / CH−** would go to next, so
+switching to it shows a picture at once. It needs **one extra connection** to your provider, so leave
+it off if your subscription allows only one. It never runs on playlists that report one connection,
+waits until you stop zapping, and is let go when you leave Live TV, switch apps or memory runs low.
+
 ### ⏳ "Too many connections"
 The spinner stays up with a live countdown and OwnTV retries by itself. Don't press Retry — just
 wait.
