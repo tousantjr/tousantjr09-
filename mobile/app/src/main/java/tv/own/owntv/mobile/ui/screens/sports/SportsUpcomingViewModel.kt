@@ -3,6 +3,8 @@ package tv.own.owntv.mobile.ui.screens.sports
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -14,6 +16,7 @@ import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import tv.own.owntv.core.settings.SettingsRepository
 import tv.own.owntv.core.sports.SportsCatalog
+import tv.own.owntv.core.sports.model.League
 import tv.own.owntv.core.sports.SportsConfig
 import tv.own.owntv.core.sports.SportsHttpException
 import tv.own.owntv.core.sports.SportsSource
@@ -34,6 +37,17 @@ data class SportsUpcomingState(
     /** At least one (league, day) fetch failed for a reason other than ESPN's own rate limit. */
     val hasFailures: Boolean = false,
     /** ESPN answered 403/429 on the last attempt: every fetch stands down until this time. */
+    val pausedUntil: Long = 0L,
+) {
+    val paused: Boolean get() = pausedUntil > System.currentTimeMillis()
+}
+
+/** One day picked on the hub's day strip ([SportsDays]): that day's matches across every followed league. */
+data class SportsDayState(
+    val date: LocalDate? = null,
+    val matches: List<Match> = emptyList(),
+    val loading: Boolean = false,
+    val hasFailures: Boolean = false,
     val pausedUntil: Long = 0L,
 ) {
     val paused: Boolean get() = pausedUntil > System.currentTimeMillis()
@@ -101,30 +115,7 @@ class SportsUpcomingViewModel(
             leagues.flatMap { league -> dates.map { date -> league to date } }
                 .map { (league, date) ->
                     async(Dispatchers.IO) {
-                        val key = CacheKey(league.key, date)
-                        val cached = if (force) null else cache[key]?.takeIf { now - it.fetchedAt < CACHE_TTL_MS }
-                        val matches = cached?.matches ?: semaphore.withPermit {
-                            try {
-                                val fetched = source.scoreboard(league, date)
-                                cache[key] = CacheEntry(now, fetched)
-                                fetched
-                            } catch (e: SportsHttpException) {
-                                if (e.code == 403 || e.code == 429) {
-                                    hitRateLimit.set(true)
-                                    pausedUntilAtomic.set(now + PAUSE_MS)
-                                } else {
-                                    anyFailure.set(true)
-                                }
-                                // A stale cached answer beats nothing on a transient failure.
-                                cache[key]?.matches.orEmpty()
-                            } catch (e: CancellationException) {
-                                throw e
-                            } catch (e: Exception) {
-                                anyFailure.set(true)
-                                cache[key]?.matches.orEmpty()
-                            }
-                        }
-                        date to matches
+                        date to fetch(league, date, now, force, hitRateLimit, anyFailure)
                     }
                 }
                 .map { it.await() }
@@ -153,6 +144,77 @@ class SportsUpcomingViewModel(
         cache.clear()
         pausedUntilAtomic.set(0L)
         load(force = true)
+    }
+
+    /** One league's scoreboard for one day: from the cache when fresh, else ESPN (a failure keeps a stale answer). */
+    private suspend fun fetch(
+        league: League,
+        date: LocalDate,
+        now: Long,
+        force: Boolean,
+        hitRateLimit: AtomicBoolean,
+        anyFailure: AtomicBoolean,
+    ): List<Match> {
+        val key = CacheKey(league.key, date)
+        val cached = if (force) null else cache[key]?.takeIf { now - it.fetchedAt < CACHE_TTL_MS }
+        val matches = cached?.matches ?: semaphore.withPermit {
+            try {
+                val fetched = source.scoreboard(league, date)
+                cache[key] = CacheEntry(now, fetched)
+                fetched
+            } catch (e: SportsHttpException) {
+                if (e.code == 403 || e.code == 429) {
+                    hitRateLimit.set(true)
+                    pausedUntilAtomic.set(now + PAUSE_MS)
+                } else {
+                    anyFailure.set(true)
+                }
+                // A stale cached answer beats nothing on a transient failure.
+                cache[key]?.matches.orEmpty()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                anyFailure.set(true)
+                cache[key]?.matches.orEmpty()
+            }
+        }
+        return matches
+    }
+
+    private val _day = MutableStateFlow(SportsDayState())
+
+    /** The day picked on the hub's day strip (any day but today, which is core's live board). */
+    val day: StateFlow<SportsDayState> = _day
+    private var dayJob: Job? = null
+
+    /** Loads [date]'s matches for every followed league, sharing [load]'s cache and rate-limit pause. */
+    fun loadDay(date: LocalDate, force: Boolean = false) {
+        dayJob?.cancel()
+        dayJob = viewModelScope.launch {
+            val c = settings.activeSportsConfig.first()
+            val leagues = c.followedLeagues().mapNotNull(SportsCatalog::league)
+            val kept = _day.value.takeIf { it.date == date }?.matches.orEmpty()
+            val now = System.currentTimeMillis()
+            if (force) pausedUntilAtomic.set(0L)
+            val pausedUntil = pausedUntilAtomic.get()
+            when {
+                leagues.isEmpty() -> { _day.value = SportsDayState(date); return@launch }
+                pausedUntil > now -> { _day.value = SportsDayState(date, kept, pausedUntil = pausedUntil); return@launch }
+            }
+            _day.value = SportsDayState(date, kept, loading = true)
+            val hitRateLimit = AtomicBoolean(false)
+            val anyFailure = AtomicBoolean(false)
+            val matches = coroutineScope {
+                leagues.map { league -> async(Dispatchers.IO) { fetch(league, date, now, force, hitRateLimit, anyFailure) } }.awaitAll()
+            }.flatten().distinctBy { it.key }
+            _day.value = SportsDayState(
+                date = date,
+                matches = SportsDays.onDay(matches, date)
+                    .sortedWith(compareBy({ c.rankOf(it.sport, it.feed).first }, { c.rankOf(it.sport, it.feed).second }, { it.startMs })),
+                hasFailures = anyFailure.get(),
+                pausedUntil = pausedUntilAtomic.get(),
+            )
+        }
     }
 
     private companion object {
