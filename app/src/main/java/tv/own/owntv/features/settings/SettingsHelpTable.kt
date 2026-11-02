@@ -162,6 +162,7 @@ internal val SETTING_HELP: Map<String, Int> = mapOf(
     "vp_volume" to R.string.settings_help_volume,
     "vp_sub_lang" to R.string.settings_help_sub_lang,
     "vp_channel_numbers" to R.string.settings_help_channel_numbers,
+    "vp_anti_freeze" to R.string.settings_help_anti_freeze,
     "vp_preload_next" to R.string.settings_help_preload_next_channel,
     "vp_live_preview" to R.string.settings_help_live_preview,
     "vp_preview_audio" to R.string.settings_help_preview_audio,

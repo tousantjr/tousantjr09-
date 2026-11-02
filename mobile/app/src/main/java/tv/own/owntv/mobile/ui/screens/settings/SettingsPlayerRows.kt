@@ -5,6 +5,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -12,7 +13,9 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.koinInject
 import tv.own.owntv.core.brand.AppIconSwitcher
 import tv.own.owntv.core.database.entity.FOLLOW_GLOBAL_LATENCY_SECS
 import tv.own.owntv.core.database.entity.FOLLOW_GLOBAL_PREROLL
@@ -32,6 +35,7 @@ import tv.own.owntv.core.timeshift.TimeshiftRules
 import tv.own.owntv.core.ui.findActivity
 import tv.own.owntv.mobile.R
 import tv.own.owntv.mobile.ui.components.MobileIcons
+import tv.own.owntv.mobile.ui.screens.live.AntiFreezeSettings
 import tv.own.owntv.mobile.ui.stage.StagePlaylistMark
 import tv.own.owntv.player.LiveLadder
 import tv.own.owntv.player.ZoomMode
@@ -367,6 +371,9 @@ internal fun liveSections(vm: SettingsViewModel): List<SettingSection> {
     val custom = s.liveLatencyCustomSecs.pref(LiveBuffer.CUSTOM_DEFAULT)
     val preroll = s.livePrerollSecs.pref(0)
     val giveUp = s.liveTuneTimeoutSecs.pref(LiveLadder.DEFAULT_BUDGET_SECS)
+    val antiFreeze = koinInject<AntiFreezeSettings>()
+    val antiFreezeOn by antiFreeze.enabled.collectAsStateWithLifecycle(AntiFreezeSettings.DEFAULT)
+    val scope = rememberCoroutineScope()
 
     // Low latency can make a working stream stutter, so it is acknowledged before it applies. [onCancel] runs when
     // the answer is no (a custom value that crossed below Balanced goes back to Balanced).
@@ -394,6 +401,10 @@ internal fun liveSections(vm: SettingsViewModel): List<SettingSection> {
             stringResource(R.string.settings_live_tv),
             listOfNotNull(
                 quickSwitch(vm, "vp_channel_numbers", MobileIcons.FormatListBulleted, R.string.settings_channel_numbers, R.string.settings_line_channel_numbers),
+                switchItem(
+                    "vp_anti_freeze", MobileIcons.SwapHoriz, stringResource(R.string.settings_anti_freeze),
+                    stringResource(R.string.settings_line_anti_freeze), antiFreezeOn,
+                ) { on -> scope.launch { antiFreeze.setEnabled(on) } },
                 switchItem(
                     "vp_live_preview", MobileIcons.LiveTv, stringResource(R.string.settings_quick_live_preview),
                     stringResource(R.string.settings_line_live_preview_mobile), s.livePreviewEnabled.pref(true),

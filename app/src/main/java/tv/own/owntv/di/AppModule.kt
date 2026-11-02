@@ -72,6 +72,8 @@ val appModule = module {
     // Home's "Play trailers on Home" toggle (Settings → Layout → Home): app-level, its own DataStore for
     // the same reason — see HomeTrailerSettings.
     single { tv.own.owntv.features.home.HomeTrailerSettings(androidContext()) }
+    // Settings → Video player → Live: "Anti-freeze" and each channel's working format (on by default).
+    single { tv.own.owntv.features.live.AntiFreezeSettings(androidContext()) }
     // Settings → Video player → Live: "Preload next channel" (its own DataStore, off by default).
     single { tv.own.owntv.features.live.LivePreloadSettings(androidContext()) }
     // Settings → Layout → Home → MDBList: the feature's own DataStore (MdbListSettings — app-level, and
@@ -162,11 +164,12 @@ val appModule = module {
     // Takes a Context first; Koin resolves it from androidContext().
     //
     // Spelled out rather than `viewModelOf(::LiveViewModel)`: that reflective helper is generated for
-    // up to 22 constructor parameters and this class now has 24. The failure is a "none of the
+    // up to 22 constructor parameters and this class now has 26. The failure is a "none of the
     // following candidates is applicable" at the call above, which says nothing about arity — hence
     // this note. Every argument is resolved by type, so the order here does not matter.
     viewModel {
         LiveViewModel(
+            get(),
             get(),
             get(),
             get(),
@@ -263,6 +266,7 @@ val appModule = module {
             livePreview = get(),
             enginePool = get(),
             importer = get(),
+            antiFreeze = get(),
             livePreload = get(),
         )
     }

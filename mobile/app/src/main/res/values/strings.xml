@@ -421,6 +421,11 @@
     <!-- Announcements: the owner's message from announcement.json, shown once. -->
     <string name="announcement_title">Announcement</string>
     <string name="announcement_eyebrow">Message from MPTV</string>
+    <!-- Anti-freeze: a live Xtream channel that keeps freezing is retried in the other stream format. -->
+    <string name="settings_anti_freeze">Anti-freeze</string>
+    <string name="settings_line_anti_freeze">If a live Xtream channel keeps freezing, switch it between MPEG-TS and HLS and remember what works</string>
+    <string name="anti_freeze_switched_hls">Switched to HLS to reduce freezing</string>
+    <string name="anti_freeze_switched_ts">Switched to MPEG-TS to reduce freezing</string>
     <!-- Sports hub day strip: a day other than today with nothing on it. -->
     <string name="sports_day_empty">No matches on this day in what you follow</string>
 </resources>
