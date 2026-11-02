@@ -1090,7 +1090,12 @@
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsPlayerParts.kt	– : –
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsScreen.kt	\0
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsScreen.kt	${sportEmoji(s)} ${sportLabel(s)}
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsScreen.kt	EEEd
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsScreen.kt	chips
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsScreen.kt	day-$feed
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsScreen.kt	dayEmpty
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsScreen.kt	dayFailed
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsScreen.kt	days
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsScreen.kt	empty
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsScreen.kt	head
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsScreen.kt	leagues

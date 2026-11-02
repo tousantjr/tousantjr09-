@@ -98,6 +98,7 @@ fun SportsScreen(
         SportsHubScreen(
             vm = vm,
             liveVm = liveVm,
+            dayVm = upcomingVm,
             onOpenMatch = open,
             onPlayChannel = onPlayChannel,
             onOpenUpcoming = { upcoming = true },

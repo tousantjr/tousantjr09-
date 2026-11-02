@@ -61,6 +61,9 @@ class SportsPlayback(
     var hubChip: Any? = null
     var hubLeague: Any? = null
 
+    /** The hub's day strip ([SportsDays]): 0 = today. Kept while the app runs, back to today on a fresh start. */
+    var hubDay: Int = 0
+
     /** The match page a channel was played full screen from: Back from the player lands on it again. */
     var returnToMatch: Match? = null
 

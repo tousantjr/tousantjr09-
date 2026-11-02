@@ -444,6 +444,8 @@
     <string name="settings_help_anti_freeze">When an Xtream channel buffers more than twice in 30 seconds, or stalls for more than 8 seconds, MPTV reopens it once in the other stream format (MPEG-TS ⇄ HLS) and remembers that format for the channel next time. It never opens a second connection. M3U and Stalker playlists are not affected.</string>
     <string name="anti_freeze_switched_hls">Switched to HLS to reduce freezing</string>
     <string name="anti_freeze_switched_ts">Switched to MPEG-TS to reduce freezing</string>
+    <!-- Sports hub day strip: a day other than today with nothing on it. -->
+    <string name="sports_day_empty">No matches on this day in what you follow</string>
     <!-- Settings → Video player → Live: Preload next channel (off by default, uses an extra connection). -->
     <string name="settings_preload_next_channel">Preload next channel</string>
     <string name="settings_preload_next_channel_description">Quietly opens the next channel in the list while you watch, so CH+/CH− feels instant. Uses an extra connection — leave off if your provider allows only one.</string>
