@@ -262,6 +262,13 @@ for that channel**, so next time it opens straight in it. It replaces the frozen
 opening a second one, so it is safe on one-connection accounts. **Xtream playlists only** — M3U and
 Stalker channels are left as they are.
 
+### ⚡ Preload next channel
+**Where:** Settings → Video player → Live → **Preload next channel** (off by default)
+While a channel plays full screen, OwnTV quietly opens the channel **CH+ / CH−** would go to next, so
+switching to it shows a picture at once. It needs **one extra connection** to your provider, so leave
+it off if your subscription allows only one. It never runs on playlists that report one connection,
+waits until you stop zapping, and is let go when you leave Live TV, switch apps or memory runs low.
+
 ### ⏳ "Too many connections"
 The spinner stays up with a live countdown and OwnTV retries by itself. Don't press Retry — just
 wait.

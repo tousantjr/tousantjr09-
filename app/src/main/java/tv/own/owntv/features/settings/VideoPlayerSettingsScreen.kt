@@ -174,6 +174,7 @@ internal val VIDEO_QUICK_ROWS: List<VideoQuickRef> = listOf(
     VideoQuickRef("vp_vod_reconnects", SECTION_STREAMING, OwnTVIcon.REFRESH, R.string.settings_vod_reconnects, R.string.settings_vod_reconnects_description),
     VideoQuickRef("vp_channel_numbers", SECTION_LIVE, OwnTVIcon.LIVE_TV, R.string.settings_channel_numbers, R.string.settings_channel_numbers_description),
     VideoQuickRef("vp_anti_freeze", SECTION_LIVE, OwnTVIcon.LIVE_TV, R.string.settings_anti_freeze, R.string.settings_anti_freeze_description),
+    VideoQuickRef("vp_preload_next", SECTION_LIVE, OwnTVIcon.LIVE_TV, R.string.settings_preload_next_channel, R.string.settings_preload_next_channel_description),
     VideoQuickRef("vp_live_preview", SECTION_LIVE, OwnTVIcon.LIVE_TV, R.string.settings_quick_live_preview, R.string.settings_live_preview_description),
     VideoQuickRef("vp_preview_audio", SECTION_LIVE, OwnTVIcon.AUDIO, R.string.settings_preview_audio, R.string.settings_preview_audio_description),
     VideoQuickRef("vp_timeshift", SECTION_LIVE, OwnTVIcon.REWIND, R.string.settings_timeshift, R.string.settings_timeshift_description),
@@ -401,6 +402,10 @@ internal fun videoQuickBinding(key: String, vm: SettingsViewModel): VideoQuickBi
             val on by vm.antiFreezeEnabled.collectAsStateWithLifecycle()
             toggle(onOff(on), on) { vm.setAntiFreezeEnabled(!on) }
         }
+        "vp_preload_next" -> {
+            val on by vm.preloadNextChannel.collectAsStateWithLifecycle()
+            toggle(onOff(on), on) { vm.setPreloadNextChannel(!on) }
+        }
         "vp_live_left_right" -> {
             val on by vm.liveLeftRightRewinds.collectAsStateWithLifecycle()
             toggle(onOff(on), on) { vm.setLiveLeftRightRewinds(!on) }
@@ -577,6 +582,7 @@ internal fun VideoPlayerGroupRows(
     val detailedDiagnostics by vm.detailedDiagnostics.collectAsStateWithLifecycle()
     val directTune by vm.directTune.collectAsStateWithLifecycle()
     val antiFreeze by vm.antiFreezeEnabled.collectAsStateWithLifecycle()
+    val preloadNext by vm.preloadNextChannel.collectAsStateWithLifecycle()
     val liveLeftRightRewinds by vm.liveLeftRightRewinds.collectAsStateWithLifecycle()
     val timeshiftEnabled by vm.timeshiftEnabled.collectAsStateWithLifecycle()
     val timeshiftWindowMinutes by vm.timeshiftWindowMinutes.collectAsStateWithLifecycle()
@@ -995,6 +1001,14 @@ internal fun VideoPlayerGroupRows(
             desc = stringResource(R.string.settings_anti_freeze_description),
             value = SettingValue.Switch(antiFreeze),
             onClick = { vm.setAntiFreezeEnabled(!antiFreeze) },
+        )
+        KeyedSettingRow(
+            quickKey = "vp_preload_next",
+            icon = OwnTVIcon.LIVE_TV,
+            title = stringResource(R.string.settings_preload_next_channel),
+            desc = stringResource(R.string.settings_preload_next_channel_description),
+            value = SettingValue.Switch(preloadNext),
+            onClick = { vm.setPreloadNextChannel(!preloadNext) },
         )
         KeyedSettingRow(
             quickKey = "vp_live_preview",

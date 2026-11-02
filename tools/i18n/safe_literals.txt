@@ -162,6 +162,8 @@
 1	technical	app/src/main/java/tv/own/owntv/features/live/CatchupJumpDialog.kt	exact
 1	technical	app/src/main/java/tv/own/owntv/features/live/CatchupManualTimeDialog.kt	:
 1	technical	app/src/main/java/tv/own/owntv/features/live/CatchupManualTimeDialog.kt	EEEMMMd
+1	preference-key	app/src/main/java/tv/own/owntv/features/live/LivePreload.kt	live_preload
+1	preference-key	app/src/main/java/tv/own/owntv/features/live/LivePreload.kt	preload_next_channel
 2	technical	app/src/main/java/tv/own/owntv/features/live/LiveScreen.kt	\0
 1	technical	app/src/main/java/tv/own/owntv/features/live/LiveScreen.kt	+
 1	technical	app/src/main/java/tv/own/owntv/features/live/LiveScreen.kt	EEE
@@ -198,6 +200,7 @@
 1	log	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	catch-up external '${ch.name}' prog='${programme.title}'
 1	log	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	ensurePlaying history profile=$pid channelId=${channel.id}
 1	log	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	ensurePlaying history record failed channelId=${channel.id} profile=$pid
+1	log	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	preload: warming ${target.name}
 1	log	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	stalker resolve failed channelId=${channel.id}
 1	log	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	tuneByNumber($number) failed
 1	log	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	zap: tune wait ${delayMs}ms — ${zapWaitReason(lastZapPressMs, now, singleConnection)}
@@ -595,6 +598,7 @@
 1	technical	app/src/main/java/tv/own/owntv/features/settings/SettingsHelpTable.kt	vp_night_mode
 1	technical	app/src/main/java/tv/own/owntv/features/settings/SettingsHelpTable.kt	vp_output_audio_delay
 1	technical	app/src/main/java/tv/own/owntv/features/settings/SettingsHelpTable.kt	vp_passthrough
+1	protocol	app/src/main/java/tv/own/owntv/features/settings/SettingsHelpTable.kt	vp_preload_next
 1	technical	app/src/main/java/tv/own/owntv/features/settings/SettingsHelpTable.kt	vp_preroll
 1	technical	app/src/main/java/tv/own/owntv/features/settings/SettingsHelpTable.kt	vp_preroll_sources
 2	technical	app/src/main/java/tv/own/owntv/features/settings/SettingsHelpTable.kt	vp_preview_audio
@@ -680,6 +684,7 @@
 3	technical	app/src/main/java/tv/own/owntv/features/settings/VideoPlayerSettingsScreen.kt	vp_night_mode
 4	technical	app/src/main/java/tv/own/owntv/features/settings/VideoPlayerSettingsScreen.kt	vp_output_audio_delay
 3	technical	app/src/main/java/tv/own/owntv/features/settings/VideoPlayerSettingsScreen.kt	vp_passthrough
+3	protocol	app/src/main/java/tv/own/owntv/features/settings/VideoPlayerSettingsScreen.kt	vp_preload_next
 4	preference-key	app/src/main/java/tv/own/owntv/features/settings/VideoPlayerSettingsScreen.kt	vp_preroll
 4	preference-key	app/src/main/java/tv/own/owntv/features/settings/VideoPlayerSettingsScreen.kt	vp_preroll_sources
 3	preference-key	app/src/main/java/tv/own/owntv/features/settings/VideoPlayerSettingsScreen.kt	vp_preview_audio

@@ -134,6 +134,9 @@ class LiveViewModel(
     private val downloadWatchGuard: tv.own.owntv.core.download.DownloadWatchGuard,
     /** "Anti-freeze": switch a freezing Xtream channel between MPEG-TS and HLS (see AntiFreeze.kt). */
     private val antiFreezeSettings: AntiFreezeSettings,
+    /** "Preload next channel": the one extra engine that warms the CH+/- neighbour (off by default). */
+    private val preloader: LiveChannelPreloader,
+    private val preloadSettings: LivePreloadSettings,
 ) : ViewModel() {
 
     data class ChannelMoveState(val items: List<ChannelEntity>, val activeIndex: Int, val contextKey: String)
@@ -1145,6 +1148,7 @@ class LiveViewModel(
     /** Zap to the neighbouring channel ([delta] = +1 down / -1 up) — see [LiveZapList.next] for how
      *  the target is chosen. [ensurePlaying], reached through [zapTo], cancels any pending rebuild. */
     fun zap(delta: Int) {
+        lastZapDelta = delta
         zapList.next(delta)?.let { zapTo(it) }
     }
 
@@ -1173,6 +1177,8 @@ class LiveViewModel(
      */
     private fun zapTo(channel: ChannelEntity) {
         _previewChannel.value = channel
+        // Preloaded neighbour: its picture goes up at once while the real tune below opens as usual.
+        handOffPreload(channel)
         val now = android.os.SystemClock.elapsedRealtime()
         val delayMs = zapTuneDelayMs(lastZapPressMs, now)
         // Logged only: single-connection panels follow the same rule (see ZAP_ISOLATED_PRESS_MS).
@@ -1432,6 +1438,7 @@ class LiveViewModel(
         live.start(tuneChannel, tuneSource)
         recordLiveHistory(channel)
         watchForFreeze(channel, tuneChannel, tuneSource)
+        schedulePreload()
     }
 
     // --- Anti-freeze ------------------------------------------------------------------------------
@@ -1504,6 +1511,112 @@ class LiveViewModel(
         ).show()
         val (c, s) = AntiFreeze.withFormat(playing, source, to)
         live.launch { start(c, s) }
+    }
+
+    // --- Preload next channel ---------------------------------------------------------------------
+    // Off by default. While a channel plays full-screen, the neighbour CH+/- would land on is opened,
+    // muted and without a surface, on one extra engine. Zapping to it shows that engine's picture at
+    // once (the "handoff") while the normal tune — ZapTuneDelay included — runs underneath; once the
+    // real stream is playing the stand-in is stopped. It costs one extra connection, so it never runs
+    // on a one-connection playlist, and never during a burst of zaps (see PRELOAD_SETTLE_MS).
+
+    val preloadNextEnabled: StateFlow<Boolean> = preloadSettings.preloadNext
+        .stateIn(viewModelScope, SharingStarted.Eagerly, LivePreloadSettings.DEFAULT)
+
+    /** The preloaded engine standing in on screen right after a zap; null when none. */
+    private val _preloadHandoff = MutableStateFlow<tv.own.owntv.player.LivePreviewEngine?>(null)
+    val preloadHandoff: StateFlow<tv.own.owntv.player.LivePreviewEngine?> = _preloadHandoff.asStateFlow()
+
+    /** Set by the shell: true only while a live channel plays full-screen on ExoPlayer. */
+    private var preloadActive = false
+    private var lastZapDelta: Int? = null
+    private var preloadJob: Job? = null
+    private var handoffJob: Job? = null
+
+    init {
+        viewModelScope.launch { preloadNextEnabled.drop(1).collect { schedulePreload() } }
+        preloader.onReleased = { endHandoff() }
+    }
+
+    /** The shell reports whether a live channel is on screen full-screen; leaving it frees the preload. */
+    fun setPreloadActive(active: Boolean) {
+        if (preloadActive == active) return
+        preloadActive = active
+        schedulePreload()
+    }
+
+    /** Free the preloaded engine entirely (leaving Live, backgrounded, memory pressure). */
+    fun releasePreload() {
+        preloadJob?.cancel()
+        endHandoff()
+        preloader.release()
+    }
+
+    private fun schedulePreload() {
+        preloadJob?.cancel()
+        if (!preloadActive || !preloadNextEnabled.value) {
+            releasePreload()
+            return
+        }
+        preloadJob = viewModelScope.launch {
+            delay(PRELOAD_SETTLE_MS)
+            // Only once the channel the user stopped on is really playing: a preload must never compete
+            // with the tune it is meant to follow.
+            previewEngine.state.first { it == tv.own.owntv.player.LivePreviewEngine.State.PLAYING }
+            if (!preloadActive || !liveOnExo.value || _catchupActive.value) return@launch
+            val target = zapList.peek(preloadDirection(lastZapDelta)) ?: return@launch
+            if (target.id == _previewChannel.value?.id) return@launch
+            if (preloader.channel?.id == target.id) return@launch
+            val source = sourceById[target.sourceId] ?: return@launch
+            val allowed = preloadAllowed(
+                maxConnections = source.maxConnections,
+                singleSession = tv.own.owntv.player.LiveStreamQuirks.isSingleSession(target.streamUrl),
+            )
+            if (!allowed) {
+                preloader.release()
+                return@launch
+            }
+            if (target.categoryId != null && target.categoryId in hiddenCategoryIds.value) return@launch
+            tv.own.owntv.player.LiveDiagnosticsLog.event("preload: warming ${target.name}")
+            val engine = preloader.engineFor(target)
+            engine.setMaxVideoHeight(PREVIEW_MAX_HEIGHT)
+            live.playTile(engine, target, true)
+        }
+    }
+
+    private fun handOffPreload(channel: ChannelEntity) {
+        endHandoff()
+        val engine = preloader.readyFor(channel.id)
+        if (engine == null || !liveOnExo.value) {
+            // Zapped somewhere else: the warm neighbour is no longer the likely next step.
+            if (preloader.channel != null && preloader.channel?.id != channel.id) preloader.stop()
+            return
+        }
+        _preloadHandoff.value = engine
+        handoffJob = viewModelScope.launch {
+            // Wait for the real tune to reach a picture (it first leaves PLAYING for the old channel).
+            kotlinx.coroutines.withTimeoutOrNull(PRELOAD_HANDOFF_MAX_MS) {
+                previewEngine.state.first { it != tv.own.owntv.player.LivePreviewEngine.State.PLAYING }
+                previewEngine.state.first {
+                    it == tv.own.owntv.player.LivePreviewEngine.State.PLAYING ||
+                        it == tv.own.owntv.player.LivePreviewEngine.State.ERROR
+                }
+            }
+            _preloadHandoff.value = null
+            preloader.stop()
+        }
+    }
+
+    private fun endHandoff() {
+        handoffJob?.cancel()
+        handoffJob = null
+        _preloadHandoff.value = null
+    }
+
+    override fun onCleared() {
+        releasePreload()
+        preloader.onReleased = null
+        super.onCleared()
     }
 
     /** HUD "compatibility mode" toggle: flip the current channel's engine and pin the choice. */

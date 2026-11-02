@@ -199,6 +199,18 @@ class LiveZapList(
         return prev[nextIdx]
     }
 
+    /**
+     * The channel CH± would land on from the playing channel, without moving anything — for "Preload
+     * next channel". Only the ordinary in-list step: while a direct-tune anchor is pending there is no
+     * stable neighbour to warm, so this is null rather than touching the anchor the way [next] does.
+     */
+    fun peek(delta: Int): ChannelEntity? {
+        val currentId = playingChannelId() ?: return null
+        val i = list.indexOfFirst { it.id == currentId }
+        if (i < 0) return null
+        return wrappedZapIndex(i, delta, list.size)?.let { list[it] }
+    }
+
     // ---- Direct tune -------------------------------------------------------------------------------
 
     /**
