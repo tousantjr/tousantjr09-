@@ -1516,6 +1516,10 @@ fun OwnTVShell(
           }
       }
 
+      // "Preload next channel" only warms a neighbour while a live channel plays full-screen on ExoPlayer;
+      // anything else (leaving Live, the mini player, Multiview, a movie) releases it.
+      val preloadActive = multiview == null && playerMode == PlayerMode.FULLSCREEN && liveOnExo
+      LaunchedEffect(preloadActive) { liveVm.setPreloadActive(preloadActive) }
       if (multiview == null && (playerMode == PlayerMode.FULLSCREEN || playerMode == PlayerMode.MINI)) {
         val isFull = playerMode == PlayerMode.FULLSCREEN
         Box(
@@ -1537,6 +1541,12 @@ fun OwnTVShell(
                     engine = liveVm.previewEngine, modifier = Modifier.fillMaxSize(),
                     keepAwake = true, autoFrameRate = isFull && autoFrameRate,
                 )
+                // "Preload next channel": right after CH+/- onto the preloaded neighbour, its already
+                // playing picture covers the real tune until that has a frame of its own.
+                val preloadHandoff by liveVm.preloadHandoff.collectAsStateWithLifecycle()
+                preloadHandoff?.let { warm ->
+                    tv.own.owntv.player.ExoPreviewSurface(engine = warm, modifier = Modifier.fillMaxSize(), useTextureView = true)
+                }
             } else {
                 MpvVideoSurface(
                     player = player, modifier = Modifier.fillMaxSize(), autoFrameRate = isFull && autoFrameRate,

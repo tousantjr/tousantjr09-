@@ -162,6 +162,8 @@ open class MainActivity : ComponentActivity() {
         // cache + decoder buffers — holding them while invisible got the process LMK-killed on real TVs.
         // Every engine: mpv, the Live engine (its audio must stop too), each Multiview tile and the hero.
         if (!isChangingConfigurations) engines.onAppBackgrounded()
+        // "Preload next channel": the warm neighbour is an extra connection — never hold it in the background.
+        if (!isChangingConfigurations) runCatching { get<tv.own.owntv.features.live.LiveChannelPreloader>().release() }
         window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     }
 

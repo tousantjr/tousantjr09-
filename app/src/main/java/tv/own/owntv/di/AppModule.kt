@@ -72,6 +72,8 @@ val appModule = module {
     // Home's "Play trailers on Home" toggle (Settings → Layout → Home): app-level, its own DataStore for
     // the same reason — see HomeTrailerSettings.
     single { tv.own.owntv.features.home.HomeTrailerSettings(androidContext()) }
+    // Settings → Video player → Live: "Preload next channel" (its own DataStore, off by default).
+    single { tv.own.owntv.features.live.LivePreloadSettings(androidContext()) }
     // Settings → Layout → Home → MDBList: the feature's own DataStore (MdbListSettings — app-level, and
     // where the user's API key lives), its client riding the app's shared OkHttp client, and the cache +
     // matcher that turn a public list into a Home rail (MdbListRepository, see its header). Named
@@ -188,6 +190,8 @@ val appModule = module {
             get(),
             get(),
             get(),
+            get(),
+            get(),
         )
     }
     viewModelOf(::MovieViewModel)
@@ -259,6 +263,7 @@ val appModule = module {
             livePreview = get(),
             enginePool = get(),
             importer = get(),
+            livePreload = get(),
         )
     }
     viewModelOf(::LocalSyncViewModel)
