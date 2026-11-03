@@ -7,6 +7,12 @@
 > Issue numbers that are part of a title are fine; explanatory parentheticals are not. The detail —
 > what, why, files and verification — belongs in the commit message, never here.
 
+## v1.0.22 — 2026-11-03
+
+### 🐛 Fixes
+- **Live TV: a channel whose picture fails to start is retried a few more times before giving up**
+- **Switching playlist no longer leaves Movies, Series or Live TV on the old playlist's category**
+
 ## v1.0.21 — 2026-11-02
 
 ### ✨ New features
