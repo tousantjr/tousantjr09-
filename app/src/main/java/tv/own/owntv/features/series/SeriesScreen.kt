@@ -1464,25 +1464,25 @@ private fun EpisodeView(
                         text = stringResource(if (targetProgress != null) R.string.content_resume_episode else R.string.content_play_episode, code),
                         trailing = secondsLeft(target)?.let { "· " + stringResource(R.string.home_time_left, vodRuntime(it)) },
                         onClick = { startEpisode(target) },
-                        icon = OwnTVIcon.PLAY, iconFilled = true, tinted = true, height = 60.mpx, textSize = 20,
+                        icon = OwnTVIcon.PLAY, iconFilled = true, tinted = true, height = 60.mpx, textSize = 20, glow = true,
                     )
                 }
                 val favourite = favoriteIds.contains(series.id)
                 StageButton(
                     text = stringResource(if (favourite) R.string.content_favorited else R.string.content_favorite),
                     onClick = { vm.toggleFavorite(series) },
-                    icon = OwnTVIcon.FAVORITE, iconFilled = favourite, height = 60.mpx, textSize = 20,
+                    icon = OwnTVIcon.FAVORITE, iconFilled = favourite, height = 60.mpx, textSize = 20, glow = true,
                 )
                 if (visibleEpisodes.isNotEmpty() || seasonEpisodes.isNotEmpty()) {
                     StageButton(
                         text = stringResource(R.string.content_download_season),
                         onClick = { vm.downloadSeason(series, activeSeason) },
-                        icon = OwnTVIcon.DOWNLOADS, height = 60.mpx, textSize = 20,
+                        icon = OwnTVIcon.DOWNLOADS, height = 60.mpx, textSize = 20, glow = true,
                     )
                 }
                 StageButton(
                     text = null, onClick = { seriesMenuOpen = true }, icon = OwnTVIcon.MORE, round = true,
-                    height = 60.mpx, textSize = 20, modifier = Modifier.focusRequester(moreFocus),
+                    height = 60.mpx, textSize = 20, glow = true, modifier = Modifier.focusRequester(moreFocus),
                 )
             }
         }

@@ -1001,6 +1001,7 @@ private fun TrendingHero(
                         onClick = { onActivate(item) },
                         icon = if (isMovie) OwnTVIcon.PLAY else OwnTVIcon.SERIES,
                         iconFilled = isMovie,
+                        glow = true,
                         modifier = Modifier.focusRequester(primaryFocusRequester).tracked(primaryFocusRequester, track),
                     )
                     if (!snapshot.trailerKey.isNullOrBlank()) {
@@ -1016,6 +1017,7 @@ private fun TrendingHero(
                         onClick = { onAllVersions(item) },
                         icon = OwnTVIcon.LAYERS,
                         trailing = extras.versions.takeIf { it > 1 }?.toString(),
+                        glow = true,
                         modifier = Modifier.focusRequester(versionsFocusRequester).tracked(versionsFocusRequester, track),
                     )
                 }
@@ -1024,6 +1026,7 @@ private fun TrendingHero(
                     onClick = { onDetails(item) },
                     icon = OwnTVIcon.INFO,
                     round = true,
+                    glow = true,
                     modifier = Modifier.focusRequester(detailsFocusRequester).tracked(detailsFocusRequester, track),
                 )
                 StageButton(
@@ -1032,6 +1035,7 @@ private fun TrendingHero(
                     icon = OwnTVIcon.FAVORITE,
                     iconFilled = favourite,
                     round = true,
+                    glow = true,
                     modifier = Modifier.tracked(track = track),
                 )
             }

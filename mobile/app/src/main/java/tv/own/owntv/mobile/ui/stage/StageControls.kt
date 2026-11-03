@@ -98,6 +98,8 @@ fun StageButton(
     trailing: String? = null,
     /** After the text (the wizard's "Continue ›"). */
     trailingIcon: ImageVector? = null,
+    /** MPTV: a breathing accent halo (the VOD buttons). */
+    glow: Boolean = false,
 ) {
     val palette = LocalStagePalette.current
     val accent = stageAccent
@@ -115,8 +117,9 @@ fun StageButton(
         modifier
             // Not available yet (a form not filled in): the whole button at 45 %, no glow — as a dimmed menu item.
             .then(if (enabled) Modifier else Modifier.alpha(0.45f))
+            .then(if (glow && enabled) Modifier.vodGlow(accent.accent, radius) else Modifier)
             .then(
-                if (style == StageButtonStyle.PRIMARY && enabled) {
+                if (style == StageButtonStyle.PRIMARY && enabled && !glow) {
                     Modifier.stageShadow(
                         accent.accent.copy(alpha = if (palette.isLight) 0.3f else 0.4f),
                         if (palette.isLight) 16.dp else 24.dp,

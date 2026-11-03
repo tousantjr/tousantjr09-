@@ -257,13 +257,15 @@ fun StageButton(
     tinted: Boolean = false,
     /** A glyph after the label: the ▾ of "● Record ▾". */
     trailingIcon: OwnTVIcon? = null,
+    /** MPTV: a breathing accent halo (the VOD buttons). */
+    glow: Boolean = false,
 ) {
     val a = stageAccent
     val r = StageRadii.Button
     StageSurface(
         onClick = onClick,
         radius = r,
-        modifier = modifier.height(height).then(if (round) Modifier.width(height) else Modifier),
+        modifier = modifier.then(if (glow) Modifier.vodGlow(a.accent, r) else Modifier).height(height).then(if (round) Modifier.width(height) else Modifier),
         focusStyle = StageFocus.PRIMARY,
         idle = if (tinted) Modifier.background(a.accent.copy(alpha = 0.2f), RoundedCornerShape(r)) else Modifier.stageGlass(r),
         contentAlignment = Alignment.Center,

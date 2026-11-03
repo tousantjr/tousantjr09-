@@ -253,6 +253,7 @@ internal fun SeriesPage(
                             },
                             icon = MobileIcons.PlayArrow,
                             style = StageButtonStyle.PRIMARY,
+                            glow = true,
                             modifier = Modifier.weight(1f),
                         )
                     } else {
@@ -262,6 +263,7 @@ internal fun SeriesPage(
                     StageButton(
                         onClick = vm::toggleFavorite,
                         icon = if (favorite) MobileIcons.Favorite else MobileIcons.FavoriteBorder,
+                        glow = true,
                         modifier = Modifier.semantics { contentDescription = favourite },
                     )
                     // ⬇ the listed season, as the TV's "Download season"; once its episodes are queued it says
@@ -278,10 +280,11 @@ internal fun SeriesPage(
                         ),
                         icon = download.icon(),
                         style = if (download.deletes) StageButtonStyle.DANGER else StageButtonStyle.SECONDARY,
+                        glow = true,
                         modifier = Modifier.semantics { contentDescription = downloadLabel },
                     )
                     val more = stringResource(R.string.content_key_options)
-                    StageButton(onClick = { menuOpen = true }, icon = MobileIcons.MoreHoriz, modifier = Modifier.semantics { contentDescription = more })
+                    StageButton(onClick = { menuOpen = true }, icon = MobileIcons.MoreHoriz, glow = true, modifier = Modifier.semantics { contentDescription = more })
                 }
                 SeasonBar(
                     seasons = seasons,

@@ -203,19 +203,21 @@ internal fun MoviePage(
                 text = stringResource(R.string.content_play),
                 icon = MobileIcons.PlayArrow,
                 style = StageButtonStyle.PRIMARY,
+                glow = true,
                 modifier = Modifier.weight(1f),
             )
             trailer?.let { key ->
                 StageButton(onClick = { context.playTrailer(key) }, text = stringResource(R.string.home_trending_trailer), icon = MobileIcons.PlayCircle)
             }
             val more = stringResource(R.string.content_key_options)
-            StageButton(onClick = { menuOpen = true }, icon = MobileIcons.MoreHoriz, modifier = Modifier.semantics { contentDescription = more })
+            StageButton(onClick = { menuOpen = true }, icon = MobileIcons.MoreHoriz, glow = true, modifier = Modifier.semantics { contentDescription = more })
         }
         Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             StageButton(
                 onClick = vm::toggleFavorite,
                 text = stringResource(R.string.content_favorite),
                 icon = if (favorite) MobileIcons.Favorite else MobileIcons.FavoriteBorder,
+                glow = true,
                 modifier = Modifier.weight(1f),
             )
             val download = downloadActionFor(itemDownloads)
@@ -228,12 +230,14 @@ internal fun MoviePage(
                 text = download.label(),
                 icon = download.icon(),
                 style = if (download.deletes) StageButtonStyle.DANGER else StageButtonStyle.SECONDARY,
+                glow = true,
                 modifier = Modifier.weight(1f),
             )
             val versions = stringResource(R.string.home_trending_all_versions)
             StageButton(
                 onClick = { onOpenSearch(film.canonicalTitle.ifBlank { title }) },
                 icon = MobileIcons.Layers,
+                glow = true,
                 modifier = Modifier.semantics { contentDescription = versions },
             )
         }
