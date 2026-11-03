@@ -18,6 +18,9 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -613,7 +616,19 @@ class LibraryViewModel(
                 }
             }
         }
+        // Another playlist can leave a tab on a folder the playlists now shown do not have: its titles stayed
+        // listed under an empty label. Such a folder falls back to All, as on Live TV.
+        viewModelScope.launch {
+            ctx.filter { it.profileId >= 0L }.distinctUntilChanged { a, b -> a.sourceIds == b.sourceIds }.drop(1).collect { c ->
+                if (folderGone(_selectedMovies.value, c.sourceIdsFor(MediaType.MOVIE))) _selectedMovies.value = LiveKey.All
+                if (folderGone(_selectedSeries.value, c.sourceIdsFor(MediaType.SERIES))) _selectedSeries.value = LiveKey.All
+            }
+        }
     }
+
+    /** Whether [key] is a provider folder that none of [sourceIds] has (another playlist's, or deleted). */
+    private suspend fun folderGone(key: LiveKey, sourceIds: List<Long>): Boolean =
+        key is LiveKey.Folder && categoryDao.getById(key.id)?.sourceId !in sourceIds
 
     // --- The long-press actions ------------------------------------------------------------------
 
