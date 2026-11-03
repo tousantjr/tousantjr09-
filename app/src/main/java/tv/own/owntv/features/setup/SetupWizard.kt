@@ -67,7 +67,7 @@ import tv.own.owntv.ui.theme.mpx
 import tv.own.owntv.ui.theme.stageAccent
 import tv.own.owntv.ui.theme.stageText
 
-private enum class Step { WELCOME, DISPLAY_SIZE, DISCLAIMER, SETUP_CHOICE, SYNC_DEVICE, CREATE_PROFILE, ADD_CONTENT, ADD_SOURCE_REMOTE, ADD_SOURCE, IMPORTING, EXISTING, IMPORT_BACKUP_CHOOSER, IMPORT_BACKUP_REMOTE, IMPORT_BACKUP }
+private enum class Step { QUICK_LOGIN, WELCOME, DISPLAY_SIZE, DISCLAIMER, SETUP_CHOICE, SYNC_DEVICE, CREATE_PROFILE, ADD_CONTENT, ADD_SOURCE_REMOTE, ADD_SOURCE, IMPORTING, EXISTING, IMPORT_BACKUP_CHOOSER, IMPORT_BACKUP_REMOTE, IMPORT_BACKUP }
 
 /**
  * Onboarding for one profile. [firstRun] shows language/welcome/disclaimer; otherwise it
@@ -82,7 +82,7 @@ fun Onboarding(firstRun: Boolean, onDone: (Long?) -> Unit, onCancel: () -> Unit,
     val defaultIptvName = stringResource(R.string.setup_default_iptv)
     val defaultPlaylistName = stringResource(R.string.setup_name_default_playlist)
     val defaultPortalName = stringResource(R.string.setup_default_portal)
-    var step by rememberSaveable(firstRun) { mutableStateOf(if (firstRun) Step.WELCOME else Step.CREATE_PROFILE) }
+    var step by rememberSaveable(firstRun) { mutableStateOf(if (firstRun) Step.QUICK_LOGIN else Step.CREATE_PROFILE) }
     val importState by vm.state.collectAsStateWithLifecycle()
     val progress by vm.progress.collectAsStateWithLifecycle()
     val epgSync by vm.epgSync.collectAsStateWithLifecycle()
@@ -100,13 +100,25 @@ fun Onboarding(firstRun: Boolean, onDone: (Long?) -> Unit, onCancel: () -> Unit,
     // "Hardware settings from the other device" — asked with the sections, carried like them.
     val restoreDeviceSettings = remember { mutableStateOf(false) }
 
+    // The profile the simple login screen made for itself, so Try again does not make a second one.
+    var quickProfileId by rememberSaveable { mutableStateOf<Long?>(null) }
+    // Simple login: make the one profile (first time only), then import straight away.
+    val quickStart: (String, () -> Unit) -> Unit = { name, start ->
+        val go = { importName = name; start(); importOrigin = Step.QUICK_LOGIN; step = Step.IMPORTING }
+        if (quickProfileId != null) go()
+        else vm.createProfile(defaultProfileName, -1, false, null, null) { id -> quickProfileId = id; go() }
+    }
+
     // Refresh the "existing playlists" availability whenever we land on the add-content step.
     LaunchedEffect(step) { if (step == Step.ADD_CONTENT) existing = runCatching { vm.availableExistingSources() }.getOrDefault(emptyList()) }
 
     val accent = stageAccent.accent
     Box(modifier = modifier.fillMaxSize().stageBackground(accent)) {
         when (step) {
-            Step.WELCOME -> WelcomeStep(onNext = { step = Step.DISPLAY_SIZE })
+            Step.QUICK_LOGIN -> QuickLoginScreen(
+                onXtream = { user, pass -> quickStart(defaultIptvName) { vm.startXtream(defaultIptvName, DEFAULT_XTREAM_SERVER, user, pass) } },
+            )
+            Step.WELCOME -> WelcomeStep(onNext = { step = Step.DISPLAY_SIZE }, onBack = { step = Step.QUICK_LOGIN })
             // Before the disclaimer, which is the first screen with a paragraph of real text on it:
             // if the interface is too small to read, that is the screen it first hurts on.
             Step.DISPLAY_SIZE -> DisplaySizeStep(onNext = { step = Step.DISCLAIMER }, onBack = { step = Step.WELCOME })
@@ -296,12 +308,12 @@ private fun rememberFirstFocus(): FocusRequester {
 
 /** The language as a row (OK opens the list), then Get started. */
 @Composable
-private fun WelcomeStep(onNext: () -> Unit) {
+private fun WelcomeStep(onNext: () -> Unit, onBack: () -> Unit) {
     WizardFrame(
         step = WizardStep.LANGUAGE,
         title = stringResource(R.string.setup_welcome_title),
         sub = stringResource(R.string.setup_welcome_sub),
-        back = null,
+        back = WizardAction(stringResource(R.string.common_back), onBack),
         next = WizardAction(stringResource(R.string.setup_get_started), onNext),
     ) {
         FirstRunLanguageSelector(Modifier.focusRequester(rememberFirstFocus()))

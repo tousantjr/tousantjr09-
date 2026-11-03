@@ -428,4 +428,5 @@
     <string name="anti_freeze_switched_ts">Switched to MPEG-TS to reduce freezing</string>
     <!-- Sports hub day strip: a day other than today with nothing on it. -->
     <string name="sports_day_empty">No matches on this day in what you follow</string>
+    <string name="quick_login_connect">Connect</string>
 </resources>

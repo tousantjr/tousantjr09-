@@ -49,7 +49,7 @@ enum class SourceKind { XTREAM, M3U, STALKER }
 
 /** MPTV is pinned to a single Xtream provider, so new sources skip the server-URL field entirely
  *  and only ask for username/password. */
-private const val DEFAULT_XTREAM_SERVER = "https://bp-v2.net"
+internal const val DEFAULT_XTREAM_SERVER = "https://bp-v2.net"
 
 /** Known alternate server from the same provider, offered as a quick switch when editing a source —
  *  so a dead server (it's happened before: best-streams.tv -> bp-v2.net) doesn't require a new app
