@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
@@ -177,6 +178,17 @@ class GuideViewModel(
     val selected: StateFlow<LiveKey> = _selected
 
     fun select(key: LiveKey) { _selected.value = key }
+
+    // Another playlist can leave the guide on a folder the playlists now shown do not have: its rows stayed
+    // listed under an empty label. Such a folder falls back to All, as on Live TV.
+    init {
+        viewModelScope.launch {
+            ctx.filter { it.profileId >= 0L }.map { it.liveSourceIds }.distinctUntilChanged().drop(1).collect { ids ->
+                val key = _selected.value as? LiveKey.Folder ?: return@collect
+                if (categoryDao.getById(key.id)?.sourceId !in ids) _selected.value = LiveKey.All
+            }
+        }
+    }
 
     private val _query = MutableStateFlow("")
     val query: StateFlow<String> = _query
