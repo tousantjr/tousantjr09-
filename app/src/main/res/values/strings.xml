@@ -450,11 +450,5 @@
     <string name="settings_preload_next_channel">Preload next channel</string>
     <string name="settings_preload_next_channel_description">Quietly opens the next channel in the list while you watch, so CH+/CH− feels instant. Uses an extra connection — leave off if your provider allows only one.</string>
     <string name="settings_help_preload_next_channel">While a channel plays full screen, MPTV opens the channel CH+/CH− would go to next (muted, in the background), so switching to it shows a picture at once. This needs one extra connection to your provider. It never runs on playlists that allow only one connection, waits until you stop zapping, and is released when you leave Live TV, switch apps or the TV runs low on memory.</string>
-    <string name="quick_login_title">Sign in to your playlist</string>
-    <string name="quick_login_sub">Use the login details your provider sent you.</string>
-    <string name="quick_login_portal">Portal (MAC)</string>
-    <string name="quick_login_playlist_url">Playlist URL</string>
     <string name="quick_login_connect">Connect</string>
-    <string name="quick_login_more_options">More setup options</string>
-    <string name="quick_login_privacy">Your details stay on this device.</string>
 </resources>

@@ -117,10 +117,6 @@ fun Onboarding(firstRun: Boolean, onDone: (Long?) -> Unit, onCancel: () -> Unit,
         when (step) {
             Step.QUICK_LOGIN -> QuickLoginScreen(
                 onXtream = { user, pass -> quickStart(defaultIptvName) { vm.startXtream(defaultIptvName, DEFAULT_XTREAM_SERVER, user, pass) } },
-                onM3u = { url -> quickStart(defaultPlaylistName) { vm.startM3u(defaultPlaylistName, url) } },
-                onPortal = { url, mac -> quickStart(defaultPortalName) { vm.startStalker(defaultPortalName, url, mac) } },
-                // A profile already made here: skip the wizard's profile step, go to the playlist choices.
-                onMoreOptions = { step = if (quickProfileId != null) Step.ADD_CONTENT else Step.WELCOME },
             )
             Step.WELCOME -> WelcomeStep(onNext = { step = Step.DISPLAY_SIZE }, onBack = { step = Step.QUICK_LOGIN })
             // Before the disclaimer, which is the first screen with a paragraph of real text on it:

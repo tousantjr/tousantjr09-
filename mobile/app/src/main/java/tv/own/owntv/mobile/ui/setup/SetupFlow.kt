@@ -216,14 +216,6 @@ fun SetupFlow(
                         vm.startXtream(defaultIptvName, DEFAULT_XTREAM_SERVER, user, pass, "", "", PlaylistRefresh.OFF, SyncScopeChoice.Now, SyncScopeChoice.Now, SyncScopeChoice.Now, false)
                     }
                 },
-                onM3u = { url -> quickStart(defaultPlaylistName) { vm.startM3u(defaultPlaylistName, url, "", "", PlaylistRefresh.OFF) } },
-                onPortal = { url, mac ->
-                    quickStart(defaultPortalName) {
-                        vm.startStalker(defaultPortalName, url, mac, "", "", "", "", "", "", PlaylistRefresh.OFF, SyncScopeChoice.Now, SyncScopeChoice.Later, SyncScopeChoice.Later)
-                    }
-                },
-                // A profile already made here: skip the wizard's profile step, go to the playlist choices.
-                onMoreOptions = { step = if (quickProfileMade) Step.ADD_CONTENT else Step.WELCOME },
             )
             Step.WELCOME -> WelcomeStep(onNext = { step = Step.DISPLAY_SIZE })
             // Before the disclaimer, which is the first screen that is mostly words: if the text is
