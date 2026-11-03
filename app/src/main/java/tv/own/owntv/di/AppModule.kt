@@ -15,7 +15,6 @@ import org.koin.dsl.module
 import tv.own.owntv.features.customize.CustomizeItemsViewModel
 import tv.own.owntv.features.customize.CustomizeViewModel
 import tv.own.owntv.features.downloads.DownloadsViewModel
-import tv.own.owntv.features.network.NetworkFoldersViewModel
 import tv.own.owntv.features.epg.EpgViewModel
 import tv.own.owntv.core.content.SearchReader
 import tv.own.owntv.core.home.HomeFeedReader
@@ -278,11 +277,6 @@ val appModule = module {
     viewModelOf(::DeleteSubtitlesViewModel)
     viewModelOf(::SubtitleSearchViewModel)
     viewModelOf(::DownloadsViewModel)
-    // MPTV: Network folders (SMB / NAS).
-    single { tv.own.owntv.features.network.SmbShareStore(androidContext()) }
-    single { tv.own.owntv.features.network.SmbClientPool(get()) }
-    single { tv.own.owntv.features.network.SmbStreamServer(get(), get()) }
-    viewModelOf(::NetworkFoldersViewModel)
     viewModelOf(::EpgViewModel)
     viewModelOf(::CustomizeViewModel)
     viewModelOf(::CustomizeItemsViewModel)

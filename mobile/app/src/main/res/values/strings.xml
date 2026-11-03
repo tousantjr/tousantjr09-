@@ -429,24 +429,4 @@
     <!-- Sports hub day strip: a day other than today with nothing on it. -->
     <string name="sports_day_empty">No matches on this day in what you follow</string>
     <string name="quick_login_connect">Connect</string>
-    <!-- MPTV: Network folders (SMB / NAS) -->
-    <string name="network_folders_title">Network folders</string>
-    <string name="network_folders_subtitle">Play videos from a NAS or computer on your home network (SMB)</string>
-    <string name="network_folders_add">Add network folder</string>
-    <string name="network_folders_edit">Edit network folder</string>
-    <string name="network_folders_empty">No network folders yet. Add one with the server address and share name of your NAS.</string>
-    <string name="network_folders_loading">Opening folder…</string>
-    <string name="network_folders_failed">Could not open this folder. Check the NAS is on and the details are right.</string>
-    <string name="network_folders_retry">Try again</string>
-    <string name="network_folders_no_videos">No videos in this folder</string>
-    <string name="network_folders_server">Server address (e.g. 192.168.1.20)</string>
-    <string name="network_folders_share">Share name (e.g. Movies)</string>
-    <string name="network_folders_username">Username (blank for guest)</string>
-    <string name="network_folders_password">Password</string>
-    <string name="network_folders_name">Name (optional)</string>
-    <string name="network_folders_form_hint">Your NAS must have SMB file sharing turned on.</string>
-    <string name="network_folders_checking">Connecting…</string>
-    <string name="network_folders_save_failed">Could not connect. Check the server address, share name, username and password.</string>
-    <string name="network_folders_save">Save</string>
-    <string name="network_folders_back">Back</string>
 </resources>

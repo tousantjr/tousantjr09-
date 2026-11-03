@@ -1,6 +1,4 @@
 [versions]
-# MPTV: SMB2/3 client for Network folders (SMB / NAS).
-smbj = "0.14.0"
 # Test-only: the real org.json for JVM unit tests (android.jar ships a stub).
 orgJson = "20260814"
 # --- Build toolchain ---
@@ -82,7 +80,6 @@ owntvCore = "1.0.69.1-mptv"
 # naming their own would be two copies of a native library and a packaging conflict.
 
 [libraries]
-smbj = { group = "com.hierynomus", name = "smbj", version.ref = "smbj" }
 org-json = { group = "org.json", name = "json", version.ref = "orgJson" }
 # The shared engine, from its own repository. Everything below the UI — database, sync, EPG, backup,
 # settings, strings — comes from here; this repo adds the phone/tablet shell only.

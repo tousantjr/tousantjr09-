@@ -26,16 +26,3 @@
 # --- Cast: the SDK reads the OptionsProvider's class name out of the manifest and instantiates it
 #     reflectively, so neither the name nor the no-argument constructor may be touched. ---
 -keep class tv.own.owntv.mobile.cast.CastOptionsProvider { *; }
-
-# MPTV: Network folders (SMB / NAS) — smbj and its event bus (mbassador) use reflection.
--keep class com.hierynomus.** { *; }
--keep class net.engio.mbassy.** { *; }
--keep class org.bouncycastle.crypto.** { *; }
--dontwarn com.hierynomus.**
--dontwarn net.engio.mbassy.**
--dontwarn org.bouncycastle.**
--dontwarn org.slf4j.**
--dontwarn javax.el.**
--dontwarn javax.naming.**
--dontwarn javax.security.auth.**
--dontwarn org.ietf.jgss.**

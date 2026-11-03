@@ -276,10 +276,6 @@ android {
             // release task came from. Skipping it packages byte-identical libraries without the noise.
             keepDebugSymbols += "**/*.so"
         }
-        resources {
-            // BouncyCastle (via smbj) ships OSGi manifests that collide with each other.
-            excludes += setOf("META-INF/versions/9/OSGI-INF/MANIFEST.MF", "META-INF/BCKEY.DSA", "META-INF/BCKEY.SF")
-        }
     }
 
     compileOptions {
@@ -458,8 +454,6 @@ dependencies {
 
     // Networking
     implementation(libs.okhttp)
-    // MPTV: Network folders (SMB / NAS).
-    implementation(libs.smbj)
     implementation(libs.zxing.core) // QR generation for the Remote (companion) add-source flow
     implementation(libs.juniversalchardet) // local subtitle charset detection
 

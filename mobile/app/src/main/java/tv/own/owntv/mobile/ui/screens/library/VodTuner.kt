@@ -69,9 +69,6 @@ data class VodPlayback(
     val sourceId: Long? = null,
 )
 
-/** MPTV: the [VodPlayback.itemId] of a video played from a network folder — it is in no catalogue. */
-const val NETWORK_ITEM_ID = -1L
-
 /**
  * The VOD half of what is playing — [LiveTuner]'s twin, and for the same reason: a film outlives the
  * screen that started it, so the full screen player and the mini player are two views of one stream.
@@ -377,31 +374,6 @@ class VodTuner(
     }
 
     /**
-     * MPTV: a video from a network folder (SMB / NAS), already turned into a local stream URL. It is
-     * not in the catalogue, so nothing is written to history or resume, and nothing is scrobbled.
-     * False when an external player took it.
-     */
-    suspend fun playNetwork(url: String, title: String): Boolean {
-        if (settings.externalPlayerFor(MediaType.MOVIE).first()) {
-            externalPlayerLauncher.launch(url, title)
-            return false
-        }
-        saveProgress()
-        liveTuner.stop()
-        // The stream lives on this phone's own loopback address, which no receiver can reach.
-        cast.release(this)
-        clearPlaying()
-        player.exitAudioOnly()
-        session.attach(engine)
-        PlaybackService.start(context)
-        player.play(url = url, title = title, isLive = false)
-        // No profile owns it, so saveProgress() never writes a position for it.
-        playingProfileId = -1L
-        _playing.value = VodPlayback(MediaType.MOVIE, NETWORK_ITEM_ID, title)
-        return true
-    }
-
-    /**
      * A downloaded film or episode can search for subtitles too — and better than a stream can: the
      * file is on disk, so OpenSubtitles can be matched on the file's own hash rather than on its name.
      */
@@ -486,7 +458,6 @@ class VodTuner(
      */
     override fun resumeFromCast(positionMs: Long) {
         val current = _playing.value ?: return
-        if (current.itemId == NETWORK_ITEM_ID) return
         scope.launch {
             when (current.mediaType) {
                 MediaType.EPISODE -> playEpisode(current.itemId, positionMs)
