@@ -1454,3 +1454,5 @@
 1	technical	app/src/main/java/tv/own/owntv/mobile/update/UpdateCheckWorker.kt	mptv_update_check
 1	preference-key	app/src/main/java/tv/own/owntv/mobile/update/UpdateCheckWorker.kt	mptv_update_notice
 1	protocol	app/src/main/java/tv/own/owntv/mobile/update/UpdateCheckWorker.kt	tv.own.owntv.mobile.extra.INSTALL_UPDATE
+1	log	app/src/main/java/tv/own/owntv/mobile/ui/stage/StageGlow.kt	vodGlow
+1	log	app/src/main/java/tv/own/owntv/mobile/ui/stage/StageGlow.kt	vodGlowPulse
