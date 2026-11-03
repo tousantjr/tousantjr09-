@@ -36,6 +36,12 @@ for entry in "${MODULES[@]}"; do
     exit 1
   fi
 
+  # MPTV's own core builds (maven-local/, e.g. "1.0.69.1-mptv") are an upstream tag plus cherry-picked
+  # fixes; check the brand strings against that upstream tag ("1.0.69.1-mptv" -> core-1.0.69).
+  if [[ "$PIN" == *-mptv ]]; then
+    PIN=$(echo "$PIN" | sed -E 's/^([0-9]+\.[0-9]+\.[0-9]+)\..*-mptv$/\1/')
+  fi
+
   TMP=$(mktemp -d)
   echo "Checking $RES against core-$PIN..."
   git -c advice.detachedHead=false clone --quiet --depth 1 --branch "core-$PIN" \

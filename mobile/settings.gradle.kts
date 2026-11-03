@@ -32,6 +32,12 @@ dependencyResolutionManagement {
         // OwnTV's own Maven repository — public, no login: tv.own.owntv:core and :player-core
         // (built from https://github.com/ahXN00/OwnTV_Core) and tv.own.owntv:libmpv, the mpv engine
         // (https://github.com/ahXN00/OwnTV_libmpv). Served from OwnTV_Core's gh-pages branch.
+        // MPTV's own build of core (1.0.69 + live decoder retries) — see maven-local/README.md.
+        maven {
+            name = "MPTVLocal"
+            url = uri(File(settingsDir, "../maven-local"))
+            content { includeGroup("tv.own.owntv") }
+        }
         maven {
             name = "OwnTV"
             url = uri("https://ahxn00.github.io/OwnTV_Core/maven")
