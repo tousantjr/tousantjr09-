@@ -1454,3 +1454,98 @@
 1	technical	app/src/main/java/tv/own/owntv/mobile/update/UpdateCheckWorker.kt	mptv_update_check
 1	preference-key	app/src/main/java/tv/own/owntv/mobile/update/UpdateCheckWorker.kt	mptv_update_notice
 1	protocol	app/src/main/java/tv/own/owntv/mobile/update/UpdateCheckWorker.kt	tv.own.owntv.mobile.extra.INSTALL_UPDATE
+11	empty	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	\0
+1	technical	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	#recycle
+1	technical	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	$RECYCLE.BIN
+1	technical	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	%02x
+1	technical	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	%20
+1	technical	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	%2B
+1	regex	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	(\\d+)|(\\D+)
+2	technical	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	+
+1	technical	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	.
+1	technical	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	..
+5	technical	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	/
+1	technical	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	127.0.0.1
+2	technical	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	3gp
+1	technical	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	@eaDir
+1	protocol	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	Accept-Ranges: bytes
+1	protocol	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	Connection: close
+1	protocol	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	Content-Length:
+1	protocol	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	Content-Range: bytes
+1	protocol	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	Content-Type:
+1	protocol	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	GET
+2	protocol	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	HEAD
+1	protocol	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	HTTP/1.1 $code $text Content-Length: 0 Connection: close
+1	protocol	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	HTTP/1.1 200 OK
+1	protocol	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	HTTP/1.1 206 Partial Content
+1	protocol	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	HTTP/1.1 416 Range Not Satisfiable Content-Range: bytes */$length Content-Length: 0 Connection: close
+1	protocol	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	Method Not Allowed
+1	log	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	MptvSmb
+2	protocol	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	Not Found
+1	url	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	SMB://
+1	technical	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	System Volume Information
+2	protocol	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	UTF-8
+1	technical	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	[]
+2	technical	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	aac
+1	mime	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	application/octet-stream
+1	mime	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	audio/aac
+1	mime	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	audio/flac
+1	mime	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	audio/mp4
+1	mime	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	audio/mpeg
+1	mime	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	audio/ogg
+1	mime	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	audio/wav
+2	technical	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	avi
+2	protocol	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	bytes=
+2	technical	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	divx
+2	json	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	domain
+2	technical	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	flac
+2	technical	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	flv
+2	json	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	host
+1	url	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	http://127.0.0.1:${port()}/$key/${share.id}/$encoded
+2	json	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	id
+1	technical	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	iso
+2	technical	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	m2ts
+2	technical	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	m4a
+2	technical	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	m4v
+2	technical	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	mkv
+2	technical	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	mov
+2	technical	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	mp3
+2	technical	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	mp4
+2	technical	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	mpeg
+2	technical	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	mpg
+1	technical	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	mptv-smb-http
+1	preference-key	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	mptv_network_folders
+2	technical	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	mts
+2	json	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	name
+1	log	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	network folder stream ended: ${e.message}
+1	assertion	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	not a folder share
+2	technical	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	ogg
+2	technical	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	ogv
+2	technical	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	opus
+2	json	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	pass
+2	json	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	path
+1	protocol	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	range
+2	json	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	share
+1	json	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	shares
+1	url	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	smb://
+2	technical	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	ts
+2	json	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	user
+1	mime	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	video/3gpp
+1	mime	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	video/mp2t
+1	mime	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	video/mp4
+1	mime	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	video/mpeg
+1	mime	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	video/ogg
+1	mime	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	video/quicktime
+1	mime	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	video/webm
+1	mime	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	video/x-flv
+1	mime	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	video/x-matroska
+1	mime	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	video/x-ms-wmv
+1	mime	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	video/x-msvideo
+2	technical	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	vob
+2	technical	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	wav
+2	technical	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	webm
+1	technical	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	wma
+2	technical	app/src/main/java/tv/own/owntv/mobile/network/SmbCore.kt	wmv
+1	log	app/src/main/java/tv/own/owntv/mobile/ui/stage/StageGlow.kt	vodGlow
+1	log	app/src/main/java/tv/own/owntv/mobile/ui/stage/StageGlow.kt	vodGlowPulse
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/downloads/NetworkFoldersSheet.kt	›

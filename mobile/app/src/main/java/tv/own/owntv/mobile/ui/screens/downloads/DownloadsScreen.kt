@@ -123,6 +123,7 @@ fun DownloadsScreen(
     var tab by rememberSaveable { mutableStateOf(DownloadsTab.MOVIES) }
     var menuFor by remember { mutableStateOf<DownloadEntity?>(null) }
     var optionsSheet by remember { mutableStateOf(false) }
+    var networkSheet by remember { mutableStateOf(false) }
     var savingCopyOf by remember { mutableStateOf<DownloadEntity?>(null) }
 
     val saveCopy = rememberLauncherForActivityResult(
@@ -173,6 +174,8 @@ fun DownloadsScreen(
             onSelect = { tab = it },
             folderOpen = optionsSheet,
             onFolder = { optionsSheet = true },
+            networkOpen = networkSheet,
+            onNetwork = { networkSheet = true },
         )
         // The folder the open tab saves to: the folder in use plus core's fixed subfolder (TV 40f0ddc1).
         storage?.let { info ->
@@ -238,6 +241,10 @@ fun DownloadsScreen(
         )
     }
 
+    if (networkSheet) {
+        NetworkFoldersSheet(onDismiss = { networkSheet = false }, onPlayerOpened = onPlayerOpened)
+    }
+
     if (optionsSheet) {
         DownloadOptionsSheet(
             volumes = vm.volumes,
@@ -293,6 +300,8 @@ private fun DownloadTabs(
     onSelect: (DownloadsTab) -> Unit,
     folderOpen: Boolean,
     onFolder: () -> Unit,
+    networkOpen: Boolean,
+    onNetwork: () -> Unit,
 ) {
     StageTabs(
         tabs = tabs.map { (t, n) -> stringResource(t.labelRes) to n },
@@ -301,6 +310,14 @@ private fun DownloadTabs(
         modifier = Modifier.padding(start = 18.dp, end = 14.dp, top = 16.dp),
     ) {
         Spacer(Modifier.weight(1f))
+        // MPTV: network folders (SMB / NAS).
+        StageTool(
+            onClick = onNetwork,
+            icon = MobileIcons.Wifi,
+            on = networkOpen,
+            contentDescription = stringResource(R.string.network_folders_title),
+            modifier = Modifier.padding(bottom = 6.dp),
+        )
         StageTool(
             onClick = onFolder,
             icon = MobileIcons.Folder,

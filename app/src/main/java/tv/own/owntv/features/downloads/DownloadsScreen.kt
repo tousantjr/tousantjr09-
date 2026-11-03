@@ -214,6 +214,18 @@ fun DownloadsScreen(
     val watchChoice by vm.downloadWatchChoice.collectAsStateWithLifecycle()
     val missing by vm.missingFiles.collectAsStateWithLifecycle()
 
+    // MPTV: Network folders (SMB / NAS) take this page over while open.
+    var networkOpen by rememberSaveable { mutableStateOf(false) }
+    if (networkOpen) {
+        tv.own.owntv.features.network.NetworkFoldersScreen(
+            onDismiss = { networkOpen = false },
+            onPlaying = onFullscreen,
+            contentStart = contentStart,
+            modifier = modifier.onFocusChanged { if (it.hasFocus) onChildFocused() },
+        )
+        return
+    }
+
     BoxWithConstraints(modifier.fillMaxSize().onFocusChanged { if (it.hasFocus) onChildFocused() }) {
         // Horizontal geometry is a fraction of the 1920 design width, so every zoom reflows.
         val screenW = maxWidth
@@ -267,6 +279,11 @@ fun DownloadsScreen(
                 )
             }
             Spacer(Modifier.weight(1f))
+            StageTool(
+                text = stringResource(R.string.network_folders_title), icon = OwnTVIcon.NETWORK,
+                onClick = { networkOpen = true },
+                modifier = Modifier.padding(bottom = 4.mpx),
+            )
             // What playing does to a download on a one-stream playlist; OK steps through the three answers.
             StageTool(
                 text = stringResource(R.string.content_download_watch_setting) + stringResource(R.string.content_epg_bits_separator) +

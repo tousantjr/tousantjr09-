@@ -22,3 +22,16 @@
 #     EpgAutoRefresh, PlaylistAutoRefresh, ...) round-trip through Enum.name/valueOf.
 #     Renaming a constant would silently reset settings and break old backups. ---
 -keep enum tv.own.owntv.** { *; }
+
+# MPTV: Network folders (SMB / NAS) — smbj and its event bus (mbassador) use reflection.
+-keep class com.hierynomus.** { *; }
+-keep class net.engio.mbassy.** { *; }
+-keep class org.bouncycastle.crypto.** { *; }
+-dontwarn com.hierynomus.**
+-dontwarn net.engio.mbassy.**
+-dontwarn org.bouncycastle.**
+-dontwarn org.slf4j.**
+-dontwarn javax.el.**
+-dontwarn javax.naming.**
+-dontwarn javax.security.auth.**
+-dontwarn org.ietf.jgss.**

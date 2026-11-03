@@ -255,7 +255,8 @@ fun PlayerScreen(
     // because an episode is never favourited on its own.
     val favoriteType = channel?.let { MediaType.LIVE }
         ?: film?.let { if (it.mediaType == MediaType.EPISODE) MediaType.SERIES else it.mediaType }
-    val favoriteId = channel?.id ?: film?.let { it.seriesId ?: it.itemId }
+    // MPTV: a network-folder video is in no catalogue, so there is nothing to favourite.
+    val favoriteId = channel?.id ?: film?.takeIf { it.itemId != tv.own.owntv.mobile.ui.screens.library.NETWORK_ITEM_ID }?.let { it.seriesId ?: it.itemId }
     val favoriteIds by remember(favoriteType) {
         favoriteType?.let { actions.favoriteIds(it) } ?: flowOf(emptySet())
     }.collectAsStateWithLifecycle(emptySet())

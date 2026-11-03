@@ -212,6 +212,10 @@ android {
             // has nothing to remove and merely fails loudly on a machine with no NDK.
             keepDebugSymbols += "**/*.so"
         }
+        resources {
+            // BouncyCastle (via smbj) ships OSGi manifests that collide with each other.
+            excludes += setOf("META-INF/versions/9/OSGI-INF/MANIFEST.MF", "META-INF/BCKEY.DSA", "META-INF/BCKEY.SF")
+        }
     }
 
     lint {
@@ -410,6 +414,8 @@ dependencies {
 
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
+    // MPTV: Network folders (SMB / NAS).
+    implementation(libs.smbj)
 
     // Casting. The sender half only: the Chromecast decodes the stream itself, so nothing of the
     // playback engine crosses over — see tv.own.owntv.mobile.cast.
