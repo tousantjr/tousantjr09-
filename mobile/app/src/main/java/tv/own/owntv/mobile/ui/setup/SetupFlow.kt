@@ -33,6 +33,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import tv.own.owntv.core.backup.BackupManager
+import tv.own.owntv.core.settings.PlaylistRefresh
+import tv.own.owntv.core.sync.SyncScopeChoice
 import tv.own.owntv.core.database.entity.SourceEntity
 import tv.own.owntv.core.setup.SourceImporter
 import tv.own.owntv.core.setup.displayText
@@ -82,7 +84,7 @@ object SetupHandoff {
 }
 
 private enum class Step {
-    WELCOME, DISPLAY_SIZE, DISCLAIMER, CHOICE, SYNC_DEVICE, CREATE_PROFILE, ADD_CONTENT, EXISTING, FORM, IMPORTING, RESTORE
+    QUICK_LOGIN, WELCOME, DISPLAY_SIZE, DISCLAIMER, CHOICE, SYNC_DEVICE, CREATE_PROFILE, ADD_CONTENT, EXISTING, FORM, IMPORTING, RESTORE
 }
 
 /**
@@ -105,7 +107,7 @@ fun SetupFlow(
     // No way to cancel means there is nothing behind this flow, which is exactly what a first run is.
     val firstRun = onCancel == null
     val entryStep = when {
-        firstRun -> Step.WELCOME
+        firstRun -> Step.QUICK_LOGIN
         entry == SetupEntry.FORM -> Step.FORM
         entry == SetupEntry.IMPORT -> Step.RESTORE
         entry == SetupEntry.EXISTING -> Step.EXISTING
@@ -127,6 +129,9 @@ fun SetupFlow(
     var importOrigin by rememberSaveable { mutableStateOf(Step.FORM) }
     // The playlist being imported, for "Importing <name>"; null when linking existing playlists.
     var importName by rememberSaveable { mutableStateOf<String?>(null) }
+    // Simple login: make the one profile (first time only, so Try again doesn't make a second),
+    // then import straight away with the same defaults as the full form.
+    var quickProfileMade by rememberSaveable { mutableStateOf(false) }
     // Where Back from the backup picker returns to — the first-run choice, or Add content.
     var backupOrigin by rememberSaveable { mutableStateOf(Step.ADD_CONTENT) }
     // Entered straight on Import: the picker opens at once, as the Import card promised.
@@ -171,7 +176,8 @@ fun SetupFlow(
     }
     BackHandler(enabled = !atStart || onCancel != null) {
         when (step) {
-            Step.WELCOME -> onCancel?.invoke()
+            Step.QUICK_LOGIN -> Unit
+            Step.WELCOME -> if (firstRun) step = Step.QUICK_LOGIN else onCancel?.invoke()
             Step.DISPLAY_SIZE -> step = Step.WELCOME
             Step.DISCLAIMER -> step = Step.DISPLAY_SIZE
             Step.CHOICE -> step = Step.DISCLAIMER
@@ -181,7 +187,7 @@ fun SetupFlow(
             Step.CREATE_PROFILE -> step = Step.CHOICE
             // Not `onCancel?.invoke()`: `firstRun` IS `onCancel == null`, so this branch is only
             // reached when there is one, and the compiler knows it.
-            Step.ADD_CONTENT -> if (firstRun) step = Step.CREATE_PROFILE else onCancel()
+            Step.ADD_CONTENT -> if (firstRun) step = if (quickProfileMade) Step.QUICK_LOGIN else Step.CREATE_PROFILE else onCancel()
             Step.EXISTING -> if (entryStep == Step.EXISTING) leave() else step = Step.ADD_CONTENT
             Step.FORM -> backFromForm()
             Step.RESTORE -> backFromRestore()
@@ -196,8 +202,29 @@ fun SetupFlow(
     // Read once: a later "Type it here" must not be filled from an old submission.
     LaunchedEffect(step) { if (step != Step.FORM && remotePayload != null) vm.consumeRemotePayload() }
 
+    val quickStart: (String, () -> Unit) -> Unit = { name, start ->
+        val go = { importName = name; start(); importOrigin = Step.QUICK_LOGIN; step = Step.IMPORTING }
+        if (quickProfileMade) go()
+        else vm.createProfile(defaultProfileName, -1, false, null, null) { quickProfileMade = true; go() }
+    }
+
     Box(modifier = modifier.fillMaxSize()) {
         when (step) {
+            Step.QUICK_LOGIN -> QuickLoginScreen(
+                onXtream = { user, pass ->
+                    quickStart(defaultIptvName) {
+                        vm.startXtream(defaultIptvName, DEFAULT_XTREAM_SERVER, user, pass, "", "", PlaylistRefresh.OFF, SyncScopeChoice.Now, SyncScopeChoice.Now, SyncScopeChoice.Now, false)
+                    }
+                },
+                onM3u = { url -> quickStart(defaultPlaylistName) { vm.startM3u(defaultPlaylistName, url, "", "", PlaylistRefresh.OFF) } },
+                onPortal = { url, mac ->
+                    quickStart(defaultPortalName) {
+                        vm.startStalker(defaultPortalName, url, mac, "", "", "", "", "", "", PlaylistRefresh.OFF, SyncScopeChoice.Now, SyncScopeChoice.Later, SyncScopeChoice.Later)
+                    }
+                },
+                // A profile already made here: skip the wizard's profile step, go to the playlist choices.
+                onMoreOptions = { step = if (quickProfileMade) Step.ADD_CONTENT else Step.WELCOME },
+            )
             Step.WELCOME -> WelcomeStep(onNext = { step = Step.DISPLAY_SIZE })
             // Before the disclaimer, which is the first screen that is mostly words: if the text is
             // too small to read, that is the screen it first hurts on.
@@ -226,7 +253,7 @@ fun SetupFlow(
                 onExisting = { step = Step.EXISTING },
                 onImport = { backupOrigin = Step.ADD_CONTENT; step = Step.RESTORE; pickBackup() },
                 onSkip = { vm.finish(onDone) },
-                onBack = if (firstRun) ({ step = Step.CREATE_PROFILE }) else onCancel,
+                onBack = if (firstRun) ({ step = if (quickProfileMade) Step.QUICK_LOGIN else Step.CREATE_PROFILE }) else onCancel,
             )
             Step.EXISTING -> ExistingSourcesStep(
                 sources = existing,
