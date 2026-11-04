@@ -253,6 +253,8 @@ open class MainActivity : FragmentActivity() {
         intro.dismiss() // a notification tapped mid-intro goes straight where it points
     }
 
+    // Lint's RestrictedApi check misreads this public Activity override as androidx-internal.
+    @android.annotation.SuppressLint("RestrictedApi")
     override fun dispatchKeyEvent(event: android.view.KeyEvent): Boolean =
         intro.consumeKey(event) || super.dispatchKeyEvent(event)
 
