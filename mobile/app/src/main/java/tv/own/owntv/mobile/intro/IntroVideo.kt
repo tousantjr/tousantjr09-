@@ -16,7 +16,7 @@ import android.widget.VideoView
 import tv.own.owntv.mobile.R
 
 /**
- * The MPTV intro clip (res/raw/mptv_intro.mp4, about 4 seconds) shown over the app on a normal
+ * The MPTV intro clip (res/raw/mptv_intro.mp4, about 6 seconds) shown over the app on a normal
  * launch. Plain Android views on purpose: it sits on top of whatever Compose draws underneath, so the
  * app keeps loading behind it, and it needs no player library.
  *
@@ -84,7 +84,7 @@ class IntroVideo(private val activity: Activity) {
 
 /** The intro's rules, kept free of Android views so they can be unit tested. */
 object Intro {
-    const val SAFETY_MS = 7_000L
+    const val SAFETY_MS = 10_000L
     const val FADE_MS = 250L
 
     /**
