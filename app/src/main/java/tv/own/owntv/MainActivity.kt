@@ -87,6 +87,9 @@ open class MainActivity : ComponentActivity() {
     @Volatile
     private var contentReady = false
 
+    /** The MPTV intro clip, played over the app on a normal launcher start. */
+    private val intro = tv.own.owntv.features.intro.IntroVideo(this)
+
     private val player: tv.own.owntv.player.OwnTVPlayer by inject()
     private val previewEngine: tv.own.owntv.player.LivePreviewEngine by inject()
     private val heroPreviewEngine: tv.own.owntv.player.HeroPreviewEngine by inject()
@@ -154,7 +157,13 @@ open class MainActivity : ComponentActivity() {
         Log.d(TAG, "onNewIntent deepLinkHost=${intent.data?.host} deepLinkType=${pendingDeepLink?.javaClass?.simpleName ?: "none"}")
         readMatchRequest(intent)
         readUpdateRequest(intent)
+        intro.dismiss() // a notification or deep link tapped mid-intro goes straight where it points
     }
+
+    // Lint's RestrictedApi check misreads this public Activity override as androidx-internal.
+    @android.annotation.SuppressLint("RestrictedApi")
+    override fun dispatchKeyEvent(event: android.view.KeyEvent): Boolean =
+        intro.consumeKey(event) || super.dispatchKeyEvent(event)
 
     override fun onStop() {
         super.onStop()
@@ -215,7 +224,8 @@ open class MainActivity : ComponentActivity() {
         val splash = installSplashScreen()
         super.onCreate(savedInstanceState)
         val splashDeadline = SystemClock.uptimeMillis() + SPLASH_TIMEOUT_MS
-        splash.setKeepOnScreenCondition { !contentReady && SystemClock.uptimeMillis() < splashDeadline }
+        // The intro, when it plays, replaces the splash: the app keeps loading behind the clip.
+        splash.setKeepOnScreenCondition { !intro.showing && !contentReady && SystemClock.uptimeMillis() < splashDeadline }
         pendingDeepLink = LauncherDeepLink.parse(intent.data)
         Log.d(TAG, "onCreate deepLinkHost=${intent.data?.host} deepLinkType=${pendingDeepLink?.javaClass?.simpleName ?: "none"}")
         // Turning Sports goal alerts (or the game-day heads-up) on asks here; core calls the hook.
@@ -506,6 +516,7 @@ open class MainActivity : ComponentActivity() {
                 }
             }
         }
+        if (tv.own.owntv.features.intro.Intro.shouldPlay(savedInstanceState == null, intent)) intro.show()
     }
 }
 

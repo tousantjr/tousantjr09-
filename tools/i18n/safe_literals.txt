@@ -22,6 +22,7 @@
 1	log	app/src/main/java/tv/own/owntv/MainActivity.kt	BgImage
 1	log	app/src/main/java/tv/own/owntv/MainActivity.kt	OwnTVHome
 1	compiler	app/src/main/java/tv/own/owntv/MainActivity.kt	RememberReturnType
+1	technical	app/src/main/java/tv/own/owntv/MainActivity.kt	RestrictedApi
 1	log	app/src/main/java/tv/own/owntv/MainActivity.kt	blur: bounds decode failed for $path
 1	log	app/src/main/java/tv/own/owntv/MainActivity.kt	blur: crop/scale/blur threw ${t.javaClass.simpleName}: ${t.message}
 1	log	app/src/main/java/tv/own/owntv/MainActivity.kt	blur: decodeFile returned null for $path
@@ -1858,9 +1859,9 @@
 1	technical	app/src/main/java/tv/own/owntv/ui/stage/StageComponents.kt	+
 1	technical	app/src/main/java/tv/own/owntv/ui/stage/StageComponents.kt	stageLift
 1	technical	app/src/main/java/tv/own/owntv/ui/stage/StageComponents.kt	−
+1	log	app/src/main/java/tv/own/owntv/ui/stage/StageGlow.kt	vodGlow
+1	log	app/src/main/java/tv/own/owntv/ui/stage/StageGlow.kt	vodGlowPulse
 1	technical	app/src/main/java/tv/own/owntv/ui/stage/StagePopup.kt	$value ›
 1	technical	app/src/main/java/tv/own/owntv/ui/theme/Glass.kt	glassPosition
 2	empty	app/src/main/java/tv/own/owntv/ui/theme/OwnTVColors.kt	\0
 2	empty	app/src/main/java/tv/own/owntv/ui/theme/Theme.kt	\0
-1	log	app/src/main/java/tv/own/owntv/ui/stage/StageGlow.kt	vodGlow
-1	log	app/src/main/java/tv/own/owntv/ui/stage/StageGlow.kt	vodGlowPulse

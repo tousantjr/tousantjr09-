@@ -58,6 +58,9 @@ open class MainActivity : FragmentActivity() {
     private val cast: CastController by inject()
     private val localeStore: LocaleStore by inject()
     private val settings: SettingsRepository by inject()
+
+    /** The MPTV intro clip, played over the app on a normal launcher start. */
+    private val intro = tv.own.owntv.mobile.intro.IntroVideo(this)
     private val autoRefresh: tv.own.owntv.core.sync.AutoRefresh by inject()
 
     /**
@@ -167,6 +170,7 @@ open class MainActivity : FragmentActivity() {
             }
             }
         }
+        if (tv.own.owntv.mobile.intro.Intro.shouldPlay(savedInstanceState == null, intent)) intro.show()
     }
 
     /**
@@ -246,7 +250,13 @@ open class MainActivity : FragmentActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         readOpenPlayerRequest(intent)
+        intro.dismiss() // a notification tapped mid-intro goes straight where it points
     }
+
+    // Lint's RestrictedApi check misreads this public Activity override as androidx-internal.
+    @android.annotation.SuppressLint("RestrictedApi")
+    override fun dispatchKeyEvent(event: android.view.KeyEvent): Boolean =
+        intro.consumeKey(event) || super.dispatchKeyEvent(event)
 
     private fun readOpenPlayerRequest(intent: Intent?) {
         if (intent?.getBooleanExtra(EXTRA_OPEN_PLAYER, false) == true) {

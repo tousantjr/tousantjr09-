@@ -19,6 +19,7 @@
 # category protocol: Stable protocol or comparison identifier.
 # category technical: Reviewed non-user-facing technical literal.
 
+1	technical	app/src/main/java/tv/own/owntv/mobile/MainActivity.kt	RestrictedApi
 1	technical	app/src/main/java/tv/own/owntv/mobile/MainActivity.kt	back
 1	technical	app/src/main/java/tv/own/owntv/mobile/MainActivity.kt	forward
 1	uri	app/src/main/java/tv/own/owntv/mobile/MainActivity.kt	open_player
@@ -1437,6 +1438,8 @@
 2	protocol	app/src/main/java/tv/own/owntv/mobile/ui/shell/MobileShell.kt	${it.route}/
 2	empty	app/src/main/java/tv/own/owntv/mobile/ui/stage/StageControls.kt	\0
 1	log	app/src/main/java/tv/own/owntv/mobile/ui/stage/StageControls.kt	stageSwitch
+1	log	app/src/main/java/tv/own/owntv/mobile/ui/stage/StageGlow.kt	vodGlow
+1	log	app/src/main/java/tv/own/owntv/mobile/ui/stage/StageGlow.kt	vodGlowPulse
 1	empty	app/src/main/java/tv/own/owntv/mobile/ui/stage/StageRows.kt	\0
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/stage/StageRows.kt	·
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/stage/StageRows.kt	•
@@ -1454,5 +1457,3 @@
 1	technical	app/src/main/java/tv/own/owntv/mobile/update/UpdateCheckWorker.kt	mptv_update_check
 1	preference-key	app/src/main/java/tv/own/owntv/mobile/update/UpdateCheckWorker.kt	mptv_update_notice
 1	protocol	app/src/main/java/tv/own/owntv/mobile/update/UpdateCheckWorker.kt	tv.own.owntv.mobile.extra.INSTALL_UPDATE
-1	log	app/src/main/java/tv/own/owntv/mobile/ui/stage/StageGlow.kt	vodGlow
-1	log	app/src/main/java/tv/own/owntv/mobile/ui/stage/StageGlow.kt	vodGlowPulse
