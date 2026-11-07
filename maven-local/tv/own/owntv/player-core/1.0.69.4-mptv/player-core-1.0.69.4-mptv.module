@@ -3,7 +3,7 @@
   "component": {
     "group": "tv.own.owntv",
     "module": "player-core",
-    "version": "1.0.69.3-mptv",
+    "version": "1.0.69.4-mptv",
     "attributes": {
       "org.gradle.status": "release"
     }
@@ -27,7 +27,7 @@
           "group": "tv.own.owntv",
           "module": "libmpv",
           "version": {
-            "requires": "2026.10.4"
+            "requires": "2026.11.0"
           }
         },
         {
@@ -40,8 +40,8 @@
       ],
       "files": [
         {
-          "name": "player-core-1.0.69.3-mptv.aar",
-          "url": "player-core-1.0.69.3-mptv.aar",
+          "name": "player-core-1.0.69.4-mptv.aar",
+          "url": "player-core-1.0.69.4-mptv.aar",
           "size": 1244810,
           "sha512": "3fa8fa30c03744f95e28a1742a627940502ca7a5376c48424e1ab78df2b11e1f463049c50dcd5d2337a5a10f0f7042787c631c701f485bd832b168d74c169253",
           "sha256": "a4a02d32733555de354215ee385c2ac99ef592da0fb4f2a83f15d08274d7c3ef",
@@ -63,7 +63,7 @@
           "group": "tv.own.owntv",
           "module": "core",
           "version": {
-            "requires": "1.0.69.3-mptv"
+            "requires": "1.0.69.4-mptv"
           }
         },
         {
@@ -154,7 +154,7 @@
           "group": "tv.own.owntv",
           "module": "libmpv",
           "version": {
-            "requires": "2026.10.4"
+            "requires": "2026.11.0"
           }
         },
         {
@@ -167,8 +167,8 @@
       ],
       "files": [
         {
-          "name": "player-core-1.0.69.3-mptv.aar",
-          "url": "player-core-1.0.69.3-mptv.aar",
+          "name": "player-core-1.0.69.4-mptv.aar",
+          "url": "player-core-1.0.69.4-mptv.aar",
           "size": 1244810,
           "sha512": "3fa8fa30c03744f95e28a1742a627940502ca7a5376c48424e1ab78df2b11e1f463049c50dcd5d2337a5a10f0f7042787c631c701f485bd832b168d74c169253",
           "sha256": "a4a02d32733555de354215ee385c2ac99ef592da0fb4f2a83f15d08274d7c3ef",
@@ -187,8 +187,8 @@
       },
       "files": [
         {
-          "name": "player-core-1.0.69.3-mptv-sources.jar",
-          "url": "player-core-1.0.69.3-mptv-sources.jar",
+          "name": "player-core-1.0.69.4-mptv-sources.jar",
+          "url": "player-core-1.0.69.4-mptv-sources.jar",
           "size": 381502,
           "sha512": "6b298e07381caa3df8071418a5647543d356d0371a470bbc7075f8e8122827eb525caad653130e9b0878b9c99b10082f0a6b159188a739967703ba81e7312ce9",
           "sha256": "3a0b241504640a50143a2b9d38a9396b3f0bffd77d1a064bcdc469329c552619",

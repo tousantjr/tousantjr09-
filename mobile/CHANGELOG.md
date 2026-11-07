@@ -7,6 +7,11 @@
 > Issue numbers that are part of a title are fine; explanatory parentheticals are not. The detail —
 > what, why, files and verification — belongs in the commit message, never here.
 
+## v1.1.20 — 2026-11-07
+
+### Fixes
+- **Backup video player (mpv) updated to 2026.11.0** — 4K Dolby Vision (profile 5) shows correct colours on mpv
+
 ## v1.1.19 — 2026-11-07
 
 ### Fixes
