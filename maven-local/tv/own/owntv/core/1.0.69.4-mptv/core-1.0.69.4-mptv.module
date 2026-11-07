@@ -3,7 +3,7 @@
   "component": {
     "group": "tv.own.owntv",
     "module": "core",
-    "version": "1.0.69.3-mptv",
+    "version": "1.0.69.4-mptv",
     "attributes": {
       "org.gradle.status": "release"
     }
@@ -40,8 +40,8 @@
       ],
       "files": [
         {
-          "name": "core-1.0.69.3-mptv.aar",
-          "url": "core-1.0.69.3-mptv.aar",
+          "name": "core-1.0.69.4-mptv.aar",
+          "url": "core-1.0.69.4-mptv.aar",
           "size": 9358725,
           "sha512": "110e3bbb22c6927410502eb53dc2104c959a538d10c004f2f9eb668f408c5966be95c91fd5ea074fef3d6634b4178853c2310c372c24a321424b22dd964e3c98",
           "sha256": "0ab115585f59095642a8d5222db38539b830b24a93f756f97a51ca5047fb3fb6",
@@ -209,8 +209,8 @@
       ],
       "files": [
         {
-          "name": "core-1.0.69.3-mptv.aar",
-          "url": "core-1.0.69.3-mptv.aar",
+          "name": "core-1.0.69.4-mptv.aar",
+          "url": "core-1.0.69.4-mptv.aar",
           "size": 9358725,
           "sha512": "110e3bbb22c6927410502eb53dc2104c959a538d10c004f2f9eb668f408c5966be95c91fd5ea074fef3d6634b4178853c2310c372c24a321424b22dd964e3c98",
           "sha256": "0ab115585f59095642a8d5222db38539b830b24a93f756f97a51ca5047fb3fb6",
@@ -229,8 +229,8 @@
       },
       "files": [
         {
-          "name": "core-1.0.69.3-mptv-sources.jar",
-          "url": "core-1.0.69.3-mptv-sources.jar",
+          "name": "core-1.0.69.4-mptv-sources.jar",
+          "url": "core-1.0.69.4-mptv-sources.jar",
           "size": 1113036,
           "sha512": "3fe5cbde816c6d5439800000c86224d73a4a7cc876aaf43ae98a2aeeabc8029fdfcbe85cfd4abcb2f1f83929754b5a57238aa840a9a899b1e76da1b942e759b5",
           "sha256": "de8feb444adf487fac71ef9dbbe5302d4530906f9c02da84581bfc7c60d37e7e",
