@@ -1,0 +1,243 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "group": "tv.own.owntv",
+    "module": "core",
+    "version": "1.0.69.2-mptv",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "9.7.1"
+    }
+  },
+  "variants": [
+    {
+      "name": "releaseVariantReleaseApiPublication",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.libraryelements": "aar",
+        "org.gradle.usage": "java-api"
+      },
+      "dependencies": [
+        {
+          "group": "androidx.sqlite",
+          "module": "sqlite",
+          "version": {
+            "requires": "2.6.2"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "2.4.20"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "core-1.0.69.2-mptv.aar",
+          "url": "core-1.0.69.2-mptv.aar",
+          "size": 9358725,
+          "sha512": "110e3bbb22c6927410502eb53dc2104c959a538d10c004f2f9eb668f408c5966be95c91fd5ea074fef3d6634b4178853c2310c372c24a321424b22dd964e3c98",
+          "sha256": "0ab115585f59095642a8d5222db38539b830b24a93f756f97a51ca5047fb3fb6",
+          "sha1": "8198834e123df5bb2b45afbeee82008e05e09b46",
+          "md5": "79bec0766d935e22a6dde75c2523cbb1"
+        }
+      ]
+    },
+    {
+      "name": "releaseVariantReleaseRuntimePublication",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.libraryelements": "aar",
+        "org.gradle.usage": "java-runtime"
+      },
+      "dependencies": [
+        {
+          "group": "androidx.core",
+          "module": "core-ktx",
+          "version": {
+            "requires": "1.19.0"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-coroutines-android",
+          "version": {
+            "requires": "1.11.0"
+          }
+        },
+        {
+          "group": "androidx.sqlite",
+          "module": "sqlite-bundled",
+          "version": {
+            "requires": "2.6.2"
+          }
+        },
+        {
+          "group": "androidx.sqlite",
+          "module": "sqlite-framework",
+          "version": {
+            "requires": "2.6.2"
+          }
+        },
+        {
+          "group": "androidx.room",
+          "module": "room-runtime",
+          "version": {
+            "requires": "2.8.5"
+          }
+        },
+        {
+          "group": "androidx.room",
+          "module": "room-ktx",
+          "version": {
+            "requires": "2.8.5"
+          }
+        },
+        {
+          "group": "androidx.room",
+          "module": "room-paging",
+          "version": {
+            "requires": "2.8.5"
+          }
+        },
+        {
+          "group": "androidx.paging",
+          "module": "paging-runtime",
+          "version": {
+            "requires": "3.5.1"
+          }
+        },
+        {
+          "group": "androidx.datastore",
+          "module": "datastore-preferences",
+          "version": {
+            "requires": "1.2.1"
+          }
+        },
+        {
+          "group": "androidx.work",
+          "module": "work-runtime-ktx",
+          "version": {
+            "requires": "2.11.2"
+          }
+        },
+        {
+          "group": "androidx.tvprovider",
+          "module": "tvprovider",
+          "version": {
+            "requires": "1.1.0"
+          }
+        },
+        {
+          "group": "androidx.documentfile",
+          "module": "documentfile",
+          "version": {
+            "requires": "1.1.0"
+          }
+        },
+        {
+          "group": "com.squareup.okhttp3",
+          "module": "okhttp",
+          "version": {
+            "requires": "5.5.0"
+          }
+        },
+        {
+          "group": "com.google.zxing",
+          "module": "core",
+          "version": {
+            "requires": "3.5.4"
+          }
+        },
+        {
+          "group": "com.github.albfernandez",
+          "module": "juniversalchardet",
+          "version": {
+            "requires": "2.5.0"
+          }
+        },
+        {
+          "group": "io.insert-koin",
+          "module": "koin-bom",
+          "version": {
+            "requires": "4.2.2"
+          },
+          "attributes": {
+            "org.gradle.category": "platform"
+          }
+        },
+        {
+          "group": "io.insert-koin",
+          "module": "koin-android"
+        },
+        {
+          "group": "androidx.compose",
+          "module": "compose-bom",
+          "version": {
+            "requires": "2026.08.00"
+          },
+          "attributes": {
+            "org.gradle.category": "platform"
+          }
+        },
+        {
+          "group": "androidx.compose.runtime",
+          "module": "runtime"
+        },
+        {
+          "group": "androidx.sqlite",
+          "module": "sqlite",
+          "version": {
+            "requires": "2.6.2"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "2.4.20"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "core-1.0.69.2-mptv.aar",
+          "url": "core-1.0.69.2-mptv.aar",
+          "size": 9358725,
+          "sha512": "110e3bbb22c6927410502eb53dc2104c959a538d10c004f2f9eb668f408c5966be95c91fd5ea074fef3d6634b4178853c2310c372c24a321424b22dd964e3c98",
+          "sha256": "0ab115585f59095642a8d5222db38539b830b24a93f756f97a51ca5047fb3fb6",
+          "sha1": "8198834e123df5bb2b45afbeee82008e05e09b46",
+          "md5": "79bec0766d935e22a6dde75c2523cbb1"
+        }
+      ]
+    },
+    {
+      "name": "releaseVariantReleaseSourcePublication",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.usage": "java-runtime"
+      },
+      "files": [
+        {
+          "name": "core-1.0.69.2-mptv-sources.jar",
+          "url": "core-1.0.69.2-mptv-sources.jar",
+          "size": 1113036,
+          "sha512": "3fe5cbde816c6d5439800000c86224d73a4a7cc876aaf43ae98a2aeeabc8029fdfcbe85cfd4abcb2f1f83929754b5a57238aa840a9a899b1e76da1b942e759b5",
+          "sha256": "de8feb444adf487fac71ef9dbbe5302d4530906f9c02da84581bfc7c60d37e7e",
+          "sha1": "7b98efdc328c2947c4ced29d5747bfc661861338",
+          "md5": "3d65b923f35af4fbb72b0c91b8b592e6"
+        }
+      ]
+    }
+  ]
+}

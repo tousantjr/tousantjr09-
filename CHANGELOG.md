@@ -7,6 +7,12 @@
 > Issue numbers that are part of a title are fine; explanatory parentheticals are not. The detail —
 > what, why, files and verification — belongs in the commit message, never here.
 
+## v1.0.26 — 2026-11-07
+
+### 🔧 Fixes
+- **4K Dolby Vision movies on Sony and other TVs**
+- **Clearer message when a 4K file can't play**
+
 ## v1.0.25 — 2026-11-03
 
 ### ✨ New features
