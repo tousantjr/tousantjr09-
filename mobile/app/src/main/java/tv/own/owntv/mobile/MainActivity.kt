@@ -31,6 +31,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
+import org.koin.android.ext.android.get
 import tv.own.owntv.core.i18n.AppLocale
 import tv.own.owntv.core.i18n.LocaleStore
 import tv.own.owntv.core.settings.SettingsRepository
@@ -150,6 +151,10 @@ open class MainActivity : FragmentActivity() {
         // active (straight away, or as soon as first-run setup has made one).
         lifecycleScope.launch {
             settings.activeProfileId.first { it >= 0 }
+            // MPTV: guides default to "Refresh on startup" (see EpgStartupDefault).
+            tv.own.owntv.mobile.ui.screens.settings.EpgStartupDefault.apply(
+                applicationContext, settings, get<tv.own.owntv.core.epg.EpgSourceStore>(),
+            )
             autoRefresh.check(includeStartup = true)
         }
         setContent {

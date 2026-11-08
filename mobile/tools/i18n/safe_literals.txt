@@ -568,6 +568,11 @@
 1	log	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/EpgSourcesViewModel.kt	add
 1	log	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/EpgSourcesViewModel.kt	manual_resync
 1	log	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/EpgSourcesViewModel.kt	update
+2	log	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/EpgStartupDefault.kt	MptvEpgDefault
+1	log	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/EpgStartupDefault.kt	could not apply the guide refresh default
+1	preference-key	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/EpgStartupDefault.kt	epg_refresh_on_startup_v1
+1	log	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/EpgStartupDefault.kt	guide ${src.id} auto refresh ${current?.mode} -> STARTUP
+1	preference-key	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/EpgStartupDefault.kt	mptv_defaults
 1	log	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/LocalSyncViewModel.kt	Local sync failed: $reason
 1	log	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/LocalSyncViewModel.kt	LocalSyncViewModel
 1	protocol	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/MobileUpdateCheck.kt	Accept

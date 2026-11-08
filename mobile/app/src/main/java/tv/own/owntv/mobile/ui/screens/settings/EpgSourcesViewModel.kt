@@ -60,7 +60,7 @@ class EpgSourcesViewModel(
         name: String,
         url: String,
         userAgent: String? = null,
-        autoRefresh: EpgRefresh = EpgRefresh.OFF,
+        autoRefresh: EpgRefresh = EpgStartupDefault.DEFAULT,
         useLogos: Boolean = false,
     ) {
         viewModelScope.launch {

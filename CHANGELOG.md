@@ -7,6 +7,11 @@
 > Issue numbers that are part of a title are fine; explanatory parentheticals are not. The detail —
 > what, why, files and verification — belongs in the commit message, never here.
 
+## v1.0.29 — 2026-11-08
+
+### 🔧 Fixes
+- **TV Guide auto refresh now defaults to Refresh on startup**
+
 ## v1.0.28 — 2026-11-07
 
 ### 🔧 Fixes
