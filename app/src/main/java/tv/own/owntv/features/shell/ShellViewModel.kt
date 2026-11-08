@@ -47,6 +47,8 @@ class ShellViewModel(
     private val weatherRepository: WeatherRepository,
     private val navVisibility: NavVisibility,
     private val profiles: tv.own.owntv.core.profile.ProfileManager,
+    private val appContext: android.content.Context,
+    private val epgSourceStore: tv.own.owntv.core.epg.EpgSourceStore,
 ) : ViewModel() {
 
     companion object {
@@ -84,7 +86,13 @@ class ShellViewModel(
 
     /** The Auto refresh settings — core's [tv.own.owntv.core.sync.AutoRefresh], shared with the phone. */
     fun checkAutoRefresh(includeStartup: Boolean) {
-        viewModelScope.launch { autoRefresh.check(includeStartup) }
+        viewModelScope.launch {
+            // MPTV: guides default to "Refresh on startup" (see EpgStartupDefault).
+            if (includeStartup) {
+                tv.own.owntv.features.settings.EpgStartupDefault.apply(appContext, settings, epgSourceStore)
+            }
+            autoRefresh.check(includeStartup)
+        }
     }
 
     val themeMode: StateFlow<ThemeMode> = settings.themeMode

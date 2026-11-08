@@ -423,11 +423,19 @@
 2	technical	app/src/main/java/tv/own/owntv/features/settings/DiagnosticsViewModel.kt	manual_resync
 1	uri	app/src/main/java/tv/own/owntv/features/settings/DiagnosticsViewModel.kt	package
 1	url	app/src/main/java/tv/own/owntv/features/settings/DnsSettingsScreen.kt	https://bp-v2.net
+1	log	app/src/main/java/tv/own/owntv/features/settings/EpgBackgroundRefresh.kt	MptvEpgBackground
+1	log	app/src/main/java/tv/own/owntv/features/settings/EpgBackgroundRefresh.kt	background refresh guide ${src.id}
+1	technical	app/src/main/java/tv/own/owntv/features/settings/EpgBackgroundRefresh.kt	mptv_epg_background_refresh
 6	empty	app/src/main/java/tv/own/owntv/features/settings/EpgSourcesScreen.kt	\0
 2	technical	app/src/main/java/tv/own/owntv/features/settings/EpgSourcesScreen.kt	▶
 1	technical	app/src/main/java/tv/own/owntv/features/settings/EpgSourcesViewModel.kt	add
 1	technical	app/src/main/java/tv/own/owntv/features/settings/EpgSourcesViewModel.kt	manual_resync
 1	technical	app/src/main/java/tv/own/owntv/features/settings/EpgSourcesViewModel.kt	update
+2	log	app/src/main/java/tv/own/owntv/features/settings/EpgStartupDefault.kt	MptvEpgDefault
+1	log	app/src/main/java/tv/own/owntv/features/settings/EpgStartupDefault.kt	could not apply the guide refresh default
+1	preference-key	app/src/main/java/tv/own/owntv/features/settings/EpgStartupDefault.kt	epg_refresh_on_startup_v1
+1	log	app/src/main/java/tv/own/owntv/features/settings/EpgStartupDefault.kt	guide ${src.id} auto refresh ${current?.mode} -> STARTUP
+1	preference-key	app/src/main/java/tv/own/owntv/features/settings/EpgStartupDefault.kt	mptv_defaults
 1	technical	app/src/main/java/tv/own/owntv/features/settings/FontSettingsScreen.kt	fonts
 3	empty	app/src/main/java/tv/own/owntv/features/settings/HomeSettingsScreen.kt	\0
 1	technical	app/src/main/java/tv/own/owntv/features/settings/HomeSettingsScreen.kt	▲ ▼

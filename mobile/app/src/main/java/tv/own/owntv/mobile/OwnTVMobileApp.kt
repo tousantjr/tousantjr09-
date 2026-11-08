@@ -203,6 +203,8 @@ class OwnTVMobileApp : Application(), androidx.work.Configuration.Provider {
         appScope.launch { runCatching { tv.own.owntv.mobile.subscription.SubscriptionExpiryWorker.schedule(this@OwnTVMobileApp) } }
         // "MPTV vX is ready — tap to install": the twice-daily background update check; same thread rule.
         appScope.launch { runCatching { tv.own.owntv.mobile.update.UpdateCheckWorker.schedule(this@OwnTVMobileApp) } }
+        // MPTV: guides also refresh in the background every few hours.
+        appScope.launch { runCatching { tv.own.owntv.mobile.ui.screens.settings.EpgBackgroundRefreshWorker.schedule(this@OwnTVMobileApp) } }
         // Channel reliability: watch the tuner's engine for the life of the process, so every channel
         // that is tried — a start, a failure, a stall — teaches the Sports ranking and the rows' dots.
         runCatching { org.koin.core.context.GlobalContext.get().get<tv.own.owntv.mobile.health.ChannelHealthMonitor>().start() }

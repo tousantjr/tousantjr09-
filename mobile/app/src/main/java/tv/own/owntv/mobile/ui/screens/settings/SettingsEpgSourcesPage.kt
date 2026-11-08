@@ -89,7 +89,7 @@ fun SettingsEpgSourcesPage(
             item(key = source.id) {
                 EpgRow(
                     source = source,
-                    autoRefresh = autoRefresh[source.id] ?: EpgRefresh.OFF,
+                    autoRefresh = autoRefresh[source.id] ?: EpgStartupDefault.DEFAULT,
                     counts = { vm.counts(source.id) },
                     syncState = vm.observeSync(source.id).collectAsStateWithLifecycle(EpgSyncState.Idle).value,
                     isDeleting = source.id in deleting,
@@ -122,7 +122,7 @@ fun SettingsEpgSourcesPage(
                 stringResource(R.string.settings_epg_sources_auto_refresh_title),
                 onClick = { refreshFor = source; close() },
                 icon = MobileIcons.Schedule,
-                value = epgRefreshLabel(autoRefresh[source.id] ?: EpgRefresh.OFF),
+                value = epgRefreshLabel(autoRefresh[source.id] ?: EpgStartupDefault.DEFAULT),
             )
             StageMenuItem(stringResource(R.string.settings_sources_delete), onClick = { confirmDelete = source; close() }, icon = MobileIcons.Delete, danger = true)
         }
@@ -132,7 +132,7 @@ fun SettingsEpgSourcesPage(
         SettingsChoiceSheet(
             title = stringResource(R.string.settings_epg_sources_auto_refresh_title),
             choices = EpgAutoRefresh.entries.map { SettingsChoice(it, epgAutoRefreshLabel(it)) },
-            selected = (autoRefresh[source.id] ?: EpgRefresh.OFF).mode,
+            selected = (autoRefresh[source.id] ?: EpgStartupDefault.DEFAULT).mode,
             onSelect = { mode ->
                 // "Every N days" needs the N, so it opens a second sheet rather than guessing one.
                 if (mode == EpgAutoRefresh.MANUAL) manualDaysFor = source else vm.setAutoRefresh(source, EpgRefresh(mode))
@@ -147,7 +147,7 @@ fun SettingsEpgSourcesPage(
             choices = PlaylistRefresh.PRESET_MANUAL_DAYS.map {
                 SettingsChoice(it, pluralStringResource(R.plurals.settings_sources_refresh_days, it, it))
             },
-            selected = (autoRefresh[source.id] ?: EpgRefresh.OFF).manualDays,
+            selected = (autoRefresh[source.id] ?: EpgStartupDefault.DEFAULT).manualDays,
             onSelect = { vm.setAutoRefresh(source, EpgRefresh(EpgAutoRefresh.MANUAL, it)) },
             onDismiss = { manualDaysFor = null },
         )
@@ -168,7 +168,7 @@ fun SettingsEpgSourcesPage(
     if (addSource) {
         EpgSourceSheet(
             initial = null,
-            initialAutoRefresh = EpgRefresh.OFF,
+            initialAutoRefresh = EpgStartupDefault.DEFAULT,
             initialUseLogos = false,
             playlistOptions = { vm.playlistEpgOptions() },
             onDismiss = { addSource = false },
@@ -182,7 +182,7 @@ fun SettingsEpgSourcesPage(
     editSource?.let { source ->
         EpgSourceSheet(
             initial = source,
-            initialAutoRefresh = autoRefresh[source.id] ?: EpgRefresh.OFF,
+            initialAutoRefresh = autoRefresh[source.id] ?: EpgStartupDefault.DEFAULT,
             initialUseLogos = source.id in useLogos,
             playlistOptions = { vm.playlistEpgOptions() },
             onDismiss = { editSource = null },
