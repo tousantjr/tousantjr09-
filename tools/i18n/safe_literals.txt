@@ -423,6 +423,9 @@
 2	technical	app/src/main/java/tv/own/owntv/features/settings/DiagnosticsViewModel.kt	manual_resync
 1	uri	app/src/main/java/tv/own/owntv/features/settings/DiagnosticsViewModel.kt	package
 1	url	app/src/main/java/tv/own/owntv/features/settings/DnsSettingsScreen.kt	https://bp-v2.net
+1	log	app/src/main/java/tv/own/owntv/features/settings/EpgBackgroundRefresh.kt	MptvEpgBackground
+1	log	app/src/main/java/tv/own/owntv/features/settings/EpgBackgroundRefresh.kt	background refresh guide ${src.id}
+1	technical	app/src/main/java/tv/own/owntv/features/settings/EpgBackgroundRefresh.kt	mptv_epg_background_refresh
 6	empty	app/src/main/java/tv/own/owntv/features/settings/EpgSourcesScreen.kt	\0
 2	technical	app/src/main/java/tv/own/owntv/features/settings/EpgSourcesScreen.kt	▶
 1	technical	app/src/main/java/tv/own/owntv/features/settings/EpgSourcesViewModel.kt	add

@@ -565,6 +565,9 @@
 1	url	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/DiagnosticsViewModel.kt	https://www.gstatic.com/generate_204
 2	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/DiagnosticsViewModel.kt	manual_resync
 1	uri	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/DiagnosticsViewModel.kt	package
+1	log	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/EpgBackgroundRefresh.kt	MptvEpgBackground
+1	log	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/EpgBackgroundRefresh.kt	background refresh guide ${src.id}
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/EpgBackgroundRefresh.kt	mptv_epg_background_refresh
 1	log	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/EpgSourcesViewModel.kt	add
 1	log	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/EpgSourcesViewModel.kt	manual_resync
 1	log	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/EpgSourcesViewModel.kt	update

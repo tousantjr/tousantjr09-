@@ -11,6 +11,7 @@
 
 ### 🔧 Fixes
 - **TV Guide auto refresh now defaults to Refresh on startup**
+- **TV Guide also refreshes in the background every 3 hours**
 
 ## v1.0.28 — 2026-11-07
 
