@@ -40,6 +40,9 @@ class SettingsSearchRowsTest {
         assertEquals("$file rows missing from $list", emptySet<String>(), drawn - listed(source, list))
     }
 
+    @Test
+    fun `player button rows are searchable`() = check("PlayerButtonsSettingsScreen.kt", "PLAYER_BUTTONS_SEARCH_ROWS")
+
     // A Stage full page's own title is the screen itself, which has a search entry of its own.
     @Test
     fun `proxy rows are searchable`() = check("NetworkSettingsScreen.kt", "PROXY_SEARCH_ROWS", notRows = setOf("common_proxy"))

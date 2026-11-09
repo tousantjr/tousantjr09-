@@ -1,54 +1,51 @@
 package tv.own.owntv.features.search
 
 import android.app.Activity
-import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.speech.RecognizerIntent
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.ui.platform.LocalContext
 
 /**
- * Voice search: hands the microphone to the system speech recogniser (Google on nearly every
- * Android TV box) and gives back the first thing it heard, which Search then treats exactly as if
- * it had been typed. Typing a channel name with a remote is the slowest thing in the app; saying
- * "Sky Sports" is the fastest.
- *
- * Returns null when the device has no recogniser, so the button is simply not shown rather than
- * offered and then failing. The `<queries>` entry in the manifest is what lets that check see the
- * recogniser on Android 11 and later.
+ * Voice search through the system's speech recogniser ([RecognizerIntent]). The recogniser app does the
+ * listening, so OwnTV needs no microphone permission. Fire TV and many boxes ship no recogniser at all,
+ * so the microphone shows only where one answers the intent.
  */
-@Composable
-fun rememberVoiceSearch(prompt: String, onResult: (String) -> Unit): (() -> Unit)? {
-    val context = LocalContext.current
-    val available = remember { voiceSearchAvailable(context) }
-    val deliver by rememberUpdatedState(onResult)
-    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode != Activity.RESULT_OK) return@rememberLauncherForActivityResult
-        result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
-            ?.firstOrNull()?.trim()?.takeIf { it.isNotEmpty() }
-            ?.let(deliver)
+internal object VoiceSearch {
+
+    /** The recogniser request: free-form speech, one best guess first, in the app's language. */
+    fun intent(prompt: String, languageTag: String): Intent =
+        Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+            .putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            .putExtra(RecognizerIntent.EXTRA_LANGUAGE, languageTag)
+            .putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, MAX_RESULTS)
+            .putExtra(RecognizerIntent.EXTRA_PROMPT, prompt)
+
+    /** Whether any installed app answers the recogniser intent. */
+    fun isAvailable(context: Context): Boolean = isAvailable {
+        Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).resolveActivity(context.packageManager) != null
     }
-    if (!available) return null
-    return {
+
+    /**
+     * [resolves] asks the package manager. Some OEM builds throw from it instead of answering; that
+     * counts as "no recogniser", so a broken box loses the button, never the screen.
+     */
+    fun isAvailable(resolves: () -> Boolean): Boolean =
         try {
-            launcher.launch(voiceSearchIntent(prompt))
-        } catch (_: ActivityNotFoundException) {
-            // The recogniser went away between the check and the press; nothing to do.
+            resolves()
+        } catch (_: RuntimeException) {
+            false
         }
+
+    /**
+     * The search text from the recogniser's answer: its first non-blank guess, trimmed and with runs of
+     * spaces collapsed. Null when the user backed out, nothing was heard, or the answer was empty.
+     */
+    fun spokenQuery(resultCode: Int, matches: List<String?>?): String? {
+        if (resultCode != Activity.RESULT_OK) return null
+        return matches.orEmpty()
+            .firstNotNullOfOrNull { it?.trim()?.replace(Whitespace, " ")?.takeIf(String::isNotEmpty) }
     }
+
+    private const val MAX_RESULTS = 5
+    private val Whitespace = Regex("\\s+")
 }
-
-private fun voiceSearchIntent(prompt: String): Intent =
-    Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
-        .putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-        .putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1)
-        .putExtra(RecognizerIntent.EXTRA_PROMPT, prompt)
-
-private fun voiceSearchAvailable(context: Context): Boolean =
-    runCatching { Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).resolveActivity(context.packageManager) != null }.getOrDefault(false)

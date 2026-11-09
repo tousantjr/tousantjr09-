@@ -1,6 +1,7 @@
 package tv.own.owntv.di
 
 import tv.own.owntv.features.sports.SportsPlayback
+import tv.own.owntv.features.pip.PictureInPicture
 import tv.own.owntv.features.sports.SportsSettingsViewModel
 import tv.own.owntv.features.sports.SportsUpcomingViewModel
 import tv.own.owntv.features.sports.SportsViewModel
@@ -12,8 +13,10 @@ import org.koin.core.module.dsl.viewModelOf
 import tv.own.owntv.features.more.MoreCountsViewModel
 import tv.own.owntv.features.shell.RailCountsViewModel
 import org.koin.dsl.module
+import tv.own.owntv.features.categorylock.CategoryLockViewModel
 import tv.own.owntv.features.customize.CustomizeItemsViewModel
 import tv.own.owntv.features.customize.CustomizeViewModel
+import tv.own.owntv.features.settings.lock.SettingsPinViewModel
 import tv.own.owntv.features.downloads.DownloadsViewModel
 import tv.own.owntv.features.epg.EpgViewModel
 import tv.own.owntv.core.content.SearchReader
@@ -31,14 +34,17 @@ import tv.own.owntv.features.profiles.ProfileGateSessionViewModel
 import tv.own.owntv.features.profiles.ProfilesViewModel
 import tv.own.owntv.features.search.SearchViewModel
 import tv.own.owntv.features.series.SeriesViewModel
+import tv.own.owntv.features.settings.LocalAutoSyncViewModel
 import tv.own.owntv.features.settings.LocalSyncViewModel
 import tv.own.owntv.features.settings.BackupViewModel
+import tv.own.owntv.features.settings.ChannelNameCleanupViewModel
 import tv.own.owntv.features.settings.DeleteSubtitlesViewModel
 import tv.own.owntv.features.settings.DiagnosticsViewModel
 import tv.own.owntv.features.settings.EpgSourcesViewModel
 import tv.own.owntv.features.settings.HomeSettingsViewModel
 import tv.own.owntv.features.settings.LanguageSettingsViewModel
 import tv.own.owntv.features.settings.OpenSubtitlesViewModel
+import tv.own.owntv.features.settings.PlayerButtonsSettingsViewModel
 import tv.own.owntv.features.settings.SettingsViewModel
 import tv.own.owntv.features.setup.DisplaySizeViewModel
 import tv.own.owntv.features.setup.SetupViewModel
@@ -154,6 +160,8 @@ val appModule = module {
     }
     // Sports Hub: which match the playing channel came from. Lazy; nothing runs until it is asked.
     singleOf(::SportsPlayback)
+    // Picture-in-picture when leaving the app: one instance shared by the activity and the shell.
+    singleOf(::PictureInPicture)
     // Process-long scope for work that must outlive the screen that started it (a first-run restore).
     single<kotlinx.coroutines.CoroutineScope> {
         kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.Default)
@@ -223,6 +231,7 @@ val appModule = module {
     single { tv.own.owntv.features.sports.preview.MatchPreviewSource(get()) }
     single { tv.own.owntv.features.sports.preview.MatchPreviewRepository(get()) }
     single { tv.own.owntv.features.announce.AnnouncementCheck(get(), androidContext()) }
+    viewModelOf(::PlayerButtonsSettingsViewModel)
     viewModelOf(::SeriesViewModel)
     viewModelOf(::SearchViewModel)
     viewModelOf(::ProfilesViewModel)
@@ -268,9 +277,11 @@ val appModule = module {
             importer = get(),
             antiFreeze = get(),
             livePreload = get(),
+            sourceEditor = get(),
         )
     }
     viewModelOf(::LocalSyncViewModel)
+    viewModelOf(::LocalAutoSyncViewModel)
     viewModelOf(::HomeSettingsViewModel)
     viewModelOf(::LanguageSettingsViewModel)
     viewModelOf(::OpenSubtitlesViewModel)
@@ -279,12 +290,16 @@ val appModule = module {
     viewModelOf(::DownloadsViewModel)
     viewModelOf(::EpgViewModel)
     viewModelOf(::CustomizeViewModel)
+    viewModelOf(::SettingsPinViewModel)
     viewModelOf(::CustomizeItemsViewModel)
     viewModelOf(::BackupViewModel)
     viewModelOf(::EpgSourcesViewModel)
     viewModelOf(::DiagnosticsViewModel)
+    viewModelOf(::ChannelNameCleanupViewModel)
     // The counts the More rows and the Favourites / History tabs carry.
     viewModelOf(::MoreCountsViewModel)
     // The counts beside the sections in the open Stage rail.
     viewModelOf(::RailCountsViewModel)
+    viewModelOf(::CategoryLockViewModel)
+    single { tv.own.owntv.features.settings.lock.MenuChangeGate(get()) }
 }

@@ -31,6 +31,8 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -59,6 +61,8 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.LineHeightStyle
@@ -191,6 +195,7 @@ fun HomeScreen(
     val lastInteractionMs by vm.lastHeroInteractionMs.collectAsStateWithLifecycle()
     val favoriteMovies by vm.favoriteMovieIds.collectAsStateWithLifecycle()
     val favoriteSeries by vm.favoriteSeriesIds.collectAsStateWithLifecycle()
+    val libraryLoadingTitles by vm.libraryLoadingTitles.collectAsStateWithLifecycle()
     val listState = androidx.compose.foundation.lazy.rememberLazyListState()
     val homeScope = rememberCoroutineScope()
     val heroFocus = remember { FocusRequester() }
@@ -368,6 +373,25 @@ fun HomeScreen(
             }
         }
     }
+    // The rows inside read the spec above too, and flush to the row's own edge the last card (scaled up,
+    // with its ring) ran off the screen. Across a row, keep the card inside the row's padding instead:
+    // [contentStart] before it, the 64 every row ends with after it.
+    val density = LocalDensity.current
+    val rowBringIntoViewSpec = remember(contentStart, density) {
+        val before = with(density) { contentStart.toPx() }
+        val after = with(density) { 64.mpx.toPx() }
+        object : BringIntoViewSpec {
+            override fun calculateScrollDistance(offset: Float, size: Float, containerSize: Float): Float {
+                val leading = offset - before
+                val trailing = offset + size - (containerSize - after)
+                return when {
+                    leading >= 0f && trailing <= 0f -> 0f
+                    leading < 0f || size > containerSize - before - after -> leading
+                    else -> trailing
+                }
+            }
+        }
+    }
     val trendingItem = state.trendingItems.getOrNull(state.activeTrendingIndex)
         ?.takeIf { fullBleed && state.trendingItems.size >= TrendingDao.MIN_ELIGIBLE_ITEMS }
     val posterItem = state.trendingItems.getOrNull(posterIndex)
@@ -442,11 +466,37 @@ fun HomeScreen(
             ) {
                 itemsIndexed(renderRows, key = { _, row -> row.name }) { index, row ->
                     val firstItemFocusRequester = rowFocusRequester(row)
-                    val rowModifier = if (row == firstRowUnderHero) unfoldOnUp else Modifier
+                    // With no hero above it, the first row is the top of the page: back at it, show the page
+                    // from the top. Bringing the focused card into view alone stopped as soon as the card
+                    // showed, leaving the row's heading (Keep watching) cut off above the screen. A full-bleed
+                    // or poster hero has its own way back up (see [unfoldOnUp]), so this stays out of its way.
+                    val topRow = index == 0 && !fullBleed && posterItem == null
+                    // The row right under a folded hero goes back to the top too, so the folded title
+                    // shows above it again instead of being scrolled away.
+                    val scrollsToTop = topRow || row == firstRowUnderHero
+                    val toTop = Modifier.onFocusChanged { if (it.hasFocus) homeScope.launch { listState.animateScrollToItem(0) } }
+                    val rowModifier = when {
+                        row == firstRowUnderHero -> unfoldOnUp.then(toTop)
+                        topRow -> toTop
+                        else -> Modifier
+                    }
                     if (index == noticeIndex) subscriptionWarning?.let { warning ->
                         SubscriptionNotice(warning, start = contentStart)
                         Spacer(Modifier.height(RowGap))
                     }
+                    // Focus entering a row also brings the whole row into view, heading included: the
+                    // focused card alone stopped the list as soon as the card showed, so coming back up
+                    // left each row's heading cut off above the screen. Not the Trending row, whose hero
+                    // places itself, nor the rows that scroll the whole page back up instead. A Column, not a
+                    // Box: the Posters layout's Trending item is two children, the folded title line and the
+                    // poster row, and they must stack as they do directly in the list.
+                    val rowArea = remember { BringIntoViewRequester() }
+                    Column(
+                        if (row == HomeRow.TRENDING || scrollsToTop) Modifier else Modifier
+                            .bringIntoViewRequester(rowArea)
+                            .onFocusChanged { if (it.hasFocus) homeScope.launch { rowArea.bringIntoView() } },
+                    ) {
+                    CompositionLocalProvider(LocalBringIntoViewSpec provides rowBringIntoViewSpec) {
                     when (row) {
                         HomeRow.TRENDING -> {
                         if (!trendingDrawn) {
@@ -681,8 +731,22 @@ fun HomeScreen(
                             modifier = rowModifier,
                         )
                     }
+                    }
+                    }
                 }
             }
+        }
+        // While a large playlist keeps loading in the background, say so where Now Trending will appear:
+        // an empty top of Home with no explanation reads as broken. Only at the top of the list, so the
+        // rows never scroll under it, and gone once Trending shows or the library is whole. Trending is
+        // promised only while its row is switched on.
+        val atTop = listState.firstVisibleItemIndex == 0 && listState.firstVisibleItemScrollOffset == 0
+        if (libraryLoadingTitles > 0 && state.trendingItems.size < TrendingDao.MIN_ELIGIBLE_ITEMS && atTop) {
+            LibraryLoadingBanner(
+                libraryLoadingTitles,
+                trendingOn = HomeRow.TRENDING in orderedRows,
+                modifier = Modifier.align(Alignment.TopStart).padding(start = contentStart, top = 40.mpx),
+            )
         }
     }
 
@@ -1598,6 +1662,24 @@ private fun AllRowsHiddenState(
                 color = tv.own.owntv.ui.theme.StageColors.Muted,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
+            )
+        }
+    }
+}
+
+/** The "Loading your library" note at the top of Home: the count so far, and — [trendingOn] — when Now Trending will show. */
+@Composable
+private fun LibraryLoadingBanner(titles: Int, trendingOn: Boolean, modifier: Modifier = Modifier) {
+    val count = java.text.NumberFormat.getIntegerInstance(LocalConfiguration.current.locales[0]).format(titles)
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(4.mpx)) {
+        Text(
+            pluralStringResource(R.plurals.home_library_loading, titles, count),
+            style = stageText(18, 600), color = StageColors.Text, maxLines = 1, overflow = TextOverflow.Ellipsis,
+        )
+        if (trendingOn) {
+            Text(
+                stringResource(R.string.home_library_loading_trending),
+                style = stageText(15, 500), color = StageColors.Dim, maxLines = 1, overflow = TextOverflow.Ellipsis,
             )
         }
     }
