@@ -57,9 +57,12 @@ class SportsPlayback(
     /** A match an alert's tap asked for ([tv.own.owntv.core.sports.MatchNotifications.EXTRA_MATCH_KEY]); the shell opens it. */
     val openMatchKey = MutableStateFlow<String?>(null)
 
-    /** The hub's chosen sport and league chips: kept while the app runs, back to All on a fresh start. */
-    var hubChip: Any? = null
-    var hubLeague: Any? = null
+    /** The team page Settings → Sports → My teams asked for: the section opens on it. */
+    val pendingTeam = MutableStateFlow<tv.own.owntv.core.sports.FollowedTeam?>(null)
+
+    /** The chosen sport and league chips: kept while the app runs, back to All on a fresh start. */
+    internal var hubChip: Set<HubChip> = emptySet()
+    var hubLeague: Set<String> = emptySet()
 
     /** The hub's day strip ([SportsDays]): 0 = today. Kept while the app runs, back to today on a fresh start. */
     var hubDay: Int = 0

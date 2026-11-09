@@ -7,6 +7,32 @@
 > Issue numbers that are part of a title are fine; explanatory parentheticals are not. The detail —
 > what, why, files and verification — belongs in the commit message, never here.
 
+## v1.0.30 — 2026-11-09
+
+### ✨ New features
+- **Updated to OwnTV 5.2.2**
+- **Voice search on the Search screen**
+- **Player buttons: choose what OK does, swap channel up/down, number keys on or off**
+- **Start on the last channel in the TV Guide or Live TV**
+- **Picture-in-picture when leaving the app**
+- **Live TV: the preview keeps playing while you browse the categories**
+- **Sources: switch to another version of the channel playing**
+- **Clean channel names: a Names option on each playlist**
+- **EPG Sources: Move up / Move down set the guide priority**
+- **Program details: the channel's whole day as a page**
+- **TV Guide: catch-up channels show their past days**
+- **Lock a category with its own PIN; Settings lock per profile**
+- **Sports: Scores, Calendar and Leagues tabs, team pages and 54 more leagues**
+- **Auto start on boot and on wake-up**
+
+### 🔧 Fixes
+- **Fit: wide films are no longer stretched**
+- **Deleting a download asks first**
+- **Live comes back by itself when the TV is switched off and on**
+- **A guide download cut off midway no longer deletes the rest of the guide**
+- **Adding an Xtream playlist no longer fails with "Expected a string but was BOOLEAN"**
+- **Smoother TV Guide and Home scrolling**
+
 ## v1.0.29 — 2026-11-08
 
 ### 🔧 Fixes

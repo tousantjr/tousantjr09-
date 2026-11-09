@@ -184,6 +184,9 @@ fun DownloadsScreen(
     }
     val acted: (Long) -> Unit = { id -> actedId = id; actedIndex = listIds.indexOf(id) }
 
+    // Delete takes the file off the drive for good, so it asks first; Cancel puts focus back on the row.
+    var confirmDelete by remember { mutableStateOf<PendingDelete?>(null) }
+
     // A row that changes group (a download finishes) is laid out anew and drops focus, which
     // then falls to the tabs. Put it back on that row — only when focus left the list at that very moment.
     var lastFocusedId by remember { mutableStateOf<Long?>(null) }
@@ -327,11 +330,14 @@ fun DownloadsScreen(
                             }
                             .focusGroup(),
                     ) {
+                        val askDelete: (DownloadEntity) -> Unit = { d ->
+                            confirmDelete = PendingDelete(d.id, details[d.id]?.title ?: d.title) { vm.delete(d) }
+                        }
                         downloadGroup(R.string.content_downloads_group_downloading, downloading, first = true) { d ->
-                            DownloadItem(d, details[d.id], active?.takeIf { it.id == d.id }, downloading, vm, onFullscreen, externalPlayerOn, focusOf(d.id), acted, rowFocused, wentExternal, gone = d.filePath in missing)
+                            DownloadItem(d, details[d.id], active?.takeIf { it.id == d.id }, downloading, vm, onFullscreen, externalPlayerOn, focusOf(d.id), askDelete, rowFocused, wentExternal, gone = d.filePath in missing)
                         }
                         downloadGroup(R.string.content_downloads_group_on_tv, onTv, first = downloading.isEmpty()) { d ->
-                            DownloadItem(d, details[d.id], null, downloading, vm, onFullscreen, externalPlayerOn, focusOf(d.id), acted, rowFocused, wentExternal, gone = d.filePath in missing)
+                            DownloadItem(d, details[d.id], null, downloading, vm, onFullscreen, externalPlayerOn, focusOf(d.id), askDelete, rowFocused, wentExternal, gone = d.filePath in missing)
                         }
                     }
                 }
@@ -346,6 +352,14 @@ fun DownloadsScreen(
             mode = BrowseMode.FOLDER,
             onPick = { vm.setDownloadRoot(it.absolutePath); showFolderPicker = false },
             onDismiss = { showFolderPicker = false },
+        )
+    }
+    confirmDelete?.let { p ->
+        tv.own.owntv.features.settings.ConfirmDialog(
+            title = stringResource(R.string.content_downloads_delete_title, p.title),
+            message = stringResource(R.string.content_downloads_delete_message),
+            onConfirm = { confirmDelete = null; acted(p.id); p.delete() },
+            onDismiss = { confirmDelete = null; scope.launch { withFrameNanos { }; focusRow(p.id) } },
         )
     }
     var pickerWasOpen by remember { mutableStateOf(false) }
@@ -399,13 +413,13 @@ private fun DownloadItem(
     onFullscreen: () -> Unit,
     externalPlayerOn: Boolean,
     focus: FocusRequester,
-    acted: (Long) -> Unit,
+    onDelete: (DownloadEntity) -> Unit,
     onFocused: (Long) -> Unit,
     wentExternal: () -> Unit,
     /** Its file (finished or partial) is no longer on the drive. Finished: only Delete; stopped: Resume/Retry start over. */
     gone: Boolean = false,
 ) {
-    val delete = StageAction(stringResource(R.string.common_delete), OwnTVIcon.TRASH) { acted(d.id); vm.delete(d) }
+    val delete = StageAction(stringResource(R.string.common_delete), OwnTVIcon.TRASH) { onDelete(d) }
     val actions = if (gone && d.status == DownloadStatus.COMPLETED) listOf(delete) else when (d.status) {
         DownloadStatus.COMPLETED -> listOf(StageAction(stringResource(R.string.content_downloads_external), OwnTVIcon.EXTERNAL) { wentExternal(); vm.playExternal(d) }, delete)
         DownloadStatus.FAILED -> listOf(StageAction(stringResource(R.string.common_retry), OwnTVIcon.REFRESH) { vm.retry(d) }, delete)
@@ -501,6 +515,9 @@ internal fun StageReady() {
         Text(stringResource(R.string.content_downloads_ready), style = stageText(17, 700), color = StageColors.Ok, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
+
+/** A delete waiting for its answer: the row it came from, the name the question shows, and what Delete does. */
+private class PendingDelete(val id: Long, val title: String, val delete: () -> Unit)
 
 /** A button on the focused row (`.tool.box`, 40 high, 16 px, full text colour). */
 internal data class StageAction(val text: String, val icon: OwnTVIcon, val onClick: () -> Unit)

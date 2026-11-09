@@ -57,13 +57,14 @@ This is an independent MPTV build; please don't bring issues to OwnTV's own comm
 - **Two engines** — mpv for compatibility, ExoPlayer for instant Live TV, with automatic fallback and a per-channel override
 - **4K HDR** direct rendering, optional auto frame-rate matching, surround sound with a stereo safety net, 150% volume boost
 - **Subtitles** — text, image and closed captions, plus OpenSubtitles search and local files
-- Resume, next-episode auto-play, mini-player/PiP, audio-only mode, live stream-info overlay
+- Resume, next-episode auto-play, mini-player/PiP, picture-in-picture when you press Home, audio-only mode, live stream-info overlay
 - Media-session transport keys and proper audio focus — it behaves like a TV app
 - An **error log you can export** for any stream that misbehaves
 
 ### 🧭 Browse
 - **Home** with Continue Watching and **Now Trending** (TMDB rankings matched to what your provider can actually play)
 - Live TV · Movies · Series · Downloads · Guide, with per-profile row order, Favorites, History and search
+  (voice search where the TV has a speech recogniser)
 - **Multiple playlists** at once, with provider labels everywhere they could be confused
 - Rename, hide, reorder and combine categories; bulk rename rules
 - **TMDB** posters, plots, cast and trailers in 40 languages — scales to ~50k channels / ~168k movies
@@ -84,8 +85,9 @@ This is an independent MPTV build; please don't bring issues to OwnTV's own comm
 - OwnTV measures how many streams your provider allows and warns before it refuses one
 
 ### 👥 Profiles & Downloads
-- Multiple profiles with their own favourites, history and resume points, PIN locks and a Kids mode
-- Per-profile startup: Home, last channel, Favorites, or one chosen channel
+- Multiple profiles with their own favourites, history and resume points, PIN locks and a Kids mode; lock single categories behind a PIN, and optionally Settings too
+- Per-profile startup: Home, last channel, the last channel in the TV Guide or Live TV, Favorites, or one
+  chosen channel
 - Offline movies and episodes with pause, resume, retry and a storage bar
 
 ### 🎨 Look & robustness
@@ -93,7 +95,9 @@ This is an independent MPTV build; please don't bring issues to OwnTV's own comm
   Picture or Plain background
 - **Dark and Light themes** (or follow the TV) across the whole app, the player included
 - Font sizing for the interface and for popups, independently
-- **Remote Shortcuts** — map spare colour, number, channel and media keys to 26 actions
+- **Remote Shortcuts** — map spare colour, number, channel and media keys to 26 actions; **Player buttons**
+  choose what OK and a held OK do in the player, swap channel up/down, and turn number keys off
+- **Menu labels** — the section names beside the menu icons: off, when focused, or always
 - **26 interface languages**, RTL-aware, chosen before anything else on a fresh install
 - **Backup & Restore** to a single `.own` file, optionally encrypted, locally or over Wi-Fi
 - **Set up from another device** — a new box copies everything from the OwnTV device you already
@@ -124,7 +128,7 @@ More in **[extras/screenshots/](extras/screenshots/)**.
 | Area | Choice |
 |------|--------|
 | Language | Kotlin 2.4.20 (no `kotlin-android` plugin) |
-| Build | AGP 9.4.0 / Gradle 9.7.1, KSP2 2.3.11 |
+| Build | AGP 9.4.0 / Gradle 9.8.2, KSP2 2.3.11, JDK 25 |
 | UI | Jetpack Compose for TV (`androidx.tv:tv-material` 1.1.0), Compose BOM 2026.08.00 |
 | Media | **libmpv** (FFmpeg) · **ExoPlayer/Media3** 1.11.1 |
 | Database | Room 2.8.5 + Paging 3.5.1 + FTS4 |

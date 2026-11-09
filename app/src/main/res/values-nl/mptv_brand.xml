@@ -5,18 +5,22 @@
            xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <string name="app_icon_restart_message">Je hebt een nieuw pictogram en logo gekozen. Ze worden actief nadat MPTV opnieuw is gestart.</string>
     <string name="app_icon_restart_title">MPTV opnieuw starten?</string>
+    <string name="auto_start_notification_text">MPTV opent wanneer de tv ontwaakt</string>
     <string name="common_own_tv_user">MPTV-gebruiker</string>
     <string name="companion_add_page_title">MPTV — Bron toevoegen</string>
     <string name="companion_backup_description">Kies een MPTV-back-upbestand (.own of een ouder .json-bestand) en druk op Verzenden. Het wordt naar de tv overgebracht — pak de afstandsbediening en kies daar wat je wilt herstellen.</string>
     <string name="companion_backup_page_title">MPTV — Back-up herstellen</string>
     <string name="companion_download_description">Je tv heeft een MPTV-back-upbestand voorbereid. Tik op de knop om het op dit apparaat op te slaan (owntv-backup.own). Bewaar het op een veilige plek — je kunt je gegevens er later mee herstellen.</string>
     <string name="companion_download_page_title">MPTV — Back-up downloaden</string>
+    <string name="companion_edit_page_title">MPTV — Bron bewerken</string>
     <string name="companion_image_page_title">MPTV — Achtergrondafbeelding</string>
     <string name="companion_pin_page_title">MPTV — PIN invoeren</string>
     <string name="companion_saved_page_title">MPTV — Verzonden</string>
     <string name="content_epg_own_player">MPTV-speler</string>
     <string name="content_exit_owntv">MPTV afsluiten?</string>
     <string name="content_storage_folder_fallback">Je downloadmap is nu niet beschikbaar, dus downloads worden in de eigen map van MPTV opgeslagen tot hij terug is.</string>
+    <string name="local_auto_sync_accept_body"><xliff:g id="device">%1$s</xliff:g> wil vanzelf met dit apparaat synchroniseren wanneer MPTV op beide open is. Alleen wat u op dit apparaat toestaat komt binnen, en elk van beide kan het uitzetten.</string>
+    <string name="local_auto_sync_listen_description">Aan: gekoppelde apparaten kunnen met dit apparaat synchroniseren wanneer MPTV hier open is. Uit: alleen terwijl de synchronisatiemodus aan staat.</string>
     <string name="local_sync_browser_body">Dit adres is bedoeld voor de MPTV-app op je andere apparaat. Open daar Lokaal synchroniseren en kies dit apparaat uit de lijst.</string>
     <string name="local_sync_browser_title">MPTV lokaal synchroniseren</string>
     <string name="local_sync_error_unreachable">Dit apparaat was niet bereikbaar. Open daarop MPTV → Meer → Lokaal synchroniseren en zet Synchronisatiemodus aan. Beide apparaten moeten op hetzelfde wifinetwerk zitten.</string>
@@ -28,11 +32,15 @@
     <string name="settings_app_startup_description">Wat MPTV opent wanneer de app start</string>
     <string name="settings_auto_frame_rate_warning_description">Dit apparaat draait op Android <xliff:g id="android_version">%1$s</xliff:g>. Onder Android 12 kan de tv MPTV niet vertellen naar welke verversingsfrequenties hij soepel kan overschakelen, dus het wijzigen van de frequentie kan het scherm een seconde of twee zwart maken — soms meerdere keren tijdens een programma.\n\nWe raden aan om Automatische framesnelheid hier uit te laten staan. Als je tv probleemloos overschakelt, zet je hem aan en kijk je: je kunt hem op elk moment weer uitzetten.</string>
     <string name="settings_auto_frame_rate_warning_description_mobile">Dit apparaat draait op Android <xliff:g id="android_version">%1$s</xliff:g>. Onder Android 12 kan het apparaat MPTV niet vertellen naar welke verversingsfrequenties het soepel kan overschakelen, dus het wijzigen van de frequentie kan het scherm een seconde of twee zwart maken — soms meerdere keren tijdens een programma.\n\nWe raden aan om Automatische framesnelheid hier uit te laten staan. Als je scherm probleemloos overschakelt, zet je hem aan en kijk je: je kunt hem op elk moment weer uitzetten.</string>
+    <string name="settings_auto_start_boot_description">MPTV openen wanneer de tv wordt aangezet</string>
+    <string name="settings_auto_start_wake_description">MPTV openen wanneer de tv uit de slaapstand komt</string>
     <string name="settings_catchup_player_internal">MPTV-speler</string>
     <string name="settings_dns_toggle_description">Alle domeinnamen die MPTV opzoekt via een aangepaste DNS-server laten omzetten.</string>
     <string name="settings_ffmpeg_audio_description">Aan: ExoPlayer kan ook geluid decoderen waarvoor het apparaat geen decoder heeft, zoals DTS, TrueHD of MP2. De eigen decoders van het apparaat gaan nog steeds voor. Uit: ExoPlayer gebruikt alleen de decoders van het apparaat. mpv decodeert altijd met FFmpeg. Wijzigen herstart MPTV.</string>
     <string name="settings_ffmpeg_audio_restart_message">De audiodecoder wisselt nadat MPTV opnieuw is gestart.</string>
     <string name="settings_help_app_icon">Het MPTV-pictogram op het startscherm van je tv. Het kan even duren voordat de launcher de wijziging toont.</string>
+    <string name="settings_help_auto_start_boot">Opent MPTV vanzelf zodra de tv is opgestart, op het scherm dat bij Opstartgedrag van app is gekozen. Android laat een app alleen vanzelf openen als die vóór andere apps mag worden weergegeven; als je dit aanzet, opent daarom het scherm voor die toestemming. Sommige tv’s bieden dat niet, en daar kan automatisch starten niet werken.</string>
+    <string name="settings_help_auto_start_wake">Opent MPTV telkens wanneer de tv uit de slaapstand komt, ook als je hem voor een andere app hebt gewekt. Opent Opstartgedrag van app een zender, dan start elke keer ontwaken die stream. Zolang dit aan staat, houdt MPTV een kleine achtergronddienst met een stille melding actief. Net als automatisch starten bij opstarten is toestemming nodig om vóór andere apps te worden weergegeven.</string>
     <string name="settings_help_bg_background">Stage toont de eigen zachte kleuren van MPTV. Afbeelding toont een eigen afbeelding achter elk scherm. Effen is een vlakke donkere vulling.</string>
     <string name="settings_help_brand_accent">Het MPTV-logo in het menu, Over en de installatie toont de afspeeldriehoek in je accentkleur. Het pictogram op het startscherm houdt zijn eigen kleuren.</string>
     <string name="settings_help_check_updates">Zoekt nu op GitHub naar een nieuwere MPTV en biedt aan die te installeren. Je afspeellijsten, favorieten en instellingen blijven zoals ze zijn.</string>
@@ -41,6 +49,7 @@
         <item quantity="one">De taal van alle menu’s en meldingen in MPTV. <xliff:g id="count">%1$d</xliff:g> taal; volgt de taal van de tv tot je er een kiest.</item>
         <item quantity="other">De taal van alle menu’s en meldingen in MPTV. <xliff:g id="count">%1$d</xliff:g> talen; volgt de taal van de tv tot je er een kiest.</item>
     </plurals>
+    <string name="settings_help_pip">Druk op Home of open een andere app terwijl een video schermvullend of in de minispeler speelt, en hij speelt verder in een klein venster boven de rest van de tv. Open MPTV opnieuw om terug te gaan naar schermvullend; sluit het venster om het afspelen te stoppen. Multiview blijft in MPTV.</string>
     <string name="settings_help_startup">Wat MPTV toont bij het starten: Start, het laatst bekeken kanaal, je favorieten of een kanaal naar keuze.</string>
     <string name="settings_help_theme">MPTV is ontworpen voor donker. Systeem volgt de instelling van de tv, als die er is; licht past bij een lichte kamer.</string>
     <string name="settings_help_update_startup">Zoekt bij elke start van MPTV naar een nieuwe versie en meldt het als die er is. Er wordt niets geïnstalleerd zonder te vragen.</string>
