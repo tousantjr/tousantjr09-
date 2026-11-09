@@ -5,18 +5,22 @@
            xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <string name="app_icon_restart_message">Ikono eta logo berri bat aukeratu duzu. MPTV berrabiarazi ondoren izango dute eragina.</string>
     <string name="app_icon_restart_title">MPTV berrabiarazi?</string>
+    <string name="auto_start_notification_text">MPTV irekiko da telebista esnatzen denean</string>
     <string name="common_own_tv_user">MPTV erabiltzailea</string>
     <string name="companion_add_page_title">MPTV — Gehitu iturburua</string>
     <string name="companion_backup_description">Aukeratu MPTV babeskopia-fitxategi bat (.own, edo .json zaharrago bat) eta sakatu Bidali. Telebistara transferitzen da — hartu urrutiko agintea eta aukeratu bertan zer leheneratu.</string>
     <string name="companion_backup_page_title">MPTV — Leheneratu babeskopia</string>
     <string name="companion_download_description">Zure telebistak MPTV babeskopia-fitxategi bat prestatu du. Sakatu botoia gailu honetan gordetzeko (owntv-backup.own). Gorde leku seguru batean — geroago leheneratu dezakezu.</string>
     <string name="companion_download_page_title">MPTV — Deskargatu babeskopia</string>
+    <string name="companion_edit_page_title">MPTV — Editatu iturburua</string>
     <string name="companion_image_page_title">MPTV — Atzealdeko irudia</string>
     <string name="companion_pin_page_title">MPTV — Idatzi PINa</string>
     <string name="companion_saved_page_title">MPTV — Bidalita</string>
     <string name="content_epg_own_player">MPTV erreproduzigailua</string>
     <string name="content_exit_owntv">MPTV itxi?</string>
     <string name="content_storage_folder_fallback">Zure deskarga-karpeta ez dago eskuragarri oraintxe, beraz deskargak MPTVren karpeta propioan gordetzen ari dira berriro eskuragarri egon arte.</string>
+    <string name="local_auto_sync_accept_body"><xliff:g id="device">%1$s</xliff:g> gailuak berez sinkronizatu nahi du gailu honekin, MPTV bietan irekita dagoen bakoitzean. Gailu honetan baimentzen duzuna bakarrik sartzen da, eta bietako edozeinek desaktiba dezake.</string>
+    <string name="local_auto_sync_listen_description">Aktibatuta: parekatutako gailuak honekin sinkroniza daitezke MPTV hemen irekita dagoen bakoitzean. Desaktibatuta: sinkronizazio modua aktibatuta dagoen bitartean bakarrik.</string>
     <string name="local_sync_browser_body">Helbide hau zure beste gailuko MPTV aplikaziorako da. Ireki Tokiko sinkronizazioa bertan eta aukeratu gailu hau zerrendatik.</string>
     <string name="local_sync_browser_title">MPTV tokiko sinkronizazioa</string>
     <string name="local_sync_error_unreachable">Gailu hori ezin izan da atzitu. Bertan, ireki MPTV → Gehiago → Tokiko sinkronizazioa eta aktibatu Sinkronizazio modua. Bi gailuak Wi-Fi sare berean egon behar dute.</string>
@@ -28,13 +32,32 @@
     <string name="settings_app_startup_description">Zer irekitzen duen MPTVk abiatzean</string>
     <string name="settings_auto_frame_rate_warning_description">Gailu honek Android <xliff:g id="android_version">%1$s</xliff:g> exekutatzen du. Android 12 baino lehenagoko bertsioetan telebistak ezin dio MPTVri esan zein freskatze-maiztasunetara alda dezakeen leun, beraz maiztasuna aldatzeak pantaila segundo bat edo bi beltz utz dezake — batzuetan programa batean zehar behin baino gehiagotan.\n\nHemen Fotograma-maiztasun automatikoa desaktibatuta uztea gomendatzen dugu. Zure telebistak garbi aldatzen badu, aktibatu eta probatu: edonoiz alda dezakezu berriro.</string>
     <string name="settings_auto_frame_rate_warning_description_mobile">Gailu honek Android <xliff:g id="android_version">%1$s</xliff:g> exekutatzen du. Android 12 baino lehenagoko bertsioetan gailuak ezin dio MPTVri esan zein freskatze-maiztasunetara alda dezakeen leun, beraz maiztasuna aldatzeak pantaila segundo bat edo bi beltz utz dezake — batzuetan programa batean zehar behin baino gehiagotan.\n\nHemen Fotograma-maiztasun automatikoa desaktibatuta uztea gomendatzen dugu. Zure pantailak garbi aldatzen badu, aktibatu eta probatu: edonoiz alda dezakezu berriro.</string>
+    <string name="settings_auto_start_boot_description">Ireki MPTV telebista pizten denean</string>
+    <string name="settings_auto_start_wake_description">Ireki MPTV telebista lo-egoeratik esnatzen denean</string>
     <string name="settings_catchup_player_internal">MPTV erreproduzigailua</string>
     <string name="settings_dns_toggle_description">Ebatzi MPTVren domeinu-bilaketa guztiak DNS zerbitzari pertsonalizatu baten bidez.</string>
     <string name="settings_ffmpeg_audio_description">Aktibatuta: ExoPlayer-ek gailuak deskodetzailerik ez duen soinua ere deskodetu dezake, adibidez DTS, TrueHD edo MP2. Gailuaren deskodetzaileek lehentasuna dute oraindik. Desaktibatuta: ExoPlayer-ek gailuaren deskodetzaileak soilik erabiltzen ditu. mpv-k beti FFmpeg bidez deskodetzen du. Aldatzean MPTV berrabiarazten da.</string>
     <string name="settings_ffmpeg_audio_restart_message">Audio-deskodetzailea MPTV berrabiarazi ondoren aldatzen da.</string>
+    <string name="settings_help_app_icon">Zure telebistaren hasierako pantailako MPTV ikonoa. Baliteke abiarazleak une bat behar izatea aldaketa erakusteko.</string>
+    <string name="settings_help_auto_start_boot">MPTV bere kabuz irekitzen du telebista abiarazi ondoren, Aplikazioaren abioa ezarpenean aukeratutako pantailan. Android-ek aplikazio bati bere kabuz irekitzen uzten dio beste aplikazioen gainean bistara badaiteke soilik; beraz, hau aktibatzean baimen horren pantaila irekitzen da. Telebista batzuek ez dute eskaintzen, eta haietan abiarazte automatikoak ezin du funtzionatu.</string>
+    <string name="settings_help_auto_start_wake">MPTV irekitzen du telebista lo-egoeratik esnatzen den bakoitzean, beste aplikazio baterako esnatu baduzu ere. Aplikazioaren abioak kanal bat irekitzen badu, esnatze bakoitzak jario hori abiarazten du. Aktibatuta dagoen bitartean, MPTV-k atzeko planoko zerbitzu txiki bat mantentzen du jakinarazpen isil batekin. Piztean abiaraztea bezala, beste aplikazioen gainean bistaratzeko baimena behar du.</string>
+    <string name="settings_help_bg_background">Eszenak MPTVren kolore leun propioak marrazten ditu. Irudiak zure irudi bat erakusten du pantaila bakoitzaren atzean. Arruntak bete-betean iluna den betegarri lau bat da.</string>
+    <string name="settings_help_brand_accent">Menuko, Honi buruz ataleko eta konfigurazioko MPTV logotipoak bere play triangelua zure azentu-koloreaz erakusten du. Hasierako pantailako ikonoak bere koloreak mantentzen ditu.</string>
+    <string name="settings_help_check_updates">GitHuben MPTV berriago bat bilatzen du orain eta instalatzea eskaintzen du. Zure erreprodukzio-zerrendak, gogokoak eta ezarpenak berdin geratzen dira.</string>
+    <string name="settings_help_fonts">MPTV osoan erabiltzen den letra-tipoa, eta testua zein handi marrazten den. Leiho gainerakorrek letra-tipo bera erabiltzen dute.</string>
+    <plurals name="settings_help_language">
+        <item quantity="one">MPTVko menu eta mezu guztien hizkuntza. <xliff:g id="count">%1$d</xliff:g> hizkuntza; telebistaren hizkuntza propioa jarraitzen du bat aukeratu arte.</item>
+        <item quantity="other">MPTVko menu eta mezu guztien hizkuntza. <xliff:g id="count">%1$d</xliff:g> hizkuntza; telebistaren hizkuntza propioa jarraitzen du bat aukeratu arte.</item>
+    </plurals>
+    <string name="settings_help_pip">Sakatu Hasiera edo ireki beste aplikazio bat bideo bat pantaila osoan edo mini erreproduzigailuan erreproduzitzen ari den bitartean, eta leiho txiki batean jarraituko du telebistaren gainerakoaren gainean. Ireki berriro MPTV pantaila osora itzultzeko; itxi leihoa erreprodukzioa gelditzeko. Multiview MPTV barruan geratzen da.</string>
+    <string name="settings_help_startup">MPTVk abiatzean zer erakusten duen: Hasiera, azkenekoz ikusi duzun kanala, zure gogokoak, edo zuk aukeratutako kanal bat.</string>
+    <string name="settings_help_theme">Iluna da MPTV diseinatuta dagoen gaia. Sistemak telebistaren ezarpen propioa jarraitzen du dagoen tokian; Argiak gela argitsu batentzat balio du.</string>
+    <string name="settings_help_update_startup">Bertsio berri bat bilatzen du MPTV abiatzen den bakoitzean eta jakinarazten dizu dagoenean. Ez da ezer instalatzen galdetu gabe.</string>
     <string name="settings_language_contribution_description">Eskaneatu QR kodea edo ireki esteka erabilgarri dagoen edozein hizkuntza aukeratzeko eta MPTVren sei itzulpen-osagaietan guztietan laguntzeko.</string>
     <string name="settings_language_contribution_qr_description">MPTV itzulpen-proiektuaren ikuspegi orokorraren QR kodea</string>
     <string name="settings_language_help_translate">Lagundu MPTV zure hizkuntzara itzultzen</string>
+    <string name="settings_language_pick_help">Erabili <xliff:g id="language">%1$s</xliff:g> MPTVn, telebista zein hizkuntzatan dagoen ere.</string>
+    <string name="settings_language_system_help">MPTVk telebistaren hizkuntza jarraitzen du (orain <xliff:g id="language">%1$s</xliff:g>). Aukeratu bat behean MPTVn soilik erabiltzeko.</string>
     <string name="settings_live_tune_timeout_description">Zuzeneko kanal batek ordu honetarako irudirik erakutsi ez badu, MPTVk saiatzeari uzten dio eta jakinarazten dizu, pantaila beltza utzi beharrean bere erreproduzigailu guztiak probatzen dituen bitartean. Inoiz ez saiatzen jarraitzen du, eta horrek minutu bat baino gehiago iraun dezake zure hornitzaileak kendu duen kanal batean. Hornitzaileak eskatutako itxaronaldiak ez dira kontatzen.</string>
     <string name="settings_metadata_clear_advanced_message">Zure TMDB API gakoa eta auto-ostatatutako zerbitzariaren helbidea gailu honetatik ezabatuko dira, eta MPTV barneko zerbitzu partekatura itzuliko da bere eguneko kuotarekin.</string>
     <string name="settings_metadata_fair_share">Barneko zerbitzua MPTV erabiltzen duten guztien artean partekatzen da. Minutuko, orduko edo eguneko kuota agortzen bada, TMDB xehetasunak pausatu egiten dira leiho hori berrezarri arte; erreprodukzio-zerrendako informazioak funtzionatzen jarraitzen du. Zure gakoak edo Workerrak kuota hau kentzen du.</string>
@@ -48,9 +71,11 @@
     <string name="settings_surround_forced_description">Surround — bidali Dolby/DTS benetako 5.1/7.1 hartzaile bati. Isildu edo eten-etenka egiten badu, MPTVk estereora itzultzen da eta jakinarazten dizu.</string>
     <string name="setup_byo_source_description">MPTV erreproduzigailua da — ekarri zure Xtream, M3U edo Stalker iturburua.</string>
     <string name="setup_disclaimer">MPTV multimedia-erreproduzigailu hutsa da. Ez du kanalik, erreprodukzio-zerrendarik edo edukirik barne hartzen. Zure ardura da legez atzitu ditzakezun Xtream, M3U edo Stalker iturburuak gehitzea.</string>
+    <string name="setup_line_app_icon">MPTV nola agertzen den telebistaren hasierako pantailan</string>
     <string name="setup_line_app_icon_mobile">Nola agertzen den MPTV hasierako pantailan</string>
     <string name="setup_set_up_owntv">Konfiguratu MPTV</string>
     <string name="setup_sync_device_description">Kopiatu dena zure beste MPTV gailutik Wi-Fi bidez</string>
+    <string name="setup_welcome_title">Ongi etorri MPTVra</string>
     <string name="sports_alerts_footnote">MPTV itxita dagoenean, alertak minutu batean iristen dira normalean. Telefonoa denbora luzez geldi eta pantaila itzalita egon bada, Androidek 15 minutu inguru atzera ditzake. Zuzeneko emaitza-txartela ez da atzeratzen.</string>
     <string name="sports_alerts_when_closed">Alertak MPTV itxita dagoenean</string>
     <string name="sports_no_playlist_body">Emaitzak, sailkapenak eta alertak gabe ere badabiltza. Zerrenda batekin, MPTVk partida hau ematen duen kate oro aurkitzen du.</string>
