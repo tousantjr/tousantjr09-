@@ -44,6 +44,7 @@ class SportsSettingsViewModel(
     private val oddsSettings: OddsSettings,
     odds: OddsRepository,
     private val notices: SportsNoticeSettings,
+    private val sportsPins: SportsPins,
 ) : ViewModel() {
 
     val config: StateFlow<SportsConfig> = settings.activeSportsConfig
@@ -58,6 +59,11 @@ class SportsSettingsViewModel(
     fun setScoreTicker(on: Boolean) = viewModelScope.launch { notices.setScoreTicker(on) }
     fun setLivePreview(on: Boolean) = viewModelScope.launch { notices.setLivePreview(on) }
     fun setLivePreviewSound(on: Boolean) = viewModelScope.launch { notices.setLivePreviewSound(on) }
+    val pins = sportsPins.pins
+    fun clearPins() { sportsPins.pins.value.keys.forEach(sportsPins::forget) }
+    fun setScoreDelay(sec: Int) = viewModelScope.launch { notices.setScoreDelay(sec) }
+    fun setAutoSwitchKickoff(on: Boolean) = viewModelScope.launch { notices.setAutoSwitchKickoff(on) }
+    fun setSwitchOnFail(on: Boolean) = viewModelScope.launch { notices.setSwitchOnFail(on) }
 
     /** Betting odds (app-level, not the profile's — OddsSettings) and what its last fetch came to, for the Status row. */
     val oddsConfig: StateFlow<OddsConfig> = oddsSettings.config

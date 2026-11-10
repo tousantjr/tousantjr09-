@@ -26,6 +26,12 @@ data class SportsNoticeConfig(
     val livePreview: Boolean = true,
     /** Whether that preview plays with sound. On until turned off. */
     val livePreviewSound: Boolean = true,
+    /** Score delay: scores, the ticker and goal toasts in the player arrive this many seconds late (0 = off). */
+    val scoreDelaySec: Int = 0,
+    /** Auto-switch at kick-off: a followed team's game takes over a minute before, after a 10 s countdown. */
+    val autoSwitchKickoff: Boolean = false,
+    /** Switch when a channel fails: during a sports session the next channel showing the game takes over. */
+    val switchOnFail: Boolean = true,
 ) {
     companion object {
         const val DEFAULT_GAME_DAY_HOUR = 9
@@ -50,6 +56,9 @@ class SportsNoticeSettings(private val context: Context) {
         val GAME_DAY_NOTIFIED = stringPreferencesKey("game_day_notified_day")
         val LIVE_PREVIEW = booleanPreferencesKey("live_preview")
         val LIVE_PREVIEW_SOUND = booleanPreferencesKey("live_preview_sound")
+        val SCORE_DELAY = intPreferencesKey("score_delay_sec")
+        val AUTO_SWITCH_KICKOFF = booleanPreferencesKey("auto_switch_kickoff")
+        val SWITCH_ON_FAIL = booleanPreferencesKey("switch_on_fail")
     }
 
     val config: Flow<SportsNoticeConfig> = context.sportsNoticeDataStore.data.map { p ->
@@ -60,6 +69,9 @@ class SportsNoticeSettings(private val context: Context) {
             gameDayNotifiedDay = p[Keys.GAME_DAY_NOTIFIED]?.takeIf { it.isNotEmpty() },
             livePreview = p[Keys.LIVE_PREVIEW] ?: true,
             livePreviewSound = p[Keys.LIVE_PREVIEW_SOUND] ?: true,
+            scoreDelaySec = ScoreDelay.sanitize(p[Keys.SCORE_DELAY] ?: 0),
+            autoSwitchKickoff = p[Keys.AUTO_SWITCH_KICKOFF] ?: false,
+            switchOnFail = p[Keys.SWITCH_ON_FAIL] ?: true,
         )
     }.distinctUntilChanged()
 
@@ -80,6 +92,12 @@ class SportsNoticeSettings(private val context: Context) {
     suspend fun setLivePreview(on: Boolean) = edit { it[Keys.LIVE_PREVIEW] = on }
 
     suspend fun setLivePreviewSound(on: Boolean) = edit { it[Keys.LIVE_PREVIEW_SOUND] = on }
+
+    suspend fun setScoreDelay(sec: Int) = edit { it[Keys.SCORE_DELAY] = ScoreDelay.sanitize(sec) }
+
+    suspend fun setAutoSwitchKickoff(on: Boolean) = edit { it[Keys.AUTO_SWITCH_KICKOFF] = on }
+
+    suspend fun setSwitchOnFail(on: Boolean) = edit { it[Keys.SWITCH_ON_FAIL] = on }
 
     suspend fun markGameDayNotified(day: String) = edit { it[Keys.GAME_DAY_NOTIFIED] = day }
 

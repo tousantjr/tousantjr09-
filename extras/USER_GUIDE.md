@@ -565,6 +565,29 @@ A channel's country comes from its name: "UK| …" and "UK: …" both count.
 switched on. In the Move window, **▲ ▼** choose a row, **OK** picks it up and puts it down, and
 **Save** keeps the new order. The Sports page and the Home row follow it.
 
+### ⭐ My Sports
+**Where:** the Sports page → **My Sports** at the end of the row of days
+A big card for the next game (or the live one) of a team you follow, in the two teams' colours —
+**OK** opens the match page. Below it, one line per followed team: its place ("2nd in Premier League",
+points) and its next game. **OK** opens the team's page.
+
+### 📡 League Networks
+**Where:** the Sports page → **League Networks** at the end of the row of days
+Sports networks found in your playlists (NFL RedZone, NBA TV, MLB Network, Golf Channel, LaLiga TV,
+Sky Sports, ESPN and more), one line per network and country, with what is on **now** and **next**. HD,
+FHD and SD copies are put together; **OK** plays the best one. **Hold OK** lists every copy — the one
+you pick plays and is kept for that network; **Stop fixing this channel** forgets it.
+
+### 📊 Better tables
+League tables show a coloured stripe for each zone (Champions League, Europa, Conference, Promotion,
+Playoffs, Play-in, Relegation) with a key under the table, a line where a zone starts, and **▲ ▼**
+how many places a team moved since the table last changed.
+
+### 📌 Fix channel
+On a match page, **hold OK** on a found channel: **Always use for** the competition, **Always for**
+either team, or **Always for** a network ESPN lists for the game. A team's pick comes first, then the
+network's, then the competition's. **Settings → App → Sports → Fixed channels → OK** clears them all.
+
 ### ⚙️ Settings → App → Sports
 **Auto rebuild** every 1, 2, 4 or 8 hours, on every app start, or by hand. **Calendar refresh**
 (every 1–30 days, 7 at first) is how often a saved current or coming month is downloaded again;
@@ -572,6 +595,13 @@ past months never are. **Live refresh** updates live scores every 30–120 secon
 sports is on screen. **Refresh sports data now** shows when it last updated, and also marks the saved
 months out of date.
 Also here: My teams, goal alerts, playlist and channel filters.
+**While watching** also has: **Score delay** (Off, 30 s – 5 min) holds back scores, the ticker and goal
+alerts to match a channel that runs behind; **Auto-switch at kick-off** — a minute before a followed
+team plays, a card counts down 10 seconds (**Cancel** stops it) and then plays the game's best channel;
+**Switch when a channel fails** — while you watch a game, a channel that errors or freezes for 15
+seconds hands over to the next channel found for it, and a message says which.
+The Sports-hub extras above (My Sports, League Networks, tables, Fix channel, Score delay, the two
+switches) are ideas from **Nuvio + IPTV** by homelessbrian (GPL-3.0). TV only for now.
 
 ### 🏠 Sports on Home
 **Settings → Layout → Home screen** can show a **Sports** row: live and upcoming matches of your leagues and teams,

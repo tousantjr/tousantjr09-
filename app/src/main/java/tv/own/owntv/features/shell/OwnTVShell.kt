@@ -42,6 +42,7 @@ import tv.own.owntv.core.epg.displayLogoUrl
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
@@ -1770,6 +1771,31 @@ fun OwnTVShell(
                         }
                     }
                 }
+                // Settings → Sports → Switch when a channel fails (idea from Nuvio + IPTV, GPL-3.0): during a
+                // match session, a channel that errors or stays stuck buffering for Failover.STALL_MS hands
+                // over to the next channel found for the game; each channel is tried once per match.
+                val failoverEngine: tv.own.owntv.player.PlaybackEngine = if (liveOnExo) liveVm.previewEngine else mpvEngine
+                val failoverTried = remember(matchSession?.match?.key) { mutableSetOf<Long>() }
+                val failoverRes = androidx.compose.ui.platform.LocalResources.current
+                LaunchedEffect(matchSession?.match?.key, previewChannel?.id, sportsNotices.switchOnFail, failoverEngine) {
+                    val s = matchSession ?: return@LaunchedEffect
+                    if (!sportsNotices.switchOnFail || s.options.size < 2) return@LaunchedEffect
+                    val current = previewChannel?.id
+                    current?.let(failoverTried::add)
+                    kotlinx.coroutines.flow.combine(failoverEngine.error, failoverEngine.buffering, failoverEngine.stalledSinceMs) { e, b, st -> Triple(e != null, b, st != null) }
+                        .distinctUntilChanged()
+                        .collectLatest { (failed, buffering, stalled) ->
+                            if (!failed && !buffering && !stalled) return@collectLatest
+                            if (!failed) kotlinx.coroutines.delay(tv.own.owntv.features.sports.Failover.STALL_MS)
+                            val next = tv.own.owntv.features.sports.Failover.next(s.options.map { it.channel.id }, current, failoverTried) ?: return@collectLatest
+                            failoverTried += next
+                            val ch = s.options.first { it.channel.id == next }.channel
+                            if (liveVm.ensurePlayingByIdAsync(next, s.options.map { it.channel })) {
+                                sportsPlayback.start(s.match, s.options)
+                                localSubToast.show(failoverRes.getString(R.string.sports_failover_switched, ch.name))
+                            }
+                        }
+                }
                 PlayerHud(
                     player = if (liveOnExo) liveVm.previewEngine else mpvEngine, // HUD drives the active engine
                     onBack = exitPlayer,
@@ -2136,6 +2162,31 @@ fun OwnTVShell(
         }
     }
     tv.own.owntv.ui.components.InAppToast(epgMatchToast)
+
+    // Settings → Sports → Auto-switch at kick-off: a followed team's game is a minute away — count
+    // down ten seconds (Cancel stops it), then find its channels and play the best one full screen.
+    val kickoffNotices by koinInject<tv.own.owntv.features.sports.SportsNoticeSettings>().config
+        .collectAsStateWithLifecycle(tv.own.owntv.features.sports.SportsNoticeConfig())
+    val kickoffSession by sportsMatchRequests.session.collectAsStateWithLifecycle()
+    val kickoffContext = androidx.compose.ui.platform.LocalContext.current
+    val kickoffRes = androidx.compose.ui.platform.LocalResources.current
+    tv.own.owntv.features.sports.KickoffAutoSwitch(
+        enabled = kickoffNotices.autoSwitchKickoff && multiview == null,
+        games = { sportsMatchRequests.followedTeamGames() },
+        isPlaying = { m -> playerMode != PlayerMode.NONE && kickoffSession?.match?.key == m.key },
+        onSwitch = { m ->
+            scope.launch {
+                val options = sportsMatchRequests.channelsSearched(m)
+                val best = options.firstOrNull()
+                if (best == null) {
+                    epgMatchToast.show(kickoffRes.getString(R.string.sports_kickoff_no_channel, tv.own.owntv.core.sports.MatchNotifications.pair(kickoffContext, m)))
+                } else if (liveVm.ensurePlayingByIdAsync(best.channel.id, options.map { it.channel })) {
+                    openFullscreen(MainSection.LIVE_TV)
+                    sportsMatchRequests.start(m, options)
+                }
+            }
+        },
+    )
 
     // Automatic update check (GitHub Releases) shortly after launch, once per session: a small
         // top-right status card shows "Checking… / up to date" (auto-hides) or stays with

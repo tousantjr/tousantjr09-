@@ -202,7 +202,7 @@ private fun MainRows(vm: SportsSettingsViewModel, c: SportsConfig, shown: Boolea
         }
     }
 
-    StageSettingsHeading(stringResource(R.string.sports_settings_while_watching), 4)
+    StageSettingsHeading(stringResource(R.string.sports_settings_while_watching), 7)
     Row(OwnTVIcon.LIVE_TV, stringResource(R.string.sports_score_info_bar), stringResource(R.string.sports_score_info_bar_description), SettingValue.Switch(c.scoreInInfoBar)) {
         vm.update { it.copy(scoreInInfoBar = !it.scoreInInfoBar) }
     }
@@ -211,13 +211,24 @@ private fun MainRows(vm: SportsSettingsViewModel, c: SportsConfig, shown: Boolea
     Row(OwnTVIcon.TREND, stringResource(R.string.sports_score_ticker), stringResource(R.string.sports_score_ticker_description), SettingValue.Switch(notices.scoreTicker)) {
         vm.setScoreTicker(!notices.scoreTicker)
     }
+    // Score delay, kick-off switch and failover: this device's too (SportsNoticeSettings).
+    val delays = ScoreDelay.CHOICES
+    val stepDelay: (Int) -> Unit = { d -> vm.setScoreDelay(delays[(delays.indexOf(notices.scoreDelaySec).coerceAtLeast(0) + d).mod(delays.size)]) }
+    Row(OwnTVIcon.CLOCK, stringResource(R.string.sports_score_delay), stringResource(R.string.sports_score_delay_description),
+        SettingValue.Stepper(scoreDelayLabel(notices.scoreDelaySec)), onStep = stepDelay) { stepDelay(1) }
+    Row(OwnTVIcon.LIVE_TV, stringResource(R.string.sports_auto_switch_kickoff), stringResource(R.string.sports_auto_switch_kickoff_description), SettingValue.Switch(notices.autoSwitchKickoff)) {
+        vm.setAutoSwitchKickoff(!notices.autoSwitchKickoff)
+    }
+    Row(OwnTVIcon.REFRESH, stringResource(R.string.sports_switch_on_fail), stringResource(R.string.sports_switch_on_fail_description), SettingValue.Switch(notices.switchOnFail)) {
+        vm.setSwitchOnFail(!notices.switchOnFail)
+    }
     Row(OwnTVIcon.BELL, stringResource(R.string.sports_channel_goal_alerts), stringResource(R.string.sports_goal_alerts_description), SettingValue.Opens(alertsSummary(c))) { open(SportsSettingsPage.ALERTS) }
     val leads = SportsConfig.REMINDER_LEAD_CHOICES
     val stepLead: (Int) -> Unit = { d -> vm.update { s -> s.copy(reminderLeadMinutes = leads[(leads.indexOf(s.reminderLeadMinutes).coerceAtLeast(0) + d).mod(leads.size)]) } }
     Row(OwnTVIcon.CLOCK, stringResource(R.string.sports_channel_match_reminders), stringResource(R.string.sports_match_reminders_description),
         SettingValue.Stepper(pluralStringResource(R.plurals.recording_minutes, c.reminderLeadMinutes, c.reminderLeadMinutes)), onStep = stepLead) { stepLead(1) }
 
-    StageSettingsHeading(stringResource(R.string.content_channel_overlay_title), 2)
+    StageSettingsHeading(stringResource(R.string.content_channel_overlay_title), 3)
     val first = c.rememberedChannels.entries.firstOrNull()
     val rememberedLine = first?.let { (k, ch) ->
         val name = SportsCatalog.league(k)?.name ?: k.substringAfter('/')
@@ -225,6 +236,10 @@ private fun MainRows(vm: SportsSettingsViewModel, c: SportsConfig, shown: Boolea
         else pluralStringResource(R.plurals.sports_remembered_summary, c.rememberedChannels.size - 1, name, ch.name, c.rememberedChannels.size - 1)
     }
     Row(OwnTVIcon.PLAYLIST, stringResource(R.string.sports_remembered_channels), rememberedLine, SettingValue.Opens(c.rememberedChannels.size.toString())) { open(SportsSettingsPage.REMEMBERED) }
+    // Fix channel per team / per network (Hold OK on a match page channel, or on League Networks). OK clears them.
+    val pins by vm.pins.collectAsStateWithLifecycle()
+    Row(OwnTVIcon.STAR, stringResource(R.string.sports_fixed_channels), stringResource(R.string.sports_fixed_channels_description),
+        SettingValue.Opens(pins.size.toString())) { vm.clearPins() }
     Row(OwnTVIcon.EPG, stringResource(R.string.sports_show_likely), stringResource(R.string.sports_show_likely_description), SettingValue.Switch(c.showLikely)) {
         vm.update { it.copy(showLikely = !it.showLikely) }
     }
@@ -576,6 +591,17 @@ private fun AlertRows(vm: SportsSettingsViewModel, c: SportsConfig) {
     val a = c.alerts
     val notices by vm.noticeConfig.collectAsStateWithLifecycle()
     fun kind(k: AlertKind) = vm.update { it.copy(alerts = it.alerts.copy(kinds = if (k in it.alerts.kinds) it.alerts.kinds - k else it.alerts.kinds + k)) }
+    // Score delay, kick-off switch and failover: this device's too (SportsNoticeSettings).
+    val delays = ScoreDelay.CHOICES
+    val stepDelay: (Int) -> Unit = { d -> vm.setScoreDelay(delays[(delays.indexOf(notices.scoreDelaySec).coerceAtLeast(0) + d).mod(delays.size)]) }
+    Row(OwnTVIcon.CLOCK, stringResource(R.string.sports_score_delay), stringResource(R.string.sports_score_delay_description),
+        SettingValue.Stepper(scoreDelayLabel(notices.scoreDelaySec)), onStep = stepDelay) { stepDelay(1) }
+    Row(OwnTVIcon.LIVE_TV, stringResource(R.string.sports_auto_switch_kickoff), stringResource(R.string.sports_auto_switch_kickoff_description), SettingValue.Switch(notices.autoSwitchKickoff)) {
+        vm.setAutoSwitchKickoff(!notices.autoSwitchKickoff)
+    }
+    Row(OwnTVIcon.REFRESH, stringResource(R.string.sports_switch_on_fail), stringResource(R.string.sports_switch_on_fail_description), SettingValue.Switch(notices.switchOnFail)) {
+        vm.setSwitchOnFail(!notices.switchOnFail)
+    }
     Row(OwnTVIcon.BELL, stringResource(R.string.sports_channel_goal_alerts), stringResource(R.string.sports_goal_alerts_description), SettingValue.Switch(a.enabled)) {
         if (!a.enabled) MatchAlertHost.requestNotificationPermission?.invoke()
         vm.update { it.copy(alerts = it.alerts.copy(enabled = !it.alerts.enabled)) }
@@ -631,4 +657,12 @@ private fun RememberedRows(vm: SportsSettingsViewModel, c: SportsConfig) {
             vm.update { it.copy(rememberedChannels = it.rememberedChannels - key) }
         }
     }
+}
+
+/** Score delay's value: Off, "30 s", "1 min", "5 min". */
+@Composable
+internal fun scoreDelayLabel(sec: Int): String = when {
+    sec <= 0 -> stringResource(R.string.common_off)
+    sec < 60 -> stringResource(R.string.sports_seconds_short, sec)
+    else -> pluralStringResource(R.plurals.recording_minutes, sec / 60, sec / 60)
 }

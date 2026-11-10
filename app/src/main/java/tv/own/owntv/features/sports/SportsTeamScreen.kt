@@ -200,7 +200,7 @@ internal fun SportsTeamScreen(
                     if (rows != null && at >= 0) {
                         InfoBox(stringResource(R.string.sports_league_position)) {
                             StandingsHeader()
-                            neighbours(rows, at).forEach { r -> StandingsLine(r, highlight = r.team.id == team.id) }
+                            neighbours(rows, at).forEach { r -> StandingsLine(r, highlight = r.team.id == team.id, lineAbove = TableZone.lineAbove(rows, rows.indexOf(r)) && r != neighbours(rows, at).first()) }
                         }
                     }
                 }

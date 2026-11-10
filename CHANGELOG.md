@@ -7,6 +7,18 @@
 > Issue numbers that are part of a title are fine; explanatory parentheticals are not. The detail —
 > what, why, files and verification — belongs in the commit message, never here.
 
+## v1.0.31 — 2026-11-10
+
+### ✨ New features
+- **Sports: My Sports page with your teams' next games and places**
+- **Sports: League Networks page with now and next**
+- **Sports: table zone colours, zone lines and ▲▼ place changes**
+- **Sports: Fix channel per team or network**
+- **Sports: Score delay for scores, ticker and goal alerts**
+- **Sports: auto-switch at kick-off with a 10-second cancel**
+- **Sports: switch to another channel when one fails**
+- Sports-hub ideas from Nuvio + IPTV by homelessbrian (GPL-3.0)
+
 ## v1.0.30 — 2026-11-09
 
 ### ✨ New features

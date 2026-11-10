@@ -2202,6 +2202,10 @@ class LiveViewModel(
      * guide simply has no entry here, and the row shows no second line. Returns only channels that
      * actually have something airing right now.
      */
+    /** Now and next for [ch] (Sports → League Networks), with the channel's guide match and shift. */
+    suspend fun nowNextFor(ch: ChannelEntity): tv.own.owntv.core.live.EpgNowNext? =
+        runCatching { epgReader.nowNext(ch, custom.value, epgOffset.value) }.getOrNull()
+
     suspend fun nowPlayingFor(channels: List<ChannelEntity>): Map<Long, tv.own.owntv.core.parser.XtEpgEntry> =
         epgReader.nowProgrammesFor(channels, custom.value, epgOffset.value)
 
