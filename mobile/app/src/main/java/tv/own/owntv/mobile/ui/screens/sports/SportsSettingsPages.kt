@@ -170,12 +170,6 @@ fun SportsSettingsPage(vm: SportsSettingsViewModel = koinViewModel()) {
                         { vm.setScoreDelay(delays.step(notices.scoreDelaySec, 1)) },
                     )
                 }
-                SwitchRow(MobileIcons.Sports, stringResource(R.string.sports_auto_switch_kickoff), stringResource(R.string.sports_auto_switch_kickoff_description), notices.autoSwitchKickoff) {
-                    vm.setAutoSwitchKickoff(!notices.autoSwitchKickoff)
-                }
-                SwitchRow(MobileIcons.Refresh, stringResource(R.string.sports_switch_on_fail), stringResource(R.string.sports_switch_on_fail_description_mobile), notices.switchOnFail) {
-                    vm.setSwitchOnFail(!notices.switchOnFail)
-                }
                 val pins by vm.pins.collectAsStateWithLifecycle()
                 if (pins.isNotEmpty()) {
                     OpensRow(MobileIcons.Star, stringResource(R.string.sports_fixed_channels), stringResource(R.string.sports_fixed_channels_description_mobile), pins.size.toString()) {
