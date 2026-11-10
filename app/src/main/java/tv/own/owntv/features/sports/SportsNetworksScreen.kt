@@ -161,7 +161,7 @@ private fun NetworkRow(e: NetworkEntry, guide: EpgNowNext?, onClick: () -> Unit,
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.mpx)) {
                 Text(e.network.name, style = stageText(21, 800), color = StageColors.Text, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 e.country?.let { StageTag(it) }
-                if (e.pinned) Text("★", style = stageText(17, 700), color = TierPick, maxLines = 1)
+                if (e.pinned) Text("★", style = stageText(17, 700), color = TierPick, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
             val now = guide?.now
             val next = guide?.next

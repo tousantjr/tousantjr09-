@@ -135,7 +135,7 @@ private fun StandingsCells(row: StandingsRow, highlight: Boolean, star: Boolean,
                 style = stageText(15, 700),
                 color = on ?: if (move > 0) Color(0xFF3DDC84) else Color(0xFFFF4D5E),
                 maxLines = 1,
-            )
+            , overflow = TextOverflow.Ellipsis)
         }
         listOf(row.played.toString(), row.won.toString(), row.drawn.toString(), row.lost.toString(), row.difference, row.points.toString()).forEachIndexed { i, v ->
             Text(v, style = stageText(19, if (i == 5) 800 else 500), color = on ?: if (i == 5) StageColors.Text else StageColors.Body, maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.End, modifier = Modifier.width(NumberColumn))

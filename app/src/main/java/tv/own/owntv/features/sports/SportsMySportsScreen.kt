@@ -139,7 +139,7 @@ private fun MyHero(m: Match, spoilerFree: Boolean, locale: Locale, onClick: () -
                 .padding(horizontal = 36.mpx, vertical = 26.mpx),
         ) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.mpx)) {
-                Text(stringResource(R.string.sports_my_sports_next), style = stageText(17, 800), color = StageColors.Text, maxLines = 1)
+                Text(stringResource(R.string.sports_my_sports_next), style = stageText(17, 800), color = StageColors.Text, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Text(leagueName(m), style = stageText(17, 500), color = StageColors.Body, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
             Spacer(Modifier.height(16.mpx))
@@ -151,10 +151,10 @@ private fun MyHero(m: Match, spoilerFree: Boolean, locale: Locale, onClick: () -
                         LiveMark(clockText(m), 17f)
                         if (!spoilerFree) Text(
                             "${scoreText(m.sport, home?.score)} – ${scoreText(m.sport, away?.score)}",
-                            style = stageText(34, 800), color = StageColors.Text, maxLines = 1,
+                            style = stageText(34, 800), color = StageColors.Text, maxLines = 1, overflow = TextOverflow.Ellipsis,
                         )
                     } else {
-                        Text(whenText(m.startMs, locale), style = stageText(24, 800), color = StageColors.Text, maxLines = 1)
+                        Text(whenText(m.startMs, locale), style = stageText(24, 800), color = StageColors.Text, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
                 }
                 Text(away?.team?.let(::teamLabel).orEmpty(), style = stageText(30, 800), color = StageColors.Text, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f), textAlign = androidx.compose.ui.text.style.TextAlign.End)
