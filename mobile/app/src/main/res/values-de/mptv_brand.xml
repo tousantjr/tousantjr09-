@@ -5,18 +5,22 @@
            xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <string name="app_icon_restart_message">Sie haben ein neues Symbol und Logo gewählt. Die Änderung wird nach einem Neustart von MPTV wirksam.</string>
     <string name="app_icon_restart_title">MPTV neu starten?</string>
+    <string name="auto_start_notification_text">MPTV öffnet sich, wenn der Fernseher aufwacht</string>
     <string name="common_own_tv_user">MPTV-Nutzer</string>
     <string name="companion_add_page_title">MPTV — Quelle hinzufügen</string>
     <string name="companion_backup_description">Wähle eine MPTV-Sicherungsdatei (.own oder eine ältere .json-Datei) aus und drücke auf „Senden“. Sie wird auf den TV übertragen — nimm die Fernbedienung und wähle dort aus, was wiederhergestellt werden soll.</string>
     <string name="companion_backup_page_title">MPTV — Sicherung wiederherstellen</string>
     <string name="companion_download_description">Ihr Fernseher hat eine MPTV-Sicherungsdatei vorbereitet. Tippen Sie auf die Schaltfläche, um sie auf diesem Gerät zu speichern (owntv-backup.own). Bewahren Sie sie an einem sicheren Ort auf — Sie können Ihre Daten später daraus wiederherstellen.</string>
     <string name="companion_download_page_title">MPTV — Sicherung herunterladen</string>
+    <string name="companion_edit_page_title">MPTV — Quelle bearbeiten</string>
     <string name="companion_image_page_title">MPTV — Hintergrundbild</string>
     <string name="companion_pin_page_title">MPTV — PIN eingeben</string>
     <string name="companion_saved_page_title">MPTV — Gesendet</string>
     <string name="content_epg_own_player">MPTV-Player</string>
     <string name="content_exit_owntv">MPTV beenden?</string>
     <string name="content_storage_folder_fallback">Dein Download-Ordner ist gerade nicht verfügbar. Downloads werden deshalb im eigenen Ordner von MPTV gespeichert, bis er wieder da ist.</string>
+    <string name="local_auto_sync_accept_body"><xliff:g id="device">%1$s</xliff:g> möchte sich von selbst mit diesem Gerät synchronisieren, wenn MPTV auf beiden geöffnet ist. Es kommt nur herein, was du auf diesem Gerät erlaubst, und jedes der beiden Geräte kann es ausschalten.</string>
+    <string name="local_auto_sync_listen_description">An: Gekoppelte Geräte können sich mit diesem synchronisieren, wann immer MPTV hier geöffnet ist. Aus: Nur während der Synchronisierungsmodus an ist.</string>
     <string name="local_sync_browser_body">Diese Adresse ist für die MPTV-App auf deinem anderen Gerät. Öffne dort die lokale Synchronisierung und wähle dieses Gerät aus der Liste.</string>
     <string name="local_sync_browser_title">MPTV lokale Synchronisierung</string>
     <string name="local_sync_error_unreachable">Dieses Gerät war nicht erreichbar. Öffne dort MPTV → Mehr → Lokale Synchronisierung und schalte den Synchronisierungsmodus ein. Beide Geräte müssen im selben WLAN sein.</string>
@@ -28,11 +32,15 @@
     <string name="settings_app_startup_description">Was MPTV beim Start öffnet</string>
     <string name="settings_auto_frame_rate_warning_description">Auf diesem Gerät läuft Android <xliff:g id="android_version">%1$s</xliff:g>. Vor Android 12 kann der Fernseher MPTV nicht mitteilen, zu welchen Bildwiederholraten er fließend wechseln kann. Daher kann der Bildschirm beim Wechsel der Bildwiederholrate für ein oder zwei Sekunden schwarz werden – manchmal mehr als einmal während einer Sendung.\n\nWir empfehlen, die automatische Bildwiederholrate hier deaktiviert zu lassen. Wenn Ihr Fernseher sauber umschaltet, aktivieren Sie sie und sehen Sie selbst: Sie können die Einstellung jederzeit wieder ändern.</string>
     <string name="settings_auto_frame_rate_warning_description_mobile">Auf diesem Gerät läuft Android <xliff:g id="android_version">%1$s</xliff:g>. Vor Android 12 kann das Gerät MPTV nicht mitteilen, zu welchen Bildwiederholraten es fließend wechseln kann. Daher kann der Bildschirm beim Wechsel der Bildwiederholrate für ein oder zwei Sekunden schwarz werden – manchmal mehr als einmal während einer Sendung.\n\nWir empfehlen, die automatische Bildwiederholrate hier deaktiviert zu lassen. Wenn Ihr Bildschirm sauber umschaltet, aktivieren Sie sie und sehen Sie selbst: Sie können die Einstellung jederzeit wieder ändern.</string>
+    <string name="settings_auto_start_boot_description">MPTV öffnen, wenn der Fernseher eingeschaltet wird</string>
+    <string name="settings_auto_start_wake_description">MPTV öffnen, wenn der Fernseher aus dem Standby aufwacht</string>
     <string name="settings_catchup_player_internal">MPTV-Player</string>
     <string name="settings_dns_toggle_description">Alle Domainabfragen von MPTV über einen benutzerdefinierten DNS-Server auflösen.</string>
     <string name="settings_ffmpeg_audio_description">An: ExoPlayer kann auch Ton decodieren, für den das Gerät keinen Decoder hat, etwa DTS, TrueHD oder MP2. Die eigenen Decoder des Geräts haben weiterhin Vorrang. Aus: ExoPlayer nutzt nur die Decoder des Geräts. mpv decodiert immer mit FFmpeg. Eine Änderung startet MPTV neu.</string>
     <string name="settings_ffmpeg_audio_restart_message">Der Audio-Decoder wechselt, sobald MPTV neu startet.</string>
     <string name="settings_help_app_icon">Das MPTV-Symbol auf dem Startbildschirm des Fernsehers. Der Launcher braucht eventuell einen Moment, bis er die Änderung zeigt.</string>
+    <string name="settings_help_auto_start_boot">Öffnet MPTV von selbst, sobald der Fernseher gestartet ist, auf dem unter App-Start gewählten Bildschirm. Android erlaubt einer App das selbstständige Öffnen nur, wenn sie über anderen Apps eingeblendet werden darf; beim Einschalten öffnet sich daher die Seite für diese Berechtigung. Manche Fernseher bieten sie nicht an, dann funktioniert der Autostart dort nicht.</string>
+    <string name="settings_help_auto_start_wake">Öffnet MPTV jedes Mal, wenn der Fernseher aus dem Standby aufwacht – auch wenn er für eine andere App geweckt wurde. Öffnet App-Start einen Sender, startet jedes Aufwachen diesen Stream. Solange dies an ist, läuft ein kleiner Hintergrunddienst mit einer stummen Benachrichtigung. Wie der Autostart beim Einschalten braucht er die Berechtigung, über anderen Apps eingeblendet zu werden.</string>
     <string name="settings_help_bg_background">Stage zeigt die eigenen sanften Farben von MPTV. Bild zeigt ein eigenes Bild hinter jedem Bildschirm. Schlicht ist eine flache dunkle Fläche.</string>
     <string name="settings_help_brand_accent">Das MPTV-Logo im Menü, unter „Über“ und in der Einrichtung zeigt sein Play-Dreieck in deiner Akzentfarbe. Das Symbol auf dem Startbildschirm behält seine eigenen Farben.</string>
     <string name="settings_help_check_updates">Sucht jetzt auf GitHub nach einer neueren MPTV-Version und bietet die Installation an. Playlists, Favoriten und Einstellungen bleiben, wie sie sind.</string>
@@ -41,6 +49,7 @@
         <item quantity="one">Die Sprache aller Menüs und Meldungen in MPTV. <xliff:g id="count">%1$d</xliff:g> Sprache; folgt der Sprache des Fernsehers, bis Sie eine wählen.</item>
         <item quantity="other">Die Sprache aller Menüs und Meldungen in MPTV. <xliff:g id="count">%1$d</xliff:g> Sprachen; folgt der Sprache des Fernsehers, bis Sie eine wählen.</item>
     </plurals>
+    <string name="settings_help_pip">Drücken Sie Home oder öffnen Sie eine andere App, während ein Video im Vollbild oder im Mini-Player läuft, und es spielt in einem kleinen Fenster über dem Rest des Fernsehers weiter. Öffnen Sie MPTV erneut, um es wieder im Vollbild zu sehen; schließen Sie das Fenster, um die Wiedergabe zu beenden. Multiview bleibt in MPTV.</string>
     <string name="settings_help_startup">Was MPTV beim Start zeigt: die Startseite, den zuletzt gesehenen Sender, Ihre Favoriten oder einen Sender Ihrer Wahl.</string>
     <string name="settings_help_theme">MPTV ist für Dunkel gestaltet. System folgt der Einstellung des Fernsehers, sofern vorhanden; Hell passt zu einem hellen Raum.</string>
     <string name="settings_help_update_startup">Sucht bei jedem Start von MPTV nach einer neuen Version und meldet sich, wenn es eine gibt. Ohne Rückfrage wird nichts installiert.</string>
