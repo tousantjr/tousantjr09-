@@ -1776,7 +1776,7 @@ fun OwnTVShell(
                 // over to the next channel found for the game; each channel is tried once per match.
                 val failoverEngine: tv.own.owntv.player.PlaybackEngine = if (liveOnExo) liveVm.previewEngine else mpvEngine
                 val failoverTried = remember(matchSession?.match?.key) { mutableSetOf<Long>() }
-                val failoverContext = androidx.compose.ui.platform.LocalContext.current
+                val failoverRes = androidx.compose.ui.platform.LocalResources.current
                 LaunchedEffect(matchSession?.match?.key, previewChannel?.id, sportsNotices.switchOnFail, failoverEngine) {
                     val s = matchSession ?: return@LaunchedEffect
                     if (!sportsNotices.switchOnFail || s.options.size < 2) return@LaunchedEffect
@@ -1792,7 +1792,7 @@ fun OwnTVShell(
                             val ch = s.options.first { it.channel.id == next }.channel
                             if (liveVm.ensurePlayingByIdAsync(next, s.options.map { it.channel })) {
                                 sportsPlayback.start(s.match, s.options)
-                                localSubToast.show(failoverContext.getString(R.string.sports_failover_switched, ch.name))
+                                localSubToast.show(failoverRes.getString(R.string.sports_failover_switched, ch.name))
                             }
                         }
                 }
@@ -2169,6 +2169,7 @@ fun OwnTVShell(
         .collectAsStateWithLifecycle(tv.own.owntv.features.sports.SportsNoticeConfig())
     val kickoffSession by sportsMatchRequests.session.collectAsStateWithLifecycle()
     val kickoffContext = androidx.compose.ui.platform.LocalContext.current
+    val kickoffRes = androidx.compose.ui.platform.LocalResources.current
     tv.own.owntv.features.sports.KickoffAutoSwitch(
         enabled = kickoffNotices.autoSwitchKickoff && multiview == null,
         games = { sportsMatchRequests.followedTeamGames() },
@@ -2178,7 +2179,7 @@ fun OwnTVShell(
                 val options = sportsMatchRequests.channelsSearched(m)
                 val best = options.firstOrNull()
                 if (best == null) {
-                    epgMatchToast.show(kickoffContext.getString(R.string.sports_kickoff_no_channel, tv.own.owntv.core.sports.MatchNotifications.pair(kickoffContext, m)))
+                    epgMatchToast.show(kickoffRes.getString(R.string.sports_kickoff_no_channel, tv.own.owntv.core.sports.MatchNotifications.pair(kickoffContext, m)))
                 } else if (liveVm.ensurePlayingByIdAsync(best.channel.id, options.map { it.channel })) {
                     openFullscreen(MainSection.LIVE_TV)
                     sportsMatchRequests.start(m, options)
