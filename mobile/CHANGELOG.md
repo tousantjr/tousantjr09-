@@ -7,6 +7,11 @@
 > Issue numbers that are part of a title are fine; explanatory parentheticals are not. The detail —
 > what, why, files and verification — belongs in the commit message, never here.
 
+## v1.1.23 — 2026-11-10
+
+### 🐛 Fixes
+- **Tapping a bottom-bar tab from Settings now always opens that tab**
+
 ## v1.1.22 — 2026-11-10
 
 ### ✨ New features

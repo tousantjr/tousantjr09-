@@ -823,4 +823,12 @@ fun NavHostController.navigateToTab(destination: MobileDestination) {
         launchSingleTop = true
         restoreState = true
     }
+    // MPTV: a tab's saved stack can hold a page that is not the tab's own — a Settings page opened
+    // from it (Sports → Choose sports → Settings › Sports › Leagues), or More/Settings pushed on top.
+    // Restoring it put that page straight back on screen, so tapping the tab from Settings looked
+    // like nothing happened. Land on the tab itself (or one of its own pages, like a match) instead.
+    val top = currentDestination?.route
+    if (top != destination.route && top?.startsWith(destination.route + '/') != true) {
+        popBackStack(destination.route, inclusive = false)
+    }
 }
