@@ -77,6 +77,9 @@ fun SportsScreen(
     var upcoming by remember { mutableStateOf(false) }
     // Boxing (its own 7-day schedule, outside core's Sport/Demand model), over the hub.
     var boxing by remember { mutableStateOf(false) }
+    // My Sports and League Networks, over the hub the same way.
+    var mySports by remember { mutableStateOf(false) }
+    var networks by remember { mutableStateOf(false) }
     // Set when the page was opened from the player's Match button: Back plays that channel again.
     var returnTo by remember { mutableStateOf<ChannelEntity?>(null) }
     // The row or card a match was opened from, so Back lands on it.
@@ -180,6 +183,27 @@ fun SportsScreen(
                 modifier = modifier,
                 active = active,
             )
+        } else if (mySports) {
+            SportsMySportsScreen(
+                vm = vm,
+                games = remember { playback.followedTeamGames() },
+                onOpenMatch = open,
+                onOpenTeam = openTeam,
+                onBack = { mySports = false },
+                contentStart = contentStart,
+                modifier = modifier,
+                active = active,
+            )
+        } else if (networks) {
+            SportsNetworksScreen(
+                vm = vm,
+                liveVm = liveVm,
+                onPlayChannel = onPlayChannel,
+                onBack = { networks = false },
+                contentStart = contentStart,
+                modifier = modifier,
+                active = active,
+            )
         } else when (tab) {
             SportsTab.SCORES -> SportsHubScreen(
                 vm = vm,
@@ -192,6 +216,8 @@ fun SportsScreen(
                 onPlayChannel = onPlayChannel,
                 onOpenUpcoming = { upcoming = true },
                 onOpenBoxing = { boxing = true },
+                onOpenMySports = { mySports = true },
+                onOpenNetworks = { networks = true },
                 onChildFocused = onChildFocused,
                 onEntryHook = onEntryHook,
                 contentStart = contentStart,

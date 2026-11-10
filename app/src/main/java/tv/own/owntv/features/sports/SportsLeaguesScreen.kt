@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -390,17 +391,26 @@ private fun androidx.compose.foundation.layout.ColumnScope.LeaguePage(
         val myTeamIds = config.teams.filter { it.sport == league.sport }.map { it.id }.toSet()
         when (pane) {
             LeaguePane.TABLE -> {
+                val table = view.board.standings[league.key]
+                // ▲▼ since the table last changed, remembered per team on this TV.
+                var moves by remember(league.key) { mutableStateOf<Map<String, Int>>(emptyMap()) }
+                LaunchedEffect(table) { moves = table?.let { vm.rankMoves(it) }.orEmpty() }
                 LazyColumn(left.focusRestorer().focusGroup(), contentPadding = PaddingValues(bottom = 24.mpx)) {
                     item { StandingsHeader() }
-                    val groups = view.board.standings[league.key]?.groups.orEmpty()
+                    val groups = table?.groups.orEmpty()
                     groups.forEach { g ->
                         if (groups.size > 1) item { Heading(g.name) }
-                        items(g.rows, key = { "t:${g.name}:${it.team.id}" }) { r ->
+                        itemsIndexed(g.rows, key = { _, it -> "t:${g.name}:${it.team.id}" }) { i, r ->
                             val mine = r.team.id in myTeamIds
                             val ref = teamRefOf(league, r.team)
-                            StandingsLine(r, highlight = mine, star = mine, onClick = ref?.let { { onOpenTeam(it) } })
+                            StandingsLine(
+                                r, highlight = mine, star = mine, onClick = ref?.let { { onOpenTeam(it) } },
+                                move = moves[RankMoves.key(league.key, g.name, r.team.id)] ?: 0,
+                                lineAbove = TableZone.lineAbove(g.rows, i),
+                            )
                         }
                     }
+                    item { StandingsLegend(groups.flatMap { it.rows }) }
                 }
                 // This matchday: today's and tomorrow's games, else the next round from the fixtures.
                 val matchday = view.onBoard.ifEmpty { view.fixtures.let { f -> f.firstOrNull()?.let { first -> f.filter { it.startMs - first.startMs < 4 * 86_400_000L } }.orEmpty() } }

@@ -126,6 +126,7 @@ fun SportsMatchScreen(
     val tab = chosen?.takeIf { it != MatchTab.PREVIEW || preview != null } ?: if (preview != null) MatchTab.PREVIEW else MatchTab.TIMELINE
     var revealed by remember(m.key) { mutableStateOf(false) }
     var focused by remember { mutableStateOf<WatchOption?>(null) }
+    var fixFor by remember(m.key) { mutableStateOf<ChannelEntity?>(null) }
     val firstRow = remember { FocusRequester() }
     val tabFocus = remember { FocusRequester() }
     // A side of the score box under focus: the key hints say OK opens its team page.
@@ -273,7 +274,7 @@ fun SportsMatchScreen(
                         ChannelRow(
                             o, m,
                             onClick = { play(o) },
-                            onHold = { vm.rememberChannel(m, o.channel) },
+                            onHold = { fixFor = o.channel },
                             modifier = Modifier
                                 .then(if (o === focusTarget) Modifier.focusRequester(firstRow) else Modifier)
                                 .onFocusChanged { if (it.isFocused) focused = o },
@@ -304,12 +305,13 @@ fun SportsMatchScreen(
                 listOf(
                     stringResource(R.string.common_ok) to stringResource(R.string.sports_watch_full_screen),
                     "▲▼" to stringResource(R.string.sports_preview_another),
-                    stringResource(R.string.content_key_hold_ok) to stringResource(R.string.sports_always_use, leagueName(m)),
+                    stringResource(R.string.content_key_hold_ok) to stringResource(R.string.sports_fix_channel),
                 ),
                 Modifier.align(Alignment.BottomEnd).padding(end = 60.mpx, bottom = 27.mpx),
                 textSize = 18,
             )
         }
+        fixFor?.let { ch -> FixChannelMenu(m, ch, vm, onDismiss = { fixFor = null }) }
     }
 }
 
@@ -675,7 +677,8 @@ private fun TablePreview(table: StandingsTable?, m: Match, onOpenLeague: (Match)
     StageSurface(onClick = { onOpenLeague(m) }, radius = 20.mpx, focusStyle = StageFocus.FX, modifier = Modifier.fillMaxWidth().padding(top = 9.mpx)) { _ ->
         Column(Modifier.fillMaxWidth().padding(18.mpx)) {
             StandingsHeader()
-            group.rows.forEach { row -> StandingsLine(row, highlight = m.competitors.any { it.team.id == row.team.id }) }
+            group.rows.forEachIndexed { i, row -> StandingsLine(row, highlight = m.competitors.any { it.team.id == row.team.id }, lineAbove = TableZone.lineAbove(group.rows, i)) }
+            StandingsLegend(group.rows)
         }
     }
 }

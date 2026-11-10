@@ -2,6 +2,12 @@ package tv.own.owntv.features.sports
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -45,21 +51,78 @@ internal fun StandingsHeader() {
  * of My teams. With [onClick] the row takes focus and OK opens the team's page.
  */
 @Composable
-internal fun StandingsLine(row: StandingsRow, highlight: Boolean, star: Boolean = false, onClick: (() -> Unit)? = null, modifier: Modifier = Modifier) {
-    if (onClick == null) {
-        StandingsCells(row, highlight, star, focused = false)
-        return
+internal fun StandingsLine(
+    row: StandingsRow,
+    highlight: Boolean,
+    star: Boolean = false,
+    onClick: (() -> Unit)? = null,
+    modifier: Modifier = Modifier,
+    move: Int = 0,
+    lineAbove: Boolean = false,
+) {
+    val zone = TableZone.of(row.note)
+    Column(modifier.fillMaxWidth()) {
+        // A thin rule where the table changes zone (top four / playoffs / relegation).
+        if (lineAbove) Box(Modifier.fillMaxWidth().padding(horizontal = 12.mpx).height(2.mpx).background(StageColors.Dim.copy(alpha = 0.55f)))
+        if (onClick == null) {
+            StandingsCells(row, highlight, star, focused = false, zone = zone, move = move)
+        } else {
+            StageSurface(onClick = onClick, radius = 10.mpx, modifier = Modifier.fillMaxWidth()) { focused -> StandingsCells(row, highlight, star, focused, zone, move) }
+        }
     }
-    StageSurface(onClick = onClick, radius = 10.mpx, modifier = modifier.fillMaxWidth()) { focused -> StandingsCells(row, highlight, star, focused) }
+}
+
+/** The colour of a table zone's left stripe; null for none. */
+internal fun zoneColor(zone: TableZone): Color? = when (zone) {
+    TableZone.CHAMPIONS -> Color(0xFF3D7BFF)
+    TableZone.EUROPA -> Color(0xFFFF8A3D)
+    TableZone.CONFERENCE -> Color(0xFF2EC4B6)
+    TableZone.PROMOTION -> Color(0xFF3DDC84)
+    TableZone.PLAYOFF -> Color(0xFF9B7BFF)
+    TableZone.PLAY_IN -> Color(0xFFFFD166)
+    TableZone.RELEGATION_PLAYOFF -> Color(0xFFFF9E80)
+    TableZone.RELEGATION -> Color(0xFFFF4D5E)
+    TableZone.NONE -> null
 }
 
 @Composable
-private fun StandingsCells(row: StandingsRow, highlight: Boolean, star: Boolean, focused: Boolean) {
+private fun zoneLabel(zone: TableZone): String? = when (zone) {
+    TableZone.CHAMPIONS -> stringResource(R.string.sports_zone_champions)
+    TableZone.EUROPA -> stringResource(R.string.sports_zone_europa)
+    TableZone.CONFERENCE -> stringResource(R.string.sports_zone_conference)
+    TableZone.PROMOTION -> stringResource(R.string.sports_zone_promotion)
+    TableZone.PLAYOFF -> stringResource(R.string.sports_zone_playoff)
+    TableZone.PLAY_IN -> stringResource(R.string.sports_zone_play_in)
+    TableZone.RELEGATION_PLAYOFF -> stringResource(R.string.sports_zone_relegation_playoff)
+    TableZone.RELEGATION -> stringResource(R.string.sports_zone_relegation)
+    TableZone.NONE -> null
+}
+
+/** A key for the zone stripes used in [rows]; nothing when the table has no zones. */
+@Composable
+internal fun StandingsLegend(rows: List<StandingsRow>, modifier: Modifier = Modifier) {
+    val zones = rows.map { TableZone.of(it.note) }.filter { it != TableZone.NONE }.distinct()
+    if (zones.isEmpty()) return
+    Row(modifier.fillMaxWidth().padding(horizontal = 12.mpx, vertical = 8.mpx), horizontalArrangement = Arrangement.spacedBy(20.mpx), verticalAlignment = Alignment.CenterVertically) {
+        zones.forEach { z ->
+            val c = zoneColor(z) ?: return@forEach
+            Row(horizontalArrangement = Arrangement.spacedBy(8.mpx), verticalAlignment = Alignment.CenterVertically) {
+                Box(Modifier.size(12.mpx).background(c, RoundedCornerShape(3.mpx)))
+                Text(zoneLabel(z).orEmpty(), style = stageText(15, 600), color = StageColors.Muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
+        }
+    }
+}
+
+@Composable
+private fun StandingsCells(row: StandingsRow, highlight: Boolean, star: Boolean, focused: Boolean, zone: TableZone = TableZone.NONE, move: Int = 0) {
     val on = if (focused) stageAccent.onAccent else null
+    Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), verticalAlignment = Alignment.CenterVertically) {
+    Box(Modifier.width(5.mpx).fillMaxHeight().padding(vertical = 6.mpx).background(zoneColor(zone) ?: Color.Transparent, RoundedCornerShape(3.mpx)))
     Row(
         Modifier.fillMaxWidth()
             .then(if (highlight && !focused) Modifier.background(stageAccent.accent.copy(alpha = 0.14f), RoundedCornerShape(10.mpx)) else Modifier)
-            .padding(horizontal = 12.mpx, vertical = 7.mpx),
+            .padding(start = 7.mpx, end = 12.mpx, top = 7.mpx, bottom = 7.mpx),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(row.rank.toString(), style = stageText(19, 700), color = on ?: StageColors.Muted, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.width(42.mpx))
@@ -67,10 +130,17 @@ private fun StandingsCells(row: StandingsRow, highlight: Boolean, star: Boolean,
             Crest(row.team, 30)
             Text(row.team.shortName, style = stageText(19, if (highlight) 800 else 600), color = on ?: StageColors.Text, maxLines = 1, overflow = TextOverflow.Ellipsis)
             if (star) Text("★", style = stageText(17, 700), color = on ?: Color(0xFFFFD166), maxLines = 1, overflow = TextOverflow.Ellipsis)
+            if (move != 0) Text(
+                if (move > 0) "▲$move" else "▼${-move}",
+                style = stageText(15, 700),
+                color = on ?: if (move > 0) Color(0xFF3DDC84) else Color(0xFFFF4D5E),
+                maxLines = 1,
+            )
         }
         listOf(row.played.toString(), row.won.toString(), row.drawn.toString(), row.lost.toString(), row.difference, row.points.toString()).forEachIndexed { i, v ->
             Text(v, style = stageText(19, if (i == 5) 800 else 500), color = on ?: if (i == 5) StageColors.Text else StageColors.Body, maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.End, modifier = Modifier.width(NumberColumn))
         }
+    }
     }
 }
 

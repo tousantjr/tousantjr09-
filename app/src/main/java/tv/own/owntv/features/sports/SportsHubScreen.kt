@@ -114,6 +114,9 @@ fun SportsHubScreen(
     onPlayChannel: (ChannelEntity, List<ChannelEntity>) -> Unit,
     onOpenUpcoming: () -> Unit,
     onOpenBoxing: () -> Unit,
+    /** My Sports and League Networks (ideas from Nuvio + IPTV, GPL-3.0), over the hub like Upcoming. */
+    onOpenMySports: () -> Unit = {},
+    onOpenNetworks: () -> Unit = {},
     onChildFocused: () -> Unit,
     onEntryHook: (((() -> Boolean)?) -> Unit)?,
     contentStart: Dp,
@@ -233,6 +236,8 @@ fun SportsHubScreen(
                     // Boxing isn't ESPN-per-Sport (no core Sport.BOXING case, no Demand/Feed board) —
                     // its own small schedule screen, same door as Upcoming.
                     item { SportsChip(stringResource(R.string.boxing_title), false, icon = OwnTVIcon.SPORTS) { onOpenBoxing() } }
+                    item { SportsChip(stringResource(R.string.sports_my_sports_title), false, icon = OwnTVIcon.STAR) { onOpenMySports() } }
+                    item { SportsChip(stringResource(R.string.sports_networks_title), false, icon = OwnTVIcon.LIVE_TV) { onOpenNetworks() } }
                 }
             }
 
