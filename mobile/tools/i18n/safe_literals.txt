@@ -1081,6 +1081,80 @@
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsCards.kt	${scoreText(m.sport, home.score)} – ${scoreText(m.sport, away.score)}
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsCards.kt	–
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsCards.kt	– : –
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	#$n
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	$current,$previous
+2	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	$k
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	$leagueKey|$group|$teamId
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	$n$suffix
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	$sport/$teamId
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	ACC Network
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	BTN
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	Big Ten Network
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	CBS Sports Network
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	CBSSN
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	DAZN 1
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	ESPN
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	ESPN 2
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	ESPN2
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	ESPNU
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	Eurosport 1
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	FS1
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	Fox Sports 1
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	Golf Channel
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	Golf TV
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	LFC TV
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	La Liga TV
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	LaLiga TV
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	MLB Network
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	MUTV
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	NBA TV
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	NFL Network
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	NFL Red Zone
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	NFL RedZone
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	NHL Network
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	Premier Sports 1
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	Real Madrid TV
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	Red Zone
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	RedZone
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	SEC Network
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	Sky Sports F1
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	Sky Sports Football
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	Sky Sports Golf
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	Sky Sports Premier League
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	TNT Sports 1
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	Tennis Channel
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	advance
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	afc champions
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	beIN Sports
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	beIN Sports 1
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	champions league
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	championship
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	clinched
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	conference league
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	eliminated
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	europa league
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	knockout
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	libertadores
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	nd
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	net:${EpgMatcher.normalizeForEpg(name)}
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	play
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	play in
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	play-in
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	play-off
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	playoff
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	promoted
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	promotion
+2	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	qualif
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	rd
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	relegated
+2	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	relegation
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	round of
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	st
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	sudamericana
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	team:${team.key}
+2	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	th
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	wild card
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsHubPlus.kt	wildcard
 3	empty	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsLeaguesTab.kt	\0
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsLeaguesTab.kt	#
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsLeaguesTab.kt	$it ${dateText(localDate(e.main.startMs), locale, "EEE")} ${timeText(e.main.startMs)}
@@ -1131,13 +1205,16 @@
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsMatchScreen.kt	★
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsMatchScreen.kt	⚽
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsMatchScreen.kt	⚽ ${it.players.firstOrNull().orEmpty().substringAfterLast(' ')} ${it.minute}
+1	preference-key	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsNoticeSettings.kt	auto_switch_kickoff
 1	preference-key	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsNoticeSettings.kt	game_day
 1	preference-key	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsNoticeSettings.kt	game_day_hour
 1	preference-key	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsNoticeSettings.kt	game_day_notified_day
 1	preference-key	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsNoticeSettings.kt	live_preview
 1	preference-key	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsNoticeSettings.kt	live_preview_sound
+1	preference-key	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsNoticeSettings.kt	score_delay_sec
 1	preference-key	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsNoticeSettings.kt	score_ticker
 1	preference-key	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsNoticeSettings.kt	sports_notices
+1	preference-key	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsNoticeSettings.kt	switch_on_fail
 3	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsParts.kt	\0
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsParts.kt	${dateText(first, locale, "dMMM")} – ${dateText(last, locale, "dMMM")}
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsParts.kt	4K
@@ -1163,7 +1240,13 @@
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsParts.kt	🏒
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsParts.kt	🥊
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsParts.kt	🥍
-1	empty	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsPlayback.kt	\0
+1	empty	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsPins.kt	\0
+2	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsPins.kt	c
+2	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsPins.kt	n
+1	preference-key	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsPins.kt	pins
+1	preference-key	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsPins.kt	sports_pins
+1	preference-key	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsPins.kt	sports_rank_moves
+2	empty	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsPlayback.kt	\0
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsPlayerParts.kt	\0
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsPlayerParts.kt	${scoreText(m.sport, home?.score)}–${scoreText(m.sport, away?.score)}
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsPlayerParts.kt	– : –
@@ -1257,7 +1340,9 @@
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsUpcomingScreen.kt	head
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsUpcomingScreen.kt	loading
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsUpcomingScreen.kt	none
+1	empty	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsViewModel.kt	\0
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsViewModel.kt	$startMs|$title
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/SportsViewModel.kt	${network.name}|${country.orEmpty()}
 2	empty	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/boxing/BoxingScreen.kt	\0
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/boxing/BoxingScreen.kt	EEEEd
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/sports/boxing/BoxingScreen.kt	day-${day.date}

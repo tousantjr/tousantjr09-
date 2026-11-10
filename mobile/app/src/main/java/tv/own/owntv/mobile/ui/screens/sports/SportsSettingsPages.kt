@@ -161,6 +161,21 @@ fun SportsSettingsPage(vm: SportsSettingsViewModel = koinViewModel()) {
                 SwitchRow(MobileIcons.LiveTv, stringResource(R.string.sports_score_ticker), stringResource(R.string.sports_score_ticker_description), notices.scoreTicker) {
                     vm.setScoreTicker(!notices.scoreTicker)
                 }
+                // Sports hub plus (ideas from Nuvio + IPTV by homelessbrian, GPL-3.0): this device's too.
+                val delays = ScoreDelay.CHOICES
+                StageSettingRow(stringResource(R.string.sports_score_delay), icon = MobileIcons.Schedule, subtitle = stringResource(R.string.sports_score_delay_description)) {
+                    StageStepper(
+                        if (notices.scoreDelaySec == 0) stringResource(R.string.common_off) else stringResource(R.string.sports_seconds_short, notices.scoreDelaySec),
+                        { vm.setScoreDelay(delays.step(notices.scoreDelaySec, -1)) },
+                        { vm.setScoreDelay(delays.step(notices.scoreDelaySec, 1)) },
+                    )
+                }
+                val pins by vm.pins.collectAsStateWithLifecycle()
+                if (pins.isNotEmpty()) {
+                    OpensRow(MobileIcons.Star, stringResource(R.string.sports_fixed_channels), stringResource(R.string.sports_fixed_channels_description_mobile), pins.size.toString()) {
+                        vm.clearPins()
+                    }
+                }
                 OpensRow(MobileIcons.Bell, stringResource(R.string.sports_channel_goal_alerts), stringResource(R.string.sports_goal_alerts_description), alertsSummary(c)) {
                     nav(SettingsLeaf.SPORTS_ALERTS.route)
                 }

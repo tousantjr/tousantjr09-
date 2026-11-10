@@ -24,6 +24,9 @@
 - **TV Guide: catch-up channels show past days, up to a week back**
 - **Auto frame rate: separate switches for films/series and Live TV**
 - **Each profile remembers its own last category and channel**
+- **Sports: score delay, so the score never runs ahead of your stream** (ideas from Nuvio + IPTV by homelessbrian, GPL-3.0)
+- **Sports: fix a channel for a team or a network** (ideas from Nuvio + IPTV by homelessbrian, GPL-3.0)
+- **Sports tables: coloured places for top spots, playoffs and relegation** (ideas from Nuvio + IPTV by homelessbrian, GPL-3.0)
 
 ### 🔧 Fixes
 - **Adding an Xtream playlist no longer fails with "Expected a string but was BOOLEAN"**
