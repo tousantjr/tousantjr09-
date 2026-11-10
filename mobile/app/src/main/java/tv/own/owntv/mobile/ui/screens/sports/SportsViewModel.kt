@@ -215,6 +215,11 @@ class SportsViewModel(
     private val previews: tv.own.owntv.mobile.ui.screens.sports.preview.MatchPreviewRepository,
     private val calendar: SportsCalendar,
     private val teams: SportsTeams,
+    /** Fix channel per team / network (long press on a channel), checked before the competition's pick. */
+    private val sportsPins: SportsPins,
+    private val watchData: tv.own.owntv.core.sports.WatchData,
+    private val rankMoves: SportsRankMoves,
+    private val health: tv.own.owntv.mobile.health.ChannelHealthStore,
 ) : ViewModel() {
 
     private val config = settings.activeSportsConfig.distinctUntilChanged()
@@ -400,8 +405,8 @@ class SportsViewModel(
      */
     fun remindFeatured(match: Match, onDone: (Boolean) -> Unit = {}) = viewModelScope.launch {
         val c = config.first()
-        val found = watchReader.found(match) { SportsMemory.rememberedFor(c, it) }
-            ?: watchReader.watchFor(listOf(match)) { SportsMemory.rememberedFor(c, it) }[match.key].orEmpty()
+        val found = watchReader.found(match, sportsPins.rememberedFor(c))
+            ?: watchReader.watchFor(listOf(match), sportsPins.rememberedFor(c))[match.key].orEmpty()
         val shown = WatchList.of(found, WatchFilter.from(c, Locale.getDefault().language, liveSources.value)).shown
         val ok = shown.isNotEmpty() && alerts.remind(settings.activeProfileIdNow(), match, shown, c.reminderLeadMinutes)
         onDone(ok)
@@ -439,18 +444,18 @@ class SportsViewModel(
                 delay(60_000L)
             }
         }.distinctUntilChanged()
-        val search = combine(config, hasPlaylist, findAsked, window) { c, has, asked, w -> listOf(c, has, asked, w) }.transformLatest { (cv, hv, av, w) ->
+        val search = combine(config, hasPlaylist, findAsked, window, sportsPins.pins) { c, has, asked, w, _ -> listOf(c, has, asked, w) }.transformLatest { (cv, hv, av, w) ->
             val c = cv as SportsConfig
             if (!(hv as Boolean)) return@transformLatest emit(ChannelSearch.NotSearched)
             if (w == null) return@transformLatest emit(ChannelSearch.Checking)
             if (w != WatchWindow.Open) return@transformLatest emit(ChannelSearch.Closed(w as WatchWindow))
-            val found = watchReader.found(m) { SportsMemory.rememberedFor(c, it) }
+            val found = watchReader.found(m, sportsPins.rememberedFor(c))
             when {
                 found != null -> emit(ChannelSearch.Found(found))
                 !(av as Boolean) -> emit(ChannelSearch.NotSearched)
                 else -> {
                     emit(ChannelSearch.Searching)
-                    emit(ChannelSearch.Found(watchReader.watchFor(listOf(m)) { SportsMemory.rememberedFor(c, it) }[m.key].orEmpty()))
+                    emit(ChannelSearch.Found(watchReader.watchFor(listOf(m), sportsPins.rememberedFor(c))[m.key].orEmpty()))
                 }
             }
         }.flowOn(Dispatchers.Default)
@@ -539,6 +544,67 @@ class SportsViewModel(
     }
 
     /** Long press on a channel: "Always use for <competition>". */
+    /** Long press on a channel → "Always for <team>". */
+    fun pinTeam(team: FollowedTeam, channel: ChannelEntity) = sportsPins.pinTeam(team, channel)
+
+    /** Long press on a channel → "Always for <network>", or League Networks' own pick. */
+    fun pinNetwork(key: String, channel: ChannelEntity) = sportsPins.pinNetwork(key, channel)
+
+    fun forgetPin(key: String) = sportsPins.forget(key)
+
+    val pins = sportsPins.pins
+
+    /** The tables' ▲▼: each row's move since its place last changed ([RankMoves]); records what is seen now. */
+    suspend fun rankMoves(table: tv.own.owntv.core.sports.model.StandingsTable): Map<String, Int> = withContext(Dispatchers.IO) {
+        rankMoves.movesFor(table.leagueKey, table.groups.map { it.name to it.rows })
+    }
+
+    /**
+     * League Networks: every [SportsNetworks] channel in the profile's playlists, one entry per network and
+     * country, its HD / FHD / SD copies together (best picture first; a Fix channel pick before all).
+     */
+    suspend fun leagueNetworks(): List<NetworkEntry> = withContext(Dispatchers.Default) {
+        val pinned = sportsPins.pins.value
+        SportsNetworks.ALL.flatMap { net ->
+            val found = net.keys.flatMap { k ->
+                val words = k.split(' ').filter { it.length >= 2 }
+                if (words.isEmpty()) emptyList() else runCatching { watchData.channelsNamingAll(words) }.getOrDefault(emptyList())
+            }.distinctBy { it.id }
+            val withFacets = found.map { it to tv.own.owntv.core.sports.ChannelFacets.of(it.providerName ?: it.name) }
+                .filter { (_, f) -> SportsNetworks.matches(net, f.portableKey) }
+            withFacets.groupBy { (_, f) -> f.country }.map { (country, list) ->
+                val pin = pinned[net.pinKey]
+                val sorted = list.sortedWith(
+                    compareBy<Pair<ChannelEntity, tv.own.owntv.core.sports.ChannelFacets>>(
+                        { (_, f) -> !(pin != null && f.portableKey == tv.own.owntv.core.epg.EpgMatcher.normalizeForEpg(pin.name) && (pin.country == null || pin.country == f.country)) },
+                        { (_, f) -> -f.qualityRank },
+                    ),
+                ).map { it.first }
+                NetworkEntry(net, country, sorted.sortedBy { health.isLikelyDead(it.id) }, pin != null)
+            }.sortedBy { it.country ?: "" }
+        }
+    }
+
+    /**
+     * My Sports: each followed team's place ("2nd in Premier League") from the followed leagues' tables
+     * (`Demand.Leagues` keeps them fresh while shown), keyed by [FollowedTeam.key].
+     */
+    val myTeamPlaces: StateFlow<Map<String, TeamPlace>> = combine(repository.observe(Demand.Leagues), config) { b, c ->
+        c.teams.mapNotNull { t ->
+            b.standings.values.firstNotNullOfOrNull { table ->
+                val league = SportsCatalog.league(table.leagueKey)?.takeIf { it.sport == t.sport } ?: return@firstNotNullOfOrNull null
+                table.groups.firstNotNullOfOrNull { g ->
+                    g.rows.firstOrNull { it.team.id == t.id }?.let { r ->
+                        TeamPlace(r.rank, league.name, g.name.takeIf { table.groups.size > 1 }, r.points)
+                    }
+                }
+            }?.let { t.key to it }
+        }.toMap()
+    }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
+
+    /** Followed teams' games not over yet (My Sports' next game), soonest first. */
+    fun followedTeamGames() = playback.followedTeamGames()
+
     fun rememberChannel(match: Match, channel: ChannelEntity) = viewModelScope.launch {
         settings.updateSportsConfig(settings.activeProfileIdNow()) { SportsMemory.remember(it, match, channel) }
     }
@@ -589,7 +655,7 @@ class SportsViewModel(
     /** [match]'s channels if Find channels already ran for it (the hub's Remind me uses one); never searches. */
     suspend fun channelsFound(match: Match): List<WatchOption> {
         val c = config.first()
-        val options = watchReader.found(match) { SportsMemory.rememberedFor(c, it) } ?: return emptyList()
+        val options = watchReader.found(match, sportsPins.rememberedFor(c)) ?: return emptyList()
         return WatchList.of(options, WatchFilter.from(c, Locale.getDefault().language, liveSources.value)).shown
     }
 
@@ -606,8 +672,8 @@ class SportsViewModel(
         if (!previewable(m.isLive, m.startMs, now) || !hasPlaylist.first()) return@withContext null
         if (WatchWindow.of(m, b.endedAt[m.key], now) != WatchWindow.Open) return@withContext null
         val c = config.first()
-        val found = watchReader.found(m) { SportsMemory.rememberedFor(c, it) }
-            ?: watchReader.watchFor(listOf(m)) { SportsMemory.rememberedFor(c, it) }[m.key].orEmpty()
+        val found = watchReader.found(m, sportsPins.rememberedFor(c))
+            ?: watchReader.watchFor(listOf(m), sportsPins.rememberedFor(c))[m.key].orEmpty()
         val appLanguage = Locale.getDefault().language
         val preferred = c.preferredLanguages(appLanguage).toList()
         WatchList.of(found, WatchFilter.from(c, appLanguage, liveSources.value), preferred, alsoList = preferred.toSet())
@@ -626,4 +692,17 @@ class SportsViewModel(
 
         fun reminderKey(startMs: Long, title: String) = "$startMs|$title"
     }
+}
+
+/** A followed team's place in its table, for My Sports. */
+data class TeamPlace(val rank: Int, val league: String, val group: String?, val points: Int)
+
+/** One League Networks line: a network in one country, its copies (HD / FHD / SD) best first. */
+data class NetworkEntry(
+    val network: SportsNetwork,
+    val country: String?,
+    val copies: List<ChannelEntity>,
+    val pinned: Boolean,
+) {
+    val key: String get() = "${network.name}|${country.orEmpty()}"
 }

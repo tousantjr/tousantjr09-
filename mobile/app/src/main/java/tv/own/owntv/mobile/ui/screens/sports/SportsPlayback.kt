@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.map
 import tv.own.owntv.core.database.dao.SourceDao
 import tv.own.owntv.core.repository.activeProfileSources
@@ -38,7 +39,21 @@ class SportsPlayback(
     private val sourceDao: SourceDao,
     /** Same-tier channels in [channelsFor] are reordered by how they have behaved here, so "best" means reliable. */
     private val health: tv.own.owntv.mobile.health.ChannelHealthStore,
+    /** Score delay (Settings → Sports): read on each score, so a change counts from the next one. */
+    private val notices: SportsNoticeSettings,
+    /** Fix channel per team / network, before the competition's remembered channel. */
+    private val pins: SportsPins,
 ) {
+    @Volatile private var delayMs = 0L
+
+    /** This flow, every value [ScoreDelay]-late; the setting is followed while it is collected. */
+    private fun <T> Flow<T>.scoreDelayed(): Flow<T> = kotlinx.coroutines.flow.channelFlow {
+        delayMs = notices.current().scoreDelaySec * 1000L
+        val follow = launch { notices.config.collect { delayMs = it.scoreDelaySec * 1000L } }
+        this@scoreDelayed.delayedBy { delayMs }.collect { send(it) }
+        follow.cancel()
+    }
+
     private val _session = MutableStateFlow<SportsSession?>(null)
     val session: StateFlow<SportsSession?> = _session.asStateFlow()
 
@@ -84,7 +99,7 @@ class SportsPlayback(
 
     /** [match] as it stands now, refreshed while collected (`Demand.PlayerScore`: that one league, 30 s live). */
     fun score(match: Match): Flow<Match> =
-        repository.observe(Demand.PlayerScore(match)).map { it.match(match.key) ?: match }.distinctUntilChanged()
+        repository.observe(Demand.PlayerScore(match)).map { it.match(match.key) ?: match }.distinctUntilChanged().scoreDelayed()
 
     /**
      * The *other* followed games under way, for the score ticker: the profile's teams first, then its
@@ -102,7 +117,7 @@ class SportsPlayback(
                 .sortedWith(
                     compareBy({ !mine(it) }, { config.rankOf(it.sport, it.feed).first }, { config.rankOf(it.sport, it.feed).second }, { it.startMs }),
                 )
-        }.distinctUntilChanged()
+        }.distinctUntilChanged().scoreDelayed()
 
     /**
      * [match]'s channels as "Watch live" lists them by default (the profile's filter) — only if Find
@@ -111,8 +126,25 @@ class SportsPlayback(
      */
     suspend fun channelsFor(match: Match): List<WatchOption> {
         val config = settings.activeSportsConfig.first()
-        val options = watchReader.found(match) { SportsMemory.rememberedFor(config, it) } ?: return emptyList()
+        val options = watchReader.found(match, pins.rememberedFor(config)) ?: return emptyList()
         val liveSources = activeProfileSources(settings, sourceDao).first().liveSourceIds
         return health.rank(WatchList.of(options, WatchFilter.from(config, Locale.getDefault().language, liveSources)).shown)
     }
+
+    /** [channelsFor], searching this one match when nothing was found for it yet (Auto-switch at kick-off). */
+    suspend fun channelsSearched(match: Match): List<WatchOption> {
+        channelsFor(match).takeIf { it.isNotEmpty() }?.let { return it }
+        val config = settings.activeSportsConfig.first()
+        val options = watchReader.watchFor(listOf(match), pins.rememberedFor(config))[match.key].orEmpty()
+        val liveSources = activeProfileSources(settings, sourceDao).first().liveSourceIds
+        return health.rank(WatchList.of(options, WatchFilter.from(config, Locale.getDefault().language, liveSources)).shown)
+    }
+
+    /** Followed teams' games not over yet, from the Home row's board, soonest first (kick-off switch, My Sports). */
+    fun followedTeamGames(): Flow<List<Match>> =
+        combine(repository.observe(Demand.HomeRow), settings.activeSportsConfig) { board, config ->
+            val teamKeys = config.teams.map { it.key }.toSet()
+            board.matches.filter { m -> m.competitors.any { FollowedTeam(m.sport, it.team.id, "").key in teamKeys } }
+                .distinctBy { it.key }.sortedBy { it.startMs }
+        }.distinctUntilChanged()
 }

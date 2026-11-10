@@ -4,6 +4,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -195,6 +198,20 @@ fun SportsMatchScreen(
                 icon = MobileIcons.Star,
                 onClick = { vm.rememberChannel(m, o.channel); rememberFor = null },
             )
+            // Fix channel per team or network (idea from Nuvio + IPTV by homelessbrian, GPL-3.0).
+            m.competitors.forEach { c ->
+                val team = tv.own.owntv.core.sports.FollowedTeam(m.sport, c.team.id, c.team.name, c.team.abbreviation)
+                StageMenuItem(
+                    label = stringResource(R.string.sports_always_for, c.team.name), icon = MobileIcons.Star,
+                    onClick = { vm.pinTeam(team, o.channel); rememberFor = null },
+                )
+            }
+            m.broadcasts.map { it.name }.filter { it.isNotBlank() }.distinct().forEach { b ->
+                StageMenuItem(
+                    label = stringResource(R.string.sports_always_for, b), icon = MobileIcons.LiveTv,
+                    onClick = { vm.pinNetwork(SportsPinRules.networkKey(b), o.channel); rememberFor = null },
+                )
+            }
             StageMenuItem(label = stringResource(R.string.content_play), icon = MobileIcons.PlayArrow, onClick = { rememberFor = null; play(o) })
         }
     }
@@ -694,8 +711,11 @@ internal fun StandingsHeader() {
 @Composable
 internal fun StandingsLine(row: StandingsRow, highlight: Boolean, star: Boolean = false, onClick: (() -> Unit)? = null) {
     val palette = LocalStagePalette.current
+    Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), verticalAlignment = Alignment.CenterVertically) {
+    // The place band (top four / playoffs / drop zone), read from ESPN's note on the row.
+    Box(Modifier.width(3.dp).fillMaxHeight().padding(vertical = 4.dp).background(zoneColor(TableZone.of(row.note)) ?: Color.Transparent, RoundedCornerShape(2.dp)))
     Row(
-        Modifier.fillMaxWidth()
+        Modifier.weight(1f)
             .clip(RoundedCornerShape(8.dp))
             .then(if (highlight) Modifier.background(stageAccent.accent.copy(alpha = 0.14f)) else Modifier)
             .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
@@ -712,6 +732,20 @@ internal fun StandingsLine(row: StandingsRow, highlight: Boolean, star: Boolean 
             Text(v, style = stageText(12.5f, if (i == 5) 800 else 500), color = if (i == 5) palette.text else palette.body, maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.End, modifier = Modifier.width(NumberColumn))
         }
     }
+}
+}
+
+/** Band colours, the same as the TV table's. */
+internal fun zoneColor(zone: TableZone): Color? = when (zone) {
+    TableZone.CHAMPIONS -> Color(0xFF3D7BFF)
+    TableZone.EUROPA -> Color(0xFFFF8A3D)
+    TableZone.CONFERENCE -> Color(0xFF2EC4B6)
+    TableZone.PROMOTION -> Color(0xFF3DDC84)
+    TableZone.PLAYOFF -> Color(0xFF9B7BFF)
+    TableZone.PLAY_IN -> Color(0xFFFFD166)
+    TableZone.RELEGATION_PLAYOFF -> Color(0xFFFF9E80)
+    TableZone.RELEGATION -> Color(0xFFFF4D5E)
+    TableZone.NONE -> null
 }
 
 /** The number columns of a table, each 26 wide — six fit beside the team on a phone. */

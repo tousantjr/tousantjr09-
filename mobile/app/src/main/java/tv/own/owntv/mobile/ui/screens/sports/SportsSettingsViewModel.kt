@@ -47,6 +47,7 @@ class SportsSettingsViewModel(
     odds: OddsRepository,
     private val notices: SportsNoticeSettings,
     private val calendar: SportsCalendar,
+    private val sportsPins: SportsPins,
 ) : ViewModel() {
     val config: StateFlow<SportsConfig> = settings.activeSportsConfig
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SportsConfig())
@@ -59,6 +60,13 @@ class SportsSettingsViewModel(
     fun setGameDayHour(hour: Int) = viewModelScope.launch { notices.setGameDayHour(hour) }
     fun setScoreTicker(on: Boolean) = viewModelScope.launch { notices.setScoreTicker(on) }
     fun setLivePreview(on: Boolean) = viewModelScope.launch { notices.setLivePreview(on) }
+
+    // Sports hub plus (ideas from Nuvio + IPTV by homelessbrian, GPL-3.0).
+    val pins = sportsPins.pins
+    fun clearPins() { sportsPins.pins.value.keys.forEach(sportsPins::forget) }
+    fun setScoreDelay(sec: Int) = viewModelScope.launch { notices.setScoreDelay(sec) }
+    fun setAutoSwitchKickoff(on: Boolean) = viewModelScope.launch { notices.setAutoSwitchKickoff(on) }
+    fun setSwitchOnFail(on: Boolean) = viewModelScope.launch { notices.setSwitchOnFail(on) }
     fun setLivePreviewSound(on: Boolean) = viewModelScope.launch { notices.setLivePreviewSound(on) }
 
     /** Betting odds (app-level, not the profile's — OddsSettings) and what its last fetch came to, for the Status row. */

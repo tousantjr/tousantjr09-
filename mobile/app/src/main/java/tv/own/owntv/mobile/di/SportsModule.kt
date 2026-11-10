@@ -21,6 +21,9 @@ import tv.own.owntv.mobile.ui.screens.sports.preview.MatchPreviewSource
 /** Sports Hub: the screens' view-models and what the player knows about a match. Lazy; nothing runs at launch. */
 val sportsModule = module {
     singleOf(::SportsPlayback)
+    // Fix channel per team / network, and the tables' last places for ▲▼ (this device).
+    single { tv.own.owntv.mobile.ui.screens.sports.SportsPins(androidContext()) }
+    single { tv.own.owntv.mobile.ui.screens.sports.SportsRankMoves(androidContext()) }
     // Settings → Sports → Betting odds: the display's own DataStore (OddsSettings — app-level, and
     // where the user's API key lives), the two read-only sources riding the app's shared OkHttp client
     // like BoxingSource, and the cache that keeps The Odds API's free quota intact (OddsRepository).
@@ -35,8 +38,8 @@ val sportsModule = module {
     // core's SportsConfig being compiled; the store also keeps GameDayWorker's schedule in step.
     single { SportsNoticeSettings(androidContext()) }
     // Positional: a constructor parameter added to either view-model goes last, with one more get() here.
-    viewModel { SportsViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
-    viewModel { SportsSettingsViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+    viewModel { SportsViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+    viewModel { SportsSettingsViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     // Sports hub → Upcoming: its own small view model, outside core's Demand/Feed system (see
     // SportsUpcomingViewModel) — the already-bound SportsSource (EspnSportsSource) is reused as is.
     viewModel { SportsUpcomingViewModel(get(), get()) }
