@@ -19,6 +19,7 @@ import kotlinx.coroutines.withContext
 import tv.own.owntv.core.content.AdultCategoryClassifier
 import tv.own.owntv.core.customize.CustomizationStore
 import tv.own.owntv.core.customize.CustomizeKeys
+import tv.own.owntv.core.customize.sealsItemIn
 import tv.own.owntv.core.customize.SectionCustomizations
 import tv.own.owntv.core.database.dao.CategoryDao
 import tv.own.owntv.core.database.dao.FavoriteDao
@@ -53,6 +54,7 @@ import tv.own.owntv.mobile.cast.CastRequest
 import tv.own.owntv.mobile.R
 import tv.own.owntv.mobile.playback.DataSaverGate
 import tv.own.owntv.mobile.playback.PlaybackService
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import tv.own.owntv.player.LiveProgramme
 import tv.own.owntv.player.EnginePair
@@ -216,12 +218,17 @@ class LiveTuner(
     private val ctx: StateFlow<ActiveProfileSources> = activeProfileSources(settings, sourceDao)
         .stateIn(scope, SharingStarted.Eagerly, ActiveProfileSources(-1L, emptyList()))
 
+    /** The profile's Live TV customizations, with the categories a lock keeps shut counted as hidden. */
     private val custom: StateFlow<SectionCustomizations> = ctx
         .flatMapLatest { c ->
             if (c.profileId < 0) flowOf(SectionCustomizations())
-            else customize.observe(c.profileId, MediaType.LIVE)
+            else customize.observeVisible(c.profileId, MediaType.LIVE)
         }
         .stateIn(scope, SharingStarted.Eagerly, SectionCustomizations())
+
+    /** Whether the profile may watch a channel of [categoryId]: not an adult one on a kids profile, nor a locked one the PIN has not opened. */
+    private suspend fun allows(profileId: Long, categoryId: Long?): Boolean =
+        AdultCategoryClassifier.allows(profileId, categoryId, profileDao, categoryDao) && !customize.sealsCategory(profileId, categoryId)
 
     /** What is on now for [channels] with the profile's own EPG matches and shifts — the player's channel list. */
     suspend fun nowProgrammes(channels: List<ChannelEntity>): Map<Long, tv.own.owntv.core.parser.XtEpgEntry> =
@@ -445,6 +452,20 @@ class LiveTuner(
      */
     val previewing: StateFlow<Boolean> = _previewing
 
+    init {
+        // A lock just closed (the relock on leaving the app, a profile change): the channel list was
+        // filled while it was open, and Channel +/- would otherwise land on a channel that refuses to tune.
+        scope.launch {
+            custom.map { it.sealedCategoryIds }.distinctUntilChanged().collect { sealed ->
+                if (sealed.isNotEmpty() && _siblings.value.any { it.categoryId in sealed }) {
+                    _siblings.value = _siblings.value.filterNot { it.categoryId in sealed }
+                }
+                // The previewed channel's category was just locked: its picture and its programme go.
+                if (sealed.isNotEmpty() && _previewing.value && _channel.value?.categoryId?.let(sealed::contains) == true) stop()
+            }
+        }
+    }
+
     /** The channel row the preview is playing, unrenamed, for [promote]. */
     private var previewChannel: ChannelEntity? = null
 
@@ -464,7 +485,7 @@ class LiveTuner(
             val channel = withContext(Dispatchers.IO) { channelDao.getById(channelId) } ?: return@launch
             val pid = ctx.value.profileId.takeIf { it >= 0 }
             if (pid == null || !dataSaver.allowsStreaming() ||
-                !AdultCategoryClassifier.allows(pid, channel.categoryId, profileDao, categoryDao)
+                !allows(pid, channel.categoryId)
             ) {
                 loadedId = _channel.value?.id
                 return@launch
@@ -544,7 +565,7 @@ class LiveTuner(
         val refuse = { loadedId = showing?.id }
         if (!dataSaver.allowsStreaming()) return refuse()
         val pid = ctx.value.profileId.takeIf { it >= 0 } ?: return refuse()
-        if (!AdultCategoryClassifier.allows(pid, channel.categoryId, profileDao, categoryDao)) return refuse()
+        if (!allows(pid, channel.categoryId)) return refuse()
 
         val storedSource = withContext(Dispatchers.IO) { sourceDao.getById(channel.sourceId) }
         // Anti-freeze: a channel that froze before opens straight in the format that worked (Xtream only).
@@ -717,7 +738,7 @@ class LiveTuner(
         scope.launch {
             if (!dataSaver.allowsStreaming()) return@launch
             val pid = ctx.value.profileId.takeIf { it >= 0 } ?: return@launch
-            if (!AdultCategoryClassifier.allows(pid, channel.categoryId, profileDao, categoryDao)) return@launch
+            if (!allows(pid, channel.categoryId)) return@launch
             // Core builds the tile's URL, headers and per-playlist overrides exactly as a full-screen
             // tune does — including "Prefer HLS", which the phone's own copy of this had left out.
             live.playTile(engine, channel, muted)
@@ -784,7 +805,8 @@ class LiveTuner(
             )
         }
         // The Live screen's own folders: custom categories, hides, renames, kids filter and order.
-        return cats.railCategories(cust, kids = kids, alphaRest = alpha).map { e ->
+        // A locked category the PIN has not opened is left out: it would list nothing.
+        return cats.railCategories(cust, kids = kids, alphabetical = alpha).filterNot { it.sealed }.map { e ->
             (e.categoryId?.let { LiveKey.Folder(it) } ?: LiveKey.Custom(e.customId!!)) to e.displayName
         }
     }
@@ -806,10 +828,11 @@ class LiveTuner(
                         categoryId = category.id,
                         profileId = c.profileId,
                         contextKey = CustomizeKeys.category(category),
+                        alpha = settings.sortLive.first() == SettingsRepository.SortMode.ALPHA,
                         limit = SIBLING_LIMIT,
                     )
                 }
-                is LiveKey.Custom -> customCategoryDao.snapshotChannels(c.profileId, key.id, ids, SIBLING_LIMIT)
+                is LiveKey.Custom -> customCategoryDao.snapshotChannels(c.profileId, key.id, ids, settings.sortLive.first() == SettingsRepository.SortMode.ALPHA, SIBLING_LIMIT)
                 else -> emptyList()
             }
             raw.filter { tv.own.owntv.core.live.isChannelVisible(it, cust, hidden, key) }
@@ -826,6 +849,7 @@ class LiveTuner(
                     categoryId = category.id,
                     profileId = c.profileId,
                     contextKey = CustomizeKeys.category(category),
+                    alpha = settings.sortLive.first() == SettingsRepository.SortMode.ALPHA,
                     limit = SIBLING_LIMIT,
                 )
             } else {
@@ -835,7 +859,7 @@ class LiveTuner(
         }
         val cust = custom.value
         _siblings.value = list
-            .filter { CustomizeKeys.channel(it) !in cust.hiddenItems }
+            .filter { CustomizeKeys.channel(it) !in cust.hiddenItems && !cust.sealsItemIn(it.categoryId) }
             .map { ch -> cust.itemNames[CustomizeKeys.channel(ch)]?.let { ch.copy(name = it) } ?: ch }
     }
 
@@ -871,7 +895,7 @@ class LiveTuner(
         live.launch {
             if (!dataSaver.allowsStreaming()) return@launch
             val pid = ctx.value.profileId.takeIf { it >= 0 } ?: return@launch
-            if (!AdultCategoryClassifier.allows(pid, channel.categoryId, profileDao, categoryDao)) return@launch
+            if (!allows(pid, channel.categoryId)) return@launch
             val url = archiveUrls.forProgramme(channel, programme) ?: run {
                 // Silence here is indistinguishable from a broken button: the tap did nothing, said
                 // nothing, and left the user to guess whether the app or the provider was at fault.
@@ -948,6 +972,16 @@ class LiveTuner(
             context.getString(R.string.content_epg_catchup_unavailable),
             android.widget.Toast.LENGTH_SHORT,
         ).show()
+    }
+
+    /** The start of the programme on air, when the provider's archive still reaches it — the first row
+     *  of the catch-up sheet. Core bounds the wait, so a guide fetched over the network cannot hold it. */
+    suspend fun currentProgrammeStart(): tv.own.owntv.core.live.CatchupProgrammeStart? {
+        if (casting()) return null
+        val ch = _channel.value?.takeIf { timeshift.canRewind(it) } ?: return null
+        return tv.own.owntv.core.live.CatchupProgrammeStart.lookUp(
+            epgReader, ch, custom.value, settings.epgOffsetMinutes.first(), timeshift.windowSec(ch),
+        )
     }
 
     /** Offsets worth offering in the catch-up sheet, nearest first; empty without an archive. */

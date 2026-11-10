@@ -584,6 +584,8 @@ private fun appSections(vm: SettingsViewModel): List<SettingSection> {
     val dnsHost = dns.dohUrl.ifBlank { dns.host }.removePrefix("https://").substringBefore('/')
     val volume = remember(root) { volumeName(context, root.ifBlank { null }) }
 
+    val lockVm: tv.own.owntv.mobile.ui.categorylock.SettingsPinViewModel = org.koin.androidx.compose.koinViewModel()
+    val settingsLock by lockVm.lock.collectAsStateWithLifecycle()
     var channelSheet by remember { mutableStateOf(false) }
     if (channelSheet) {
         StartupChannelSheet(vm, onPick = { picked -> vm.setStartupChannel(picked); channelSheet = false }, onDismiss = { channelSheet = false })
@@ -621,6 +623,17 @@ private fun appSections(vm: SettingsViewModel): List<SettingSection> {
                 // MPTV: no update-check row here. Core's updater reads a repo's single "latest"
                 // release, which for this fork is the TV app's APK — the phone couldn't install
                 // it anyway (different applicationId), so offering the check would just mislead.
+                SettingItem(
+                    "settings_lock", MobileIcons.Lock, stringResource(R.string.settings_lock), stringResource(R.string.settings_line_settings_lock),
+                    SettingValue.Opens(if (settingsLock.on) on else off),
+                    sheet = { dismiss -> SettingsLockSheet(lockVm, onDismiss = dismiss) },
+                ),
+                *listOfNotNull(
+                    switchItem(
+                        "settings_lock_menus", MobileIcons.Lock, stringResource(R.string.settings_lock_menus),
+                        stringResource(R.string.settings_lock_menus_description), settingsLock.lockMenus,
+                    ) { lockVm.setLockMenus(it) }.takeIf { settingsLock.on },
+                ).toTypedArray(),
             ),
         ),
         SettingSection(
@@ -750,6 +763,8 @@ private fun localeLabel(tag: String): String =
 private fun StartupMode.startupLabel() = when (this) {
     StartupMode.HOME -> R.string.settings_startup_home
     StartupMode.LAST_CHANNEL -> R.string.settings_startup_last_channel
+    StartupMode.LAST_CHANNEL_GUIDE -> R.string.settings_startup_last_channel_guide
+    StartupMode.LAST_CHANNEL_LIVE -> R.string.settings_startup_last_channel_live
     StartupMode.FAVORITES -> R.string.settings_startup_favorites
     StartupMode.SPECIFIC_CHANNEL -> R.string.settings_startup_specific_channel
 }

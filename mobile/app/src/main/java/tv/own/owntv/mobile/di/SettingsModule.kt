@@ -51,6 +51,7 @@ val settingsModule = module {
             livePreview = get(),
             enginePool = get(),
             homeContentFilter = get(),
+            sourceEditor = get(),
         )
     }
     viewModel {
@@ -62,6 +63,7 @@ val settingsModule = module {
             epgDao = get(),
             channelDao = get(),
             sourceRepository = get(),
+            liveEpgReader = get(),
         )
     }
     viewModel {
