@@ -103,7 +103,7 @@ fun AddSourceForm(
     onStartStalker: (
         name: String, portalUrl: String, mac: String, serialNumber: String, deviceId: String,
         deviceId2: String, signature: String, userAgent: String, httpReferer: String, autoRefresh: PlaylistRefresh,
-        live: SyncScopeChoice, movies: SyncScopeChoice, series: SyncScopeChoice,
+        live: SyncScopeChoice, movies: SyncScopeChoice, series: SyncScopeChoice, login: String, password: String,
     ) -> Unit,
     modifier: Modifier = Modifier,
     initial: SourceFormValues? = null,
@@ -349,6 +349,8 @@ fun AddSourceForm(
                         SourceKind.STALKER -> onStartStalker(
                             name, portalUrl, mac, serialNumber, deviceId, deviceId2, signature,
                             userAgent, httpReferer, autoRefresh, syncLive, syncMovies, syncSeries,
+                            // MPTV: no Stalker login fields (Xtream-only login rule).
+                            "", "",
                         )
                     }
                 },

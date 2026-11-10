@@ -5,18 +5,22 @@
            xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <string name="app_icon_restart_message">Vybrali jste novou ikonu a logo. Projeví se po restartu MPTV.</string>
     <string name="app_icon_restart_title">Restartovat MPTV?</string>
+    <string name="auto_start_notification_text">MPTV se otevře, když se televize probudí</string>
     <string name="common_own_tv_user">Uživatel MPTV</string>
     <string name="companion_add_page_title">MPTV — Přidat zdroj</string>
     <string name="companion_backup_description">Vyberte soubor zálohy MPTV (.own nebo starší .json) a stiskněte Odeslat. Přenese se do televizoru — vezměte dálkový ovladač a vyberte tam, co chcete obnovit.</string>
     <string name="companion_backup_page_title">MPTV — Obnovení ze zálohy</string>
     <string name="companion_download_description">Televizor připravil soubor zálohy MPTV. Klepnutím na tlačítko jej uložte do tohoto zařízení (owntv-backup.own). Uchovávejte jej na bezpečném místě — později z něj můžete provést obnovení.</string>
     <string name="companion_download_page_title">MPTV — Stáhnout zálohu</string>
+    <string name="companion_edit_page_title">MPTV — Upravit zdroj</string>
     <string name="companion_image_page_title">MPTV — Obrázek na pozadí</string>
     <string name="companion_pin_page_title">MPTV — Zadat PIN</string>
     <string name="companion_saved_page_title">MPTV — Odesláno</string>
     <string name="content_epg_own_player">Přehrávač MPTV</string>
     <string name="content_exit_owntv">Ukončit MPTV?</string>
     <string name="content_storage_folder_fallback">Složka pro stahování teď není dostupná, takže se stahování ukládá do vlastní složky MPTV, dokud nebude zpět.</string>
+    <string name="local_auto_sync_accept_body"><xliff:g id="device">%1$s</xliff:g> se chce s tímto zařízením synchronizovat samo, kdykoli je MPTV otevřené na obou. Dovnitř se dostane jen to, co povolíte na tomto zařízení, a kterékoli z nich ji může vypnout.</string>
+    <string name="local_auto_sync_listen_description">Zapnuto: spárovaná zařízení se s tímto mohou synchronizovat, kdykoli je zde MPTV otevřené. Vypnuto: jen při zapnutém režimu synchronizace.</string>
     <string name="local_sync_browser_body">Tato adresa je určená pro aplikaci MPTV na druhém zařízení. Otevřete tam Místní synchronizaci a vyberte ze seznamu toto zařízení.</string>
     <string name="local_sync_browser_title">Místní synchronizace MPTV</string>
     <string name="local_sync_error_unreachable">Toto zařízení se nepodařilo kontaktovat. Otevřete na něm MPTV → Více → Místní synchronizace a zapněte Režim synchronizace. Obě zařízení musí být na stejné Wi-Fi.</string>
@@ -28,11 +32,15 @@
     <string name="settings_app_startup_description">Co MPTV otevře při spuštění</string>
     <string name="settings_auto_frame_rate_warning_description">Toto zařízení běží na Androidu <xliff:g id="android_version">%1$s</xliff:g>. Na Androidu nižším než 12 televizor nedokáže MPTV sdělit, které obnovovací frekvence umí plynule přepínat, takže změna frekvence může na vteřinu nebo dvě zhasnout obrazovku – někdy i vícekrát během jednoho pořadu.\n\nDoporučujeme zde nechat automatickou snímkovou frekvenci vypnutou. Pokud váš televizor přepíná bez problémů, zapněte ji a uvidíte: můžete to kdykoli změnit zpět.</string>
     <string name="settings_auto_frame_rate_warning_description_mobile">Toto zařízení běží na Androidu <xliff:g id="android_version">%1$s</xliff:g>. Na Androidu nižším než 12 zařízení nedokáže MPTV sdělit, které obnovovací frekvence umí plynule přepínat, takže změna frekvence může na vteřinu nebo dvě zhasnout obrazovku – někdy i vícekrát během jednoho pořadu.\n\nDoporučujeme zde nechat automatickou snímkovou frekvenci vypnutou. Pokud vaše obrazovka přepíná bez problémů, zapněte ji a uvidíte: můžete to kdykoli změnit zpět.</string>
+    <string name="settings_auto_start_boot_description">Otevřít MPTV po zapnutí televize</string>
+    <string name="settings_auto_start_wake_description">Otevřít MPTV, když se televize probudí z režimu spánku</string>
     <string name="settings_catchup_player_internal">Přehrávač MPTV</string>
     <string name="settings_dns_toggle_description">Všechna vyhledávání domén MPTV provádět prostřednictvím vlastního serveru DNS.</string>
     <string name="settings_ffmpeg_audio_description">Zapnuto: ExoPlayer umí dekódovat i zvuk, pro který zařízení nemá dekodér, například DTS, TrueHD nebo MP2. Vlastní dekodéry zařízení mají stále přednost. Vypnuto: ExoPlayer používá jen dekodéry zařízení. mpv vždy dekóduje pomocí FFmpeg. Změna restartuje MPTV.</string>
     <string name="settings_ffmpeg_audio_restart_message">Zvukový dekodér se změní po restartu MPTV.</string>
     <string name="settings_help_app_icon">Ikona MPTV na domovské obrazovce televize. Spouštěči může chvíli trvat, než změnu zobrazí.</string>
+    <string name="settings_help_auto_start_boot">Otevře MPTV samo, jakmile televize nastartuje, na obrazovce zvolené v nastavení Spuštění aplikace. Android dovolí aplikaci otevřít se sama, jen pokud smí zobrazovat přes ostatní aplikace, proto se po zapnutí otevře obrazovka tohoto oprávnění. Některé televize ho nenabízejí a tam automatické spuštění fungovat nemůže.</string>
+    <string name="settings_help_auto_start_wake">Otevře MPTV pokaždé, když se televize probudí z režimu spánku, i když jste ji probudili kvůli jiné aplikaci. Pokud Spuštění aplikace otevírá kanál, každé probuzení spustí tento stream. Dokud je to zapnuté, MPTV udržuje malou službu na pozadí s tichým oznámením. Stejně jako automatické spuštění po zapnutí potřebuje oprávnění zobrazovat přes ostatní aplikace.</string>
     <string name="settings_help_bg_background">Stage ukazuje vlastní jemné barvy MPTV. Obrázek ukazuje váš obrázek za každou obrazovkou. Prosté je plochá tmavá výplň.</string>
     <string name="settings_help_brand_accent">Logo MPTV v nabídce, v sekci O aplikaci a v nastavení ukazuje trojúhelník přehrávání ve vaší barvě zvýraznění. Ikona na domovské obrazovce si ponechá své barvy.</string>
     <string name="settings_help_check_updates">Hned vyhledá na GitHubu novější MPTV a nabídne instalaci. Playlisty, oblíbené a nastavení zůstanou, jak jsou.</string>
@@ -43,6 +51,7 @@
         <item quantity="many">Jazyk všech nabídek a zpráv v MPTV. <xliff:g id="count">%1$d</xliff:g> jazyků; dokud nějaký nevyberete, řídí se jazykem televize.</item>
         <item quantity="other">Jazyk všech nabídek a zpráv v MPTV. <xliff:g id="count">%1$d</xliff:g> jazyků; dokud nějaký nevyberete, řídí se jazykem televize.</item>
     </plurals>
+    <string name="settings_help_pip">Stiskněte Domů nebo otevřete jinou aplikaci, když video hraje na celou obrazovku nebo v minipřehrávači, a bude hrát dál v malém okně nad zbytkem televize. Znovu otevřete MPTV a video se vrátí na celou obrazovku; zavřením okna přehrávání zastavíte. Multiview zůstává v MPTV.</string>
     <string name="settings_help_startup">Co MPTV zobrazí po spuštění: Domů, naposledy sledovaný kanál, oblíbené, nebo kanál, který vyberete.</string>
     <string name="settings_help_theme">MPTV je navržen pro tmavý motiv. Systém se řídí nastavením televize, pokud ho má; světlý se hodí do světlé místnosti.</string>
     <string name="settings_help_update_startup">Při každém spuštění MPTV hledá novou verzi a dá vědět, když nějaká je. Bez zeptání se nic nenainstaluje.</string>

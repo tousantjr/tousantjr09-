@@ -35,8 +35,8 @@ val sportsModule = module {
     // core's SportsConfig being compiled; the store also keeps GameDayWorker's schedule in step.
     single { SportsNoticeSettings(androidContext()) }
     // Positional: a constructor parameter added to either view-model goes last, with one more get() here.
-    viewModel { SportsViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
-    viewModel { SportsSettingsViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+    viewModel { SportsViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+    viewModel { SportsSettingsViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     // Sports hub → Upcoming: its own small view model, outside core's Demand/Feed system (see
     // SportsUpcomingViewModel) — the already-bound SportsSource (EspnSportsSource) is reused as is.
     viewModel { SportsUpcomingViewModel(get(), get()) }

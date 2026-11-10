@@ -36,6 +36,7 @@ val libraryModule = module {
             player = get(),
             watchSession = get(),
             trakt = get(),
+            customize = get(),
         )
     }
     viewModelOf(::LibraryViewModel)

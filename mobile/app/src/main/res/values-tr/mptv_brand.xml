@@ -5,18 +5,22 @@
            xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <string name="app_icon_restart_message">Yeni bir simge ve logo seçtiniz. MPTV yeniden başlatıldığında geçerli olur.</string>
     <string name="app_icon_restart_title">MPTV yeniden başlatılsın mı?</string>
+    <string name="auto_start_notification_text">TV uyandığında MPTV açılır</string>
     <string name="common_own_tv_user">MPTV Kullanıcısı</string>
     <string name="companion_add_page_title">MPTV — Kaynak ekle</string>
     <string name="companion_backup_description">Bir MPTV yedekleme dosyası (.own veya eski bir .json dosyası) seçip Gönder düğmesine basın. Dosya TV\'ye aktarılır — uzaktan kumandayı alın ve orada nelerin geri yükleneceğini seçin.</string>
     <string name="companion_backup_page_title">MPTV — Yedeklemeyi geri yükle</string>
     <string name="companion_download_description">TV\'niz bir MPTV yedekleme dosyası hazırladı. Bu cihaza (owntv-backup.own) kaydetmek için düğmeye dokunun. Dosyayı güvenli bir yerde saklayın — daha sonra bu dosyadan geri yükleme yapabilirsiniz.</string>
     <string name="companion_download_page_title">MPTV — Yedeklemeyi indir</string>
+    <string name="companion_edit_page_title">MPTV — Kaynağı düzenle</string>
     <string name="companion_image_page_title">MPTV — Arka plan görseli</string>
     <string name="companion_pin_page_title">MPTV — PIN Girin</string>
     <string name="companion_saved_page_title">MPTV — Gönderildi</string>
     <string name="content_epg_own_player">MPTV oynatıcısı</string>
     <string name="content_exit_owntv">MPTV\'den çıkılsın mı?</string>
     <string name="content_storage_folder_fallback">İndirme klasörünüz şu anda kullanılamıyor; geri gelene kadar indirmeler MPTV\'nin kendi klasörüne kaydediliyor.</string>
+    <string name="local_auto_sync_accept_body"><xliff:g id="device">%1$s</xliff:g>, MPTV her ikisinde de açıkken bu cihazla kendiliğinden eşitlemek istiyor. Yalnızca bu cihazda izin verdikleriniz gelir ve iki cihazdan biri onu kapatabilir.</string>
+    <string name="local_auto_sync_listen_description">Açık: eşleştirilmiş cihazlar, MPTV burada açıkken bununla eşitleme yapabilir. Kapalı: yalnızca eşitleme modu açıkken.</string>
     <string name="local_sync_browser_body">Bu adres, diğer cihazınızdaki MPTV uygulaması içindir. Orada Yerel eşitlemeyi açın ve listeden bu cihazı seçin.</string>
     <string name="local_sync_browser_title">MPTV yerel eşitleme</string>
     <string name="local_sync_error_unreachable">Bu cihaza ulaşılamadı. O cihazda MPTV → Daha fazla → Yerel eşitleme yolunu açıp Eşitleme modunu açın. Her iki cihaz da aynı Wi-Fi ağında olmalıdır.</string>
@@ -28,11 +32,15 @@
     <string name="settings_app_startup_description">MPTV başlatıldığında açılacak bölüm</string>
     <string name="settings_auto_frame_rate_warning_description">Bu cihaz Android <xliff:g id="android_version">%1$s</xliff:g> sürümüyle çalışıyor. Android 12\'den önceki sürümlerde TV, MPTV\'ye hangi yenileme hızlarına sorunsuz geçebileceğini bildiremez; bu yüzden hızı değiştirmek ekranın bir iki saniyeliğine kararmasına neden olabilir — bazen bir program sırasında birden fazla kez.\n\nBurada otomatik yenileme hızını kapalı bırakmanızı öneririz. TV\'niz sorunsuz geçiş yapıyorsa açıp deneyin: istediğiniz zaman geri değiştirebilirsiniz.</string>
     <string name="settings_auto_frame_rate_warning_description_mobile">Bu cihaz Android <xliff:g id="android_version">%1$s</xliff:g> sürümüyle çalışıyor. Android 12\'den önceki sürümlerde cihaz, MPTV\'ye hangi yenileme hızlarına sorunsuz geçebileceğini bildiremez; bu yüzden hızı değiştirmek ekranın bir iki saniyeliğine kararmasına neden olabilir — bazen bir program sırasında birden fazla kez.\n\nBurada otomatik yenileme hızını kapalı bırakmanızı öneririz. Ekranınız sorunsuz geçiş yapıyorsa açıp deneyin: istediğiniz zaman geri değiştirebilirsiniz.</string>
+    <string name="settings_auto_start_boot_description">TV açıldığında MPTV’yi aç</string>
+    <string name="settings_auto_start_wake_description">TV uyku modundan çıktığında MPTV’yi aç</string>
     <string name="settings_catchup_player_internal">MPTV oynatıcı</string>
     <string name="settings_dns_toggle_description">Tüm MPTV alan adı sorguları özel bir DNS sunucusu üzerinden çözümlenir.</string>
     <string name="settings_ffmpeg_audio_description">Açık: ExoPlayer, cihazın kod çözücüsü olmayan sesleri de (ör. DTS, TrueHD veya MP2) çözebilir. Cihazın kendi kod çözücüleri yine önceliklidir. Kapalı: ExoPlayer yalnızca cihazın kod çözücülerini kullanır. mpv her zaman FFmpeg ile çözer. Değiştirmek MPTV uygulamasını yeniden başlatır.</string>
     <string name="settings_ffmpeg_audio_restart_message">Ses kod çözücüsü MPTV yeniden başladıktan sonra değişir.</string>
     <string name="settings_help_app_icon">TV’nizin ana ekranındaki MPTV simgesi. Başlatıcının değişikliği göstermesi biraz sürebilir.</string>
+    <string name="settings_help_auto_start_boot">TV açıldıktan sonra MPTV’yi Uygulama başlangıcı ayarında seçilen ekranda kendiliğinden açar. Android bir uygulamanın kendiliğinden açılmasına yalnızca diğer uygulamaların üzerinde gösterilebiliyorsa izin verir; bu yüzden bunu açtığınızda o iznin ekranı açılır. Bazı TV’ler bu izni sunmaz ve orada otomatik başlatma çalışamaz.</string>
+    <string name="settings_help_auto_start_wake">TV uyku modundan her çıktığında MPTV’yi açar; TV’yi başka bir uygulama için uyandırdığınızda da. Uygulama başlangıcı bir kanal açıyorsa her uyanış o yayını başlatır. Bu açıkken MPTV, sessiz bir bildirimle küçük bir arka plan hizmeti çalıştırır. Açılışta otomatik başlatma gibi, diğer uygulamaların üzerinde gösterme izni gerekir.</string>
     <string name="settings_help_bg_background">Stage, MPTV’nin kendi yumuşak renklerini gösterir. Resim, kendi resminizi her ekranın arkasında gösterir. Düz, koyu ve düz bir dolgudur.</string>
     <string name="settings_help_brand_accent">Menüdeki, Hakkında bölümündeki ve kurulumdaki MPTV logosu oynat üçgenini vurgu renginizde gösterir. Ana ekrandaki simge kendi renklerini korur.</string>
     <string name="settings_help_check_updates">GitHub’da şimdi daha yeni bir MPTV arar ve yüklemeyi önerir. Oynatma listeleriniz, favorileriniz ve ayarlarınız olduğu gibi kalır.</string>
@@ -41,6 +49,7 @@
         <item quantity="one">MPTV’deki tüm menülerin ve iletilerin dili. <xliff:g id="count">%1$d</xliff:g> dil; siz seçene kadar TV’nin kendi dilini izler.</item>
         <item quantity="other">MPTV’deki tüm menülerin ve iletilerin dili. <xliff:g id="count">%1$d</xliff:g> dil; siz seçene kadar TV’nin kendi dilini izler.</item>
     </plurals>
+    <string name="settings_help_pip">Bir video tam ekranda veya mini oynatıcıda oynarken Ana Ekran’a basın ya da başka bir uygulama açın; video, TV’nin geri kalanının üzerinde küçük bir pencerede oynamaya devam eder. Tam ekrana döndürmek için MPTV’yi yeniden açın; oynatmayı durdurmak için pencereyi kapatın. Çoklu görünüm MPTV’de kalır.</string>
     <string name="settings_help_startup">MPTV başlarken ne gösterecek: Ana sayfa, en son izlediğiniz kanal, favorileriniz veya seçtiğiniz bir kanal.</string>
     <string name="settings_help_theme">MPTV koyu tema için tasarlandı. Sistem, varsa TV’nin kendi ayarını izler; açık tema aydınlık bir oda için uygundur.</string>
     <string name="settings_help_update_startup">MPTV her başladığında yeni bir sürüm arar ve varsa size bildirir. Sormadan hiçbir şey yüklenmez.</string>
