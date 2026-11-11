@@ -27,7 +27,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -103,7 +102,7 @@ fun SportsMatchScreen(
     // Same-tier channels reordered by how they have behaved on this phone — here rather than in the
     // view model, whose constructor SportsModule binds positionally (the television ranks in its own).
     val health: tv.own.owntv.mobile.health.ChannelHealthStore = org.koin.compose.koinInject()
-    val healthSnapshot by health.snapshot.collectAsState()
+    val healthSnapshot by health.snapshot.collectAsStateWithLifecycle()
     val state = remember(raw, healthSnapshot) { raw.copy(list = health.rank(raw.list)) }
     val m = state.match
     var picked by rememberSaveable { mutableStateOf(MatchTab.WATCH) }

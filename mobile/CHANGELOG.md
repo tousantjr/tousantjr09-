@@ -7,6 +7,12 @@
 > Issue numbers that are part of a title are fine; explanatory parentheticals are not. The detail —
 > what, why, files and verification — belongs in the commit message, never here.
 
+## v1.1.24 — 2026-11-10
+
+### 🐛 Fixes
+- **Bigger touch areas on the mini player's play and close buttons**
+- **Bigger close button on the Sports live preview**
+
 ## v1.1.23 — 2026-11-10
 
 ### 🐛 Fixes
