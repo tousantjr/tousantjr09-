@@ -529,9 +529,8 @@ private fun SportsLivePreview(tuner: LiveTuner, channel: ChannelEntity, onOpen: 
         Box(
             Modifier
                 .align(Alignment.TopEnd)
-                .padding(6.dp)
-                .size(36.dp)
-                .clip(RoundedCornerShape(18.dp))
+                .size(48.dp)
+                .clip(RoundedCornerShape(24.dp))
                 .clickable(onClick = onClose)
                 .semantics { contentDescription = close },
             contentAlignment = Alignment.Center,

@@ -160,7 +160,7 @@ fun MiniPlayer(
                 )
             }
             .padding(horizontal = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
@@ -205,22 +205,26 @@ fun MiniPlayer(
             fraction?.let { StageProgress(it, Modifier.padding(top = 5.dp).height(3.dp)) }
         }
         val playPause = stringResource(R.string.settings_remote_action_play_pause)
+        // MPTV: a 46 dp touch area around the 38 dp button, so a thumb that lands near it still counts.
         Box(
             Modifier
-                .size(38.dp)
-                .clip(RoundedCornerShape(13.dp))
-                .background(accent.accent)
+                .size(46.dp)
+                .clip(RoundedCornerShape(15.dp))
                 .clickable(role = Role.Button) {
                     if (remote != null) remote.togglePlayPause() else engine.togglePlayPause()
                 }
                 .semantics { contentDescription = playPause },
             contentAlignment = Alignment.Center,
-        ) { StageIcon(if (playing) MobileIcons.Pause else MobileIcons.PlayArrow, 16.dp, accent.onAccent) }
+        ) {
+            Box(Modifier.size(38.dp).clip(RoundedCornerShape(13.dp)).background(accent.accent), contentAlignment = Alignment.Center) {
+                StageIcon(if (playing) MobileIcons.Pause else MobileIcons.PlayArrow, 16.dp, accent.onAccent)
+            }
+        }
         val close = stringResource(R.string.content_close)
         Box(
             Modifier
-                .size(38.dp)
-                .clip(RoundedCornerShape(13.dp))
+                .size(46.dp)
+                .clip(RoundedCornerShape(15.dp))
                 .clickable(role = Role.Button, onClick = onStop)
                 .semantics { contentDescription = close },
             contentAlignment = Alignment.Center,
