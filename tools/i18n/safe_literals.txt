@@ -56,6 +56,7 @@
 1	empty	app/src/main/java/tv/own/owntv/features/autostart/AutoStart.kt	\0
 1	file-path	app/src/main/java/tv/own/owntv/features/autostart/AutoStart.kt	/proc/self/cmdline
 1	technical	app/src/main/java/tv/own/owntv/features/autostart/AutoStart.kt	:autostart
+1	technical	app/src/main/java/tv/own/owntv/features/autostart/AutoStart.kt	amazon.hardware.fire_tv
 1	uri	app/src/main/java/tv/own/owntv/features/autostart/AutoStart.kt	package:${context.packageName}
 1	empty	app/src/main/java/tv/own/owntv/features/autostart/AutoStartLaunchMark.kt	\0
 1	file-path	app/src/main/java/tv/own/owntv/features/autostart/AutoStartLaunchMark.kt	auto_start_launch
