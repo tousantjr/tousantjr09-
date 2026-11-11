@@ -36,8 +36,10 @@ internal object AutoStart {
         AutoStartPolicy.canStartFromBackground(Build.VERSION.SDK_INT, Settings.canDrawOverlays(context))
 
     /** Auto start on wake-up is offered on a television only (see [AutoStartPolicy.wakeListenerNeeded]). */
+    // MPTV: Fire TV devices do not reliably report leanback, so Amazon's own feature counts too.
     fun isTelevision(context: Context): Boolean =
-        context.packageManager.hasSystemFeature(PackageManager.FEATURE_LEANBACK)
+        context.packageManager.hasSystemFeature(PackageManager.FEATURE_LEANBACK) ||
+            context.packageManager.hasSystemFeature(FIRE_TV_FEATURE)
 
     /** A boot or an update: open OwnTV if that option is on, and start or stop the wake listener. */
     fun onBroadcast(context: Context, trigger: AutoStartTrigger) {
@@ -111,3 +113,5 @@ internal object AutoStart {
         }
     }
 }
+
+private const val FIRE_TV_FEATURE = "amazon.hardware.fire_tv"

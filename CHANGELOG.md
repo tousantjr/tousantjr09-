@@ -7,6 +7,11 @@
 > Issue numbers that are part of a title are fine; explanatory parentheticals are not. The detail —
 > what, why, files and verification — belongs in the commit message, never here.
 
+## v1.0.32 — 2026-11-10
+
+### 🐛 Fixes
+- **Fire TV: recognised as a TV for auto start, wake-up start and the TV home-screen launch**
+
 ## v1.0.31 — 2026-11-10
 
 ### ✨ New features
