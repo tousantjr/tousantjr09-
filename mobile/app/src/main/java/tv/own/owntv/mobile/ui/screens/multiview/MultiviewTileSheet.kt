@@ -28,6 +28,15 @@ fun MultiviewTileSheet(
     onSound: () -> Unit,
     onSoundOnly: () -> Unit,
     onRemove: () -> Unit,
+    /** Whether this tile is the one drawn big. */
+    spotlit: Boolean,
+    /** Null with a single tile, where there is nothing to make it bigger than. */
+    onSpotlight: (() -> Unit)?,
+    /** Null with a single tile, where there is nowhere to move it. */
+    onMove: (() -> Unit)?,
+    /** "Layout: Default", or null when this many tiles have only one shape. */
+    layoutLabel: String?,
+    onCycleLayout: () -> Unit,
     onDismiss: () -> Unit,
 ) {
     val title = stringResource(R.string.multiview_button)
@@ -44,6 +53,12 @@ fun MultiviewTileSheet(
                 icon = MobileIcons.Add,
                 onClick = onAddTile,
             )
+        }
+        if (onMove != null) {
+            Row(label = stringResource(R.string.multiview_move_tile), icon = MobileIcons.SwapVert, onClick = onMove)
+        }
+        if (layoutLabel != null) {
+            Row(label = layoutLabel, icon = MobileIcons.GridView, onClick = onCycleLayout)
         }
         if (filled) {
             Row(
@@ -64,6 +79,13 @@ fun MultiviewTileSheet(
                 icon = MobileIcons.Audiotrack,
                 onClick = onSoundOnly,
             )
+            if (onSpotlight != null) {
+                Row(
+                    label = stringResource(if (spotlit) R.string.multiview_spotlight_remove else R.string.multiview_spotlight),
+                    icon = MobileIcons.OpenInFull,
+                    onClick = onSpotlight,
+                )
+            }
             Row(
                 label = stringResource(R.string.multiview_tile_remove),
                 icon = MobileIcons.Close,

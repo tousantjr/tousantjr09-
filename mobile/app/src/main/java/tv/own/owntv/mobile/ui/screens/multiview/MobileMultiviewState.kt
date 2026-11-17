@@ -3,6 +3,7 @@ package tv.own.owntv.mobile.ui.screens.multiview
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.media3.common.util.UnstableApi
 import kotlinx.coroutines.CoroutineScope
@@ -68,7 +69,35 @@ class MobileMultiviewState(
 
     /** One more empty tile for the user to fill. */
     fun addTile() {
-        if (canAddTile) tiles.add(MobileMultiviewTile())
+        if (!canAddTile) return
+        tiles.add(MobileMultiviewTile())
+        order.add(tiles.lastIndex)
+    }
+
+    /**
+     * Where each tile sits on screen: `order[position] = tile index`. Moving a tile only reorders this
+     * list — the tile keeps its index, and so its engine and its picture, wherever it is drawn.
+     */
+    val order = mutableStateListOf<Int>().apply { addAll(tiles.indices) }
+
+    /** The tile drawn big (Spotlight), or null for the plain layout. */
+    var spotlight by mutableStateOf<Int?>(null)
+        private set
+
+    fun toggleSpotlight(tile: Int) {
+        spotlight = if (spotlight == tile || tile !in tiles.indices) null else tile
+    }
+
+    /** The on-screen position of [tile]. */
+    fun positionOf(tile: Int): Int = order.indexOf(tile)
+
+    /** Swap where two tiles are drawn. Nothing is retuned: each keeps its own channel and engine. */
+    fun swap(a: Int, b: Int) {
+        val pa = order.indexOf(a)
+        val pb = order.indexOf(b)
+        if (pa < 0 || pb < 0 || pa == pb) return
+        order[pa] = b
+        order[pb] = a
     }
 
     /**
@@ -183,8 +212,11 @@ class MobileMultiviewState(
         // Emptying the last tile removes it, so "Remove tile" shrinks a grid the user has finished
         // with. Only ever from the end, so no surviving tile changes index and no engine is handed
         // to a different channel.
+        if (spotlight == tile) spotlight = null
         while (tiles.size > openingTileCount(maxTiles) && tiles.last().isEmpty) {
             pool.release(tiles.lastIndex)
+            order.remove(tiles.lastIndex)
+            if (spotlight == tiles.lastIndex) spotlight = null
             tiles.removeAt(tiles.lastIndex)
         }
         if (audible > tiles.lastIndex) audible = tiles.lastIndex.coerceAtLeast(0)

@@ -97,6 +97,9 @@ import tv.own.owntv.mobile.ui.screens.live.LiveTuner
 import tv.own.owntv.mobile.ui.screens.morePageTitleRes
 import tv.own.owntv.mobile.ui.screens.settings.settingsPageTitleRes
 import tv.own.owntv.mobile.ui.screens.settings.isSettingsPage
+import tv.own.owntv.mobile.ui.screens.settings.SettingsLeaf
+import tv.own.owntv.mobile.weather.TemperatureUnit
+import tv.own.owntv.mobile.weather.WeatherTemperature
 import tv.own.owntv.mobile.ui.screens.sports.SportsPlayback
 import tv.own.owntv.mobile.ui.screens.sports.SportsTab
 
@@ -119,6 +122,8 @@ fun MobileShell(
     val shellViewModel: ShellViewModel = koinViewModel()
     val sportsPlayback: SportsPlayback = koinInject()
     val sections by shellViewModel.visibleSections.collectAsStateWithLifecycle()
+    val weather by shellViewModel.weather.collectAsStateWithLifecycle()
+    val temperatureUnit by shellViewModel.temperatureUnit.collectAsStateWithLifecycle()
 
     val profilesViewModel: ProfilesViewModel = koinViewModel()
     val gateSession: ProfileGateSession = koinViewModel()
@@ -503,6 +508,20 @@ fun MobileShell(
                                     text = resume.name,
                                     icon = MobileIcons.PlayArrow,
                                     modifier = Modifier.weight(1f, fill = false).widthIn(max = 150.dp),
+                                )
+                            }
+                            // Home's weather, beside Resume while the hero is in view; tapping it opens
+                            // the Weather settings. Hidden when Resume is there on a narrow phone.
+                            weather?.takeIf { onHome && homeChrome.heading == null && (homeChrome.resume == null || useRail) }?.let { now ->
+                                StagePill(
+                                    onClick = { navController.navigate(SettingsLeaf.WEATHER.route) { launchSingleTop = true } },
+                                    text = WeatherTemperature.display(now.temperatureC, temperatureUnit).let { deg ->
+                                        if (temperatureUnit == TemperatureUnit.FAHRENHEIT) stringResource(tv.own.owntv.mobile.R.string.common_weather_fahrenheit, deg)
+                                        else stringResource(tv.own.owntv.mobile.R.string.common_weather_celsius, deg)
+                                    },
+                                    icon = MobileIcons.WbSunny,
+                                    contentDescription = now.city,
+                                    modifier = Modifier.weight(1f, fill = false).widthIn(max = 110.dp),
                                 )
                             }
                             // It appears only when there is a receiver to send to; which way round it is

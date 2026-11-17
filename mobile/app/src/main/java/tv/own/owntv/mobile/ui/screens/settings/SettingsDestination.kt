@@ -24,6 +24,7 @@ fun SettingsLeafPage(leaf: SettingsLeaf, onSetup: (SetupEntry) -> Unit) {
         SettingsLeaf.HIGHLIGHT -> SettingsHighlightPage()
         SettingsLeaf.GLASS_EFFECT -> SettingsGlassPage()
         SettingsLeaf.FONTS -> SettingsFontsPage()
+        SettingsLeaf.WEATHER -> SettingsWeatherPage()
         SettingsLeaf.HOME -> SettingsHomePage()
         SettingsLeaf.BROWSING -> SettingsBrowsingPage()
         SettingsLeaf.CONTENT_MENUS -> SettingsMenusPage()
