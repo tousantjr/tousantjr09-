@@ -8,7 +8,9 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
@@ -27,6 +29,11 @@ import tv.own.owntv.core.nav.NavVisibility
 import tv.own.owntv.core.repository.activeProfileSources
 import tv.own.owntv.core.settings.SettingsRepository
 import tv.own.owntv.core.settings.StartupMode
+import tv.own.owntv.core.network.ConnectivityObserver
+import tv.own.owntv.core.weather.WeatherInfo
+import tv.own.owntv.core.weather.WeatherRepository
+import tv.own.owntv.mobile.weather.TemperatureUnit
+import tv.own.owntv.mobile.weather.WeatherTemperature
 
 /** Shell state: which destinations the active playlist offers, and the tap that sends a list home. */
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -38,7 +45,21 @@ class ShellViewModel(
     private val profileDao: ProfileDao,
     private val settings: SettingsRepository,
     private val customize: CustomizationStore,
+    private val weatherRepository: WeatherRepository,
+    private val connectivity: ConnectivityObserver,
 ) : ViewModel() {
+
+    /** Home's weather pill: null while the setting is off, offline, or the forecast has not come. */
+    val weather: StateFlow<WeatherInfo?> =
+        combine(connectivity.isOnline, settings.weatherEnabled, settings.weatherLocation) { online, on, place ->
+            Triple(online, on, place)
+        }.flatMapLatest { (online, on, place) ->
+            if (!online || !on) flowOf<WeatherInfo?>(null) else flow { emit(weatherRepository.get(place)) }
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
+    val temperatureUnit: StateFlow<TemperatureUnit> = settings.weatherFahrenheit
+        .map { WeatherTemperature.unitFor(it) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), TemperatureUnit.CELSIUS)
 
     /** Core's rule, unchanged — the same set the TV app's rail is built from. */
     val visibleSections: StateFlow<Set<MainSection>> = navVisibility.visibleSections()

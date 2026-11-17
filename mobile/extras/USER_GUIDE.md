@@ -345,12 +345,14 @@ status pill shows one running even over the player.
 | **Tap a tile** | Give it the sound |
 | **Tap an empty tile** | Pick a channel |
 | **Double-tap** | That channel, full screen |
-| **Long-press** | The tile menu — change channel, sound only, add a tile, remove |
-| **Back** | Leave, stopping everything |
+| **Long-press** | The tile menu — change channel, sound only, **Spotlight**, **Move tile**, **Layout**, add a tile, remove |
+| **Back** | Leave, stopping everything (or cancel a Move) |
 
-Landscape puts two tiles per row; portrait stacks them, which is honest rather than clever. The
-Settings number is a **ceiling**, not a size — the grid opens with two and grows when you ask.
-Leaving the app stops the tiles.
+**Spotlight** makes one tile big with the others beside it (below it in portrait); **Remove spotlight**
+puts the grid back. **Move tile**, then tap another tile, swaps the two. **Layout** cycles the grid
+shape — **Default**, **Even grid** and **Stacked** (one column) — where the tile count allows a real
+choice; the app remembers it. The Settings number is a **ceiling**, not a size — the grid opens with
+two and grows when you ask. Leaving the app stops the tiles.
 
 ---
 
@@ -594,6 +596,14 @@ else (search, Guide, Home, favourites, history, Downloads, recordings) until you
 **Enter PIN**. It stays open until you leave the app or switch profile — leaving also stops anything
 playing from it, the floating window included. **Remove lock** in the same menu asks the PIN, and
 removing the category lock PIN unlocks every category. 5 wrong PINs → a 30 s wait.
+
+### ☀️ Weather
+**Where:** Settings → Appearance → **Weather**, or tap the temperature pill on **Home**
+**Show weather** puts the current temperature at the top of Home (it gives way to the Resume pill on
+a narrow phone). Left alone, the place comes from your internet connection — on mobile data that can
+be a city away — so **Use this device's location** uses the phone's own rough position instead (it
+asks for location permission once and uses the last position the phone already knows). With it off,
+type a **city**. **Temperature unit** switches between °C and °F.
 
 ### 🏠 Home & layout
 **Where:** Settings → Layout → **Home screen**

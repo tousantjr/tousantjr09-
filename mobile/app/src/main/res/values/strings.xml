@@ -462,4 +462,18 @@
     <string name="sports_kickoff_switching">Switching to %1$s in %2$d s</string>
     <string name="sports_kickoff_cancel">Cancel</string>
     <string name="sports_failover_switched">Channel failed — switched to %s</string>
+    <!-- Multiview layouts: Spotlight, Move tile and the grid shape (tile menu). -->
+    <string name="multiview_spotlight">Spotlight this tile</string>
+    <string name="multiview_spotlight_remove">Remove spotlight</string>
+    <string name="multiview_move_tile">Move tile</string>
+    <string name="multiview_tap_to_swap">Tap a tile to swap</string>
+    <string name="multiview_layout_default">Layout: Default</string>
+    <string name="multiview_layout_even">Layout: Even grid</string>
+    <string name="multiview_layout_stacked">Layout: Stacked</string>
+    <!-- Weather chip on Home (Settings › Appearance › Weather). -->
+    <string name="settings_use_device_location">Use this device\'s location</string>
+    <string name="settings_use_device_location_description">Weather follows where the phone is. Turn off to enter a city yourself.</string>
+    <string name="common_weather_celsius">%1$d°C</string>
+    <string name="common_weather_fahrenheit">%1$d°F</string>
+    <string name="common_weather_city">%1$s · %2$s</string>
 </resources>

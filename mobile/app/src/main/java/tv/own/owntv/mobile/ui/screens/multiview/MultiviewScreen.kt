@@ -1,6 +1,5 @@
 package tv.own.owntv.mobile.ui.screens.multiview
 
-import android.content.res.Configuration
 import android.graphics.SurfaceTexture
 import android.view.Surface
 import android.view.TextureView
@@ -10,6 +9,8 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -25,6 +26,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -66,7 +68,8 @@ import tv.own.owntv.mobile.ui.stage.stageAccent
  * | tap a filled tile | give it the sound |
  * | tap an empty tile | open the channel picker |
  * | double-tap | that tile goes fullscreen |
- * | long-press | the tile menu |
+ * | long-press | the tile menu: layout, Spotlight, Move tile and the rest |
+ * | tap while moving | swap the moving tile with this one |
  * | Back | leave, stopping every tile |
  *
  * Landscape is the real mode — that is where four 16:9 pictures fit — and portrait stacks them, which
@@ -83,7 +86,6 @@ fun MultiviewScreen(
     modifier: Modifier = Modifier,
 ) {
     var menuFor by remember { mutableStateOf<Int?>(null) }
-    val landscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
 
     BackHandler(enabled = menuFor == null) { onExit() }
 
@@ -117,28 +119,56 @@ fun MultiviewScreen(
         onDispose { view.keepScreenOn = false }
     }
 
-    Box(modifier.fillMaxSize().background(Color.Black)) {
-        // Landscape: two per row. Portrait: one per row, stacked.
-        val rows = if (landscape) state.tiles.indices.chunked(2) else state.tiles.indices.map { listOf(it) }
-        Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(TileGap)) {
-            rows.forEach { row ->
-                Row(
-                    Modifier.fillMaxWidth().weight(1f),
-                    horizontalArrangement = Arrangement.spacedBy(TileGap),
-                ) {
-                    row.forEach { index ->
-                        Tile(
-                            state = state,
-                            index = index,
-                            onPickChannel = { onPickChannel(index) },
-                            onFullscreen = { state.tiles[index].channel?.let(onFullscreen) },
-                            onMenu = { menuFor = index },
-                            modifier = Modifier.weight(1f).fillMaxSize(),
-                        )
-                    }
-                    if (row.size == 1 && landscape) Box(Modifier.weight(1f))
-                }
+    val context = LocalContext.current
+    var layoutMode by remember { mutableStateOf(MultiviewLayoutStore.read(context)) }
+    // "Move tile": the tile waiting for the next tap to say where it goes.
+    var movingTile by remember { mutableStateOf<Int?>(null) }
+    BackHandler(enabled = movingTile != null && menuFor == null) { movingTile = null }
+
+    BoxWithConstraints(modifier.fillMaxSize().background(Color.Black)) {
+        val count = state.tiles.size
+        // A choice the current count cannot show falls back to the default shape rather than vanishing.
+        val mode = layoutMode.takeIf { it in MultiviewLayoutMode.available(count) } ?: MultiviewLayoutMode.Auto
+        val spotlightPosition = state.spotlight?.let(state::positionOf)?.takeIf { it >= 0 }
+        val rects = MultiviewGridMath.resolvedRects(mode, count, spotlightPosition, maxWidth.value, maxHeight.value)
+        // Composed in tile order, placed by position: a tile that moves keeps its TextureView, so its
+        // picture carries on instead of the decoder being torn down and rebuilt.
+        state.tiles.indices.forEach { index ->
+            val r = rects.getOrNull(state.positionOf(index))
+            if (r != null) key(index) {
+                Tile(
+                    state = state,
+                    index = index,
+                    moving = movingTile == index,
+                    onTap = {
+                        val from = movingTile
+                        when {
+                            from != null -> { movingTile = null; state.swap(from, index) }
+                            state.tiles[index].channel == null -> onPickChannel(index)
+                            else -> state.giveSoundTo(index)
+                        }
+                    },
+                    onFullscreen = { state.tiles[index].channel?.let(onFullscreen) },
+                    onMenu = { movingTile = null; menuFor = index },
+                    modifier = Modifier
+                        .offset(r.left.dp, r.top.dp)
+                        .size(r.width.dp, r.height.dp)
+                        .padding(TileGap / 2),
+                )
             }
+        }
+        if (movingTile != null) {
+            Text(
+                text = stringResource(R.string.multiview_tap_to_swap),
+                style = stageText(13f, 600),
+                color = Color.White,
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = 12.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Color.Black.copy(alpha = 0.7f))
+                    .padding(horizontal = 12.dp, vertical = 6.dp),
+            )
         }
     }
 
@@ -154,6 +184,20 @@ fun MultiviewScreen(
             onSound = { menuFor = null; state.giveSoundTo(tile) },
             onSoundOnly = { menuFor = null; state.setSoundOnly(tile, tile !in state.soundOnly) },
             onRemove = { menuFor = null; state.clear(tile) },
+            spotlit = state.spotlight == tile,
+            onSpotlight = if (state.tiles.size > 1) { { menuFor = null; state.toggleSpotlight(tile) } } else null,
+            onMove = if (state.tiles.size > 1) { { menuFor = null; movingTile = tile } } else null,
+            layoutLabel = MultiviewLayoutMode.available(state.tiles.size).takeIf { it.isNotEmpty() }?.let {
+                stringResource(layoutMode.takeIf { m -> m in it }?.labelRes() ?: MultiviewLayoutMode.Auto.labelRes())
+            },
+            onCycleLayout = {
+                val choices = MultiviewLayoutMode.available(state.tiles.size)
+                if (choices.isNotEmpty()) {
+                    val next = choices[(choices.indexOf(layoutMode) + 1).mod(choices.size)]
+                    layoutMode = next
+                    MultiviewLayoutStore.write(context, next)
+                }
+            },
             onDismiss = { menuFor = null },
         )
     }
@@ -164,27 +208,35 @@ fun MultiviewScreen(
 private fun Tile(
     state: MobileMultiviewState,
     index: Int,
-    onPickChannel: () -> Unit,
+    moving: Boolean,
+    onTap: () -> Unit,
     onFullscreen: () -> Unit,
     onMenu: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val tile = state.tiles[index]
     val audible = state.audible == index
+    val tap by rememberUpdatedState(onTap)
+    val fullscreen by rememberUpdatedState(onFullscreen)
+    val menu by rememberUpdatedState(onMenu)
     Box(
         modifier
             .clip(TileShape)
             .background(LocalStagePalette.current.cardSolid)
             .border(
-                width = if (audible) 2.dp else 1.dp,
-                color = if (audible) stageAccent.accent else LocalStagePalette.current.ink.copy(alpha = 0.12f),
+                width = if (audible || moving) 2.dp else 1.dp,
+                color = when {
+                    moving -> Color.White
+                    audible -> stageAccent.accent
+                    else -> LocalStagePalette.current.ink.copy(alpha = 0.12f)
+                },
                 shape = TileShape,
             )
-            .pointerInput(index, tile.channel?.id) {
+            .pointerInput(index, tile.channel?.id, moving) {
                 detectTapGestures(
-                    onTap = { if (tile.channel == null) onPickChannel() else state.giveSoundTo(index) },
-                    onDoubleTap = { if (tile.channel != null) onFullscreen() },
-                    onLongPress = { onMenu() },
+                    onTap = { tap() },
+                    onDoubleTap = { if (tile.channel != null) fullscreen() },
+                    onLongPress = { menu() },
                 )
             },
     ) {
@@ -384,4 +436,10 @@ private fun tileFailureText(failure: PlaybackFailure?): String = when {
 private const val StreamLostGraceMs = 12_000L
 
 private val TileGap = 4.dp
+
+private fun MultiviewLayoutMode.labelRes(): Int = when (this) {
+    MultiviewLayoutMode.Auto -> R.string.multiview_layout_default
+    MultiviewLayoutMode.EvenGrid -> R.string.multiview_layout_even
+    MultiviewLayoutMode.Stacked -> R.string.multiview_layout_stacked
+}
 private val TileShape = RoundedCornerShape(10.dp)

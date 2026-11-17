@@ -21,6 +21,7 @@ enum class SettingsLeaf(
     HIGHLIGHT(SettingsGroup.APPEARANCE, "highlight", R.string.settings_selection_highlight),
     GLASS_EFFECT(SettingsGroup.APPEARANCE, "glass", R.string.settings_glass_bg_title),
     FONTS(SettingsGroup.APPEARANCE, "fonts", R.string.settings_title_fonts),
+    WEATHER(SettingsGroup.APPEARANCE, "weather", R.string.settings_weather),
 
     HOME(SettingsGroup.LAYOUT, "home", R.string.settings_home_screen),
     BROWSING(SettingsGroup.LAYOUT, "browsing", R.string.settings_browsing_lists),

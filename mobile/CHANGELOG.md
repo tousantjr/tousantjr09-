@@ -7,6 +7,15 @@
 > Issue numbers that are part of a title are fine; explanatory parentheticals are not. The detail —
 > what, why, files and verification — belongs in the commit message, never here.
 
+## v1.1.25 — 2026-11-17
+
+### ✨ New features
+- **Multiview: Spotlight a tile**
+- **Multiview: Move tile to swap places**
+- **Multiview: Default, Even grid and Stacked layouts**
+- **Weather on Home**
+- **Weather settings: device location, city and °C/°F**
+
 ## v1.1.24 — 2026-11-10
 
 ### 🐛 Fixes

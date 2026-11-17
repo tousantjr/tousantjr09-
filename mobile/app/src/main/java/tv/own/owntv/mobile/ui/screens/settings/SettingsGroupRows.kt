@@ -313,6 +313,7 @@ private fun appearanceSections(vm: SettingsViewModel): List<SettingSection> {
         else vm.edit { setUiZoomPercent(next) }
     }
     val setPopup = { pct: Int -> vm.edit { setFontCustomization(fonts.copy(popupSizePercent = PopupSizeScale.clamp(pct))) } }
+    val weatherOn = vm.settings.weatherEnabled.pref(true)
 
     val themes = ThemeMode.entries
     // The presets' own (dark) colours in both themes; only the colour in force follows the theme.
@@ -350,6 +351,11 @@ private fun appearanceSections(vm: SettingsViewModel): List<SettingSection> {
                     "fonts", MobileIcons.Edit, stringResource(R.string.settings_title_fonts), stringResource(R.string.settings_line_fonts),
                     stringResource(fonts.mainFamily.labelRes()) + sep + stringResource(R.string.common_percent, fonts.sizePercent),
                     SettingsLeaf.FONTS.route,
+                ),
+                pageItem(
+                    "weather", MobileIcons.WbSunny, stringResource(R.string.settings_weather),
+                    stringResource(R.string.settings_weather_description_root),
+                    stringResource(if (weatherOn) R.string.common_on else R.string.common_off), SettingsLeaf.WEATHER.route,
                 ),
                 SettingItem(
                     "popup_size", MobileIcons.OpenInFull, stringResource(R.string.settings_popup_size), stringResource(R.string.settings_line_popup_size_mobile),
